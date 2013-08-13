@@ -6,7 +6,7 @@ LD = g++
 CXXFLAGS = -std=c++1y -O3 -Wall -Wextra -Werror
 CXXLNFLAGS = -L/usr/lib64 -lpqxx -lpq
 
-SRCS = pq.cxx
+SRCS = main.cxx
 OBJS = $(SRCS:.cxx=.o)
 EXE = main
 
