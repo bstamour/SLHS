@@ -3,8 +3,8 @@
 
 CXX = g++
 LD = g++
-CXXFLAGS = -std=c++1y -O3 -Wall -Wextra -Werror
-CXXLNFLAGS = -L/usr/lib64 -lpqxx -lpq
+CXXFLAGS = -std=c++1y -O3 -Wall -Wextra
+CXXLNFLAGS = -L/usr/lib64 -lpqxx -lpq -lboost_program_options
 
 SRCS = main.cxx
 OBJS = $(SRCS:.cxx=.o)

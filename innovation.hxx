@@ -2,6 +2,7 @@
 #define BST_INNOVATION_HXX_
 
 #include "utils.hxx"
+#include "nlp.hxx"
 
 #include <pqxx/pqxx>
 
@@ -20,14 +21,9 @@ namespace Innovation
       std::string keywords;
    };
 
-   std::ostream& operator << (std::ostream& os, Innovation const& inno)
+   inline std::ostream& operator << (std::ostream& os, Innovation const& inno)
    {
-      os << "name:       " << inno.name             << '\n'
-         << "desc:       " << inno.description      << '\n'
-         << "con impact: " << inno.continuum_impact << '\n'
-         << "sys impact: " << inno.system_impact    << '\n'
-         << "keywords:   " << inno.keywords
-         ;
+      os << inno.name;
       return os;
    }
 
@@ -56,6 +52,11 @@ namespace Innovation
       }
 
       return innos;
+   }
+
+   inline auto euclidean_distance(Innovation const& inno1, Innovation const& inno2)
+   {
+      return NLP::euclidean_distance(inno1.description, inno2.description);
    }
 
 } // namespace Innovations

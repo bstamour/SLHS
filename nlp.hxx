@@ -23,55 +23,60 @@ namespace NLP
    //    conceptual space geometry computed in step 2. It may be a fuzzy distance
    //    (see Subjective Logic) or it may be crisp. Not sure yet.
 
-   template <typename String>
-   auto words(String const& str)
+   namespace detail
    {
-      std::stringstream ss{str};
+      template <typename String>
+      auto words(String const& str)
+      {
+         std::stringstream ss{str};
 
-      auto wds = std::vector<String>{};
-      auto temp = String{};
+         auto wds = std::vector<String>{};
+         auto temp = String{};
 
-      while (ss >> temp)
-         wds.emplace_back(temp);
+         while (ss >> temp)
+            wds.emplace_back(temp);
 
-      wds.shrink_to_fit();
-      return wds;
-   }
+         wds.shrink_to_fit();
+         return wds;
+      }
 
-   template <typename Dictionary, typename Wordlist>
-   auto make_frequency_vector(Dictionary const& dict, Wordlist const& words)
-   {
-      auto freqs = std::vector<std::size_t>{};
-      freqs.reserve(dict.size());
+      template <typename Dictionary, typename Wordlist>
+      auto make_frequency_vector(Dictionary const& dict, Wordlist const& words)
+      {
+         auto freqs = std::vector<std::size_t>{};
+         freqs.reserve(dict.size());
 
-      for (auto const& w : dict)
-         freqs.emplace_back(std::count(begin(words), end(words), w));
+         for (auto const& w : dict)
+            freqs.emplace_back(std::count(begin(words), end(words), w));
 
-      return freqs;
-   }
+         return freqs;
+      }
 
-   template <typename WordList>
-   auto make_dictionary(WordList words1, WordList words2)
-   {
-      std::sort(begin(words1), end(words1));
-      std::sort(begin(words2), end(words2));
+      template <typename WordList>
+      auto make_dictionary(WordList words1, WordList words2)
+      {
+         std::sort(begin(words1), end(words1));
+         std::sort(begin(words2), end(words2));
 
-      auto dictionary = decltype(words1){};
-      std::set_union(begin(words1), end(words1), begin(words2), end(words2),
-                     std::back_inserter(dictionary));
-      dictionary.shrink_to_fit();
-      return dictionary;
-   }
+         auto dictionary = decltype(words1){};
+         std::set_union(begin(words1), end(words1), begin(words2), end(words2),
+                        std::back_inserter(dictionary));
+         dictionary.shrink_to_fit();
+         return dictionary;
+      }
+
+   } // namespace detail
 
    // Given two strings, compute the euclidean distance between the word frequency
    // vectors.
    template <typename String>
    auto euclidean_distance(String const& string1, String const& string2)
    {
+      using namespace detail;
+
       auto words1 = words(string1);
       auto words2 = words(string2);
       auto dictionary = make_dictionary(words1, words2);
-
       auto vector1 = make_frequency_vector(dictionary, words1);
       auto vector2 = make_frequency_vector(dictionary, words2);
 
