@@ -1,3 +1,6 @@
+{-# LANGUAGE TypeFamilies #-}
+
+
 -----------------------------------------------------------------------------------
 -- | Module for the core reasoning engine.
 --
@@ -7,6 +10,7 @@
 --   atomic events (aka: a frame of discernment).
 -----------------------------------------------------------------------------------
 
+
 module Reasoner
        ( MassAssignment(..)
        , makeMassAssignment
@@ -14,6 +18,7 @@ module Reasoner
        , runReasoner
        , getMass
        ) where
+
 
 import Data.Maybe (fromMaybe)
 import Data.Ratio ((%))
@@ -33,10 +38,12 @@ newtype MassAssignment atomType =
   { unMass :: M.Map [atomType] Rational
   }
 
+
 -- | Create a mass assignment.
 makeMassAssignment :: Ord atomType => [([atomType], Rational)]
                       -> MassAssignment atomType
 makeMassAssignment = MassAssignment . M.fromList
+
 
 -- | The reasoner object, parameterized by the underlying reasoning calculus,
 --   the atoms that make up the frame of discernment, and the result of the
@@ -46,22 +53,27 @@ data Reasoner calcType atomType a =
   { unR :: MassAssignment atomType -> a
   }
 
+
 -- Define a functor between the category Hask and the subcategory
 -- Reasoner calcType atomType.
 instance Functor (Reasoner calcType atomType) where
   fmap f r = Reasoner $ \m -> f $ unR r m
 
+
 -- There also exists a lax monoidal functor from Hask to Reasoner calcType atomType.
 instance Applicative (Reasoner calcType atomType) where
   pure x    = Reasoner $ \_ -> x
+
   rf <*> rx = Reasoner $ \m -> let f = unR rf m
                                in  flip unR m $ fmap f rx
 
--- Finally, there also exists a monad on Reasoner calcType atomType.
+
 instance Monad (Reasoner calcType atomType) where
   return  = pure
-  r >>= f = Reasoner $ \m -> let unR' = flip unR m
-                             in  unR' $ unR' $ pure f <*> r
+
+  r >>= f = Reasoner $ \m -> let x = unR r m
+                                 y = f x
+                             in unR y m
 
 
 -----------------------------------------------------------------------------------
@@ -70,15 +82,31 @@ instance Monad (Reasoner calcType atomType) where
 
 
 -- | Run a computation with the given mass assignment.
+runReasoner :: Reasoner calcType atomType a
+               -> MassAssignment atomType
+               -> a
 runReasoner = unR
+
 
 -- | Helper function: access the mass underneath the computation.
 getMass :: Reasoner calcType atomType (MassAssignment atomType)
 getMass = Reasoner $ \mass -> mass
 
+
 -- | Get the mass of an event, or zero if the event is not in the mass assignment.
-massOf :: Ord atomType => [atomType] -> Reasoner calcType atomType Rational
+massOf :: Ord atomType
+          => [atomType] -> Reasoner calcType atomType Rational
 massOf event = fromMaybe 0 . M.lookup event . unMass <$> getMass
+
+
+-----------------------------------------------------------------------------------
+-- | Opinions defined across calculus types.
+-----------------------------------------------------------------------------------
+
+
+class Calculus calc where
+  data Opinion calc
+  (<>) :: Opinion calc -> Opinion calc -> Opinion calc
 
 
 -----------------------------------------------------------------------------------
@@ -89,6 +117,10 @@ massOf event = fromMaybe 0 . M.lookup event . unMass <$> getMass
 data Atoms = Red | Blue deriving (Show, Eq, Ord)
 data SL = SL
 
+instance Calculus SL where
+  data Opinion SL = SLOpinion
+  op1 <> op2 = undefined
+
 type MyReasoner a = Reasoner SL Atoms a
 
 mass = makeMassAssignment [ ([Red], 1%4)
@@ -96,7 +128,9 @@ mass = makeMassAssignment [ ([Red], 1%4)
                           , ([Red, Blue], 1%2)
                           ]
 
+--runTest :: Reasoner SL Atoms b -> b
 runTest = flip runReasoner mass
+
 
 -- Some examples of applicative style.
 
@@ -105,6 +139,7 @@ test1 = runTest $ map fst . M.toList . unMass <$> getMass
 
 -- | Add the mass of [Red] to the mass of [Blue]
 test2 = runTest $ (+) <$> massOf [Red] <*> massOf [Blue]
+
 
 -- Some examples of monadic style.
 
