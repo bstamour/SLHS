@@ -9,33 +9,40 @@
 
 \section{The problem addressed}
 
-% Kind of ugly - reword this.
 \par
-The problem we pose to address in the thesis research is that there exist various
-systems for reasoning with uncertainty. Two popular systems are the
-Dempster-Shafer theory, and Subjective Logic. For researchers interested in modelling
-situations with such systems, it can be burdensome to compare outcomes for the same
-situations across different systems because, as far as we currently know, there do
-not exist any workbenches designed to support multiple reasoning systems at the same
-time.
+The main problem that we wish to address is that aside from the Java demos provided
+by Josang, there does not appear to be any off-the-shelf framework for experimenting
+with, and embedding subjective logic into applications. Software that requires a form
+of artifical reasoning and wish to utilize subjective logic appear to be doomed to
+rewrite the core operators by hand, which can lead to buggy, slow software.
 
 \section{Our approach}
 
-% TODO: Code snippets go in here.
+\par
+We propose to develop a framework for subjective logic that
+
+\begin{itemize}
+	\item Can be utilized as a standalone workbench, much like a Read-eval-print loop such as various lisps.
+	\item Can be embedded into larger applications which require artificial reasoning.
+	\item Is easily generalizeable to support more kinds of probablistic logics (e.g. Dempster-shafer theory).
+	\item Is efficient.
+\end{itemize}
 
 \par
-The approach we have taken is to develop an artificial reasoning platform that is
-parameterized not only on the frame of discernment, but also the underlying
-reasoning system. We are developing the platform using the Haskell programming
-language, which allows us to leverage the strong type system in order to aide us
-in determining the correctness of our platform.
+On item 3 above: we plan to utilize monads from Category Theory as the functional abstraction
+to support such generality. As for efficiency, many of the core operators in Subjective Logic
+are naively exponential in terms of the size of the frame of discernment. We plan on investigating
+kinds of memoization and dynamic programming in order to curtail some of the computations.
 
 \par
-Our system relies extensively on monads from Category Theory to represent computations
-within the reasoning platform. Monads have been used in computation for some time now,
-and they are somewhat of a design pattern for pure functional programming.
+Our implementation will be done using the Haskell programming language. Haskell is a pure functional
+language with non-strict semantics as the default evaluation method. Furthermore we will provide a
+binding to the C programming langauge, which will allow our framework to be utilized by programs
+written in C, C++, Python, etc. Any language that can call C subroutines will be able to take
+advantage of our proposed framework.
 
 \section{Justification for our approach}
+
 
 \section{Expected outcomes}
 
