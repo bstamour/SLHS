@@ -1,6 +1,6 @@
 \documentclass[a4paper]{article}
 
-\title{A Monadic Framework to Facilitate the Construction of Uncertain Reasoning Systems}
+\title{A Monadic Framework for Constructing Uncertain Reasoning Systems}
 \author{Bryan St. Amour}
 
 \begin{document}
@@ -24,22 +24,71 @@ We propose to develop a framework for subjective logic that
 \begin{itemize}
 	\item Can be utilized as a standalone workbench, much like a Read-eval-print loop such as various lisps.
 	\item Can be embedded into larger applications which require artificial reasoning.
-	\item Is easily generalizeable to support more kinds of probablistic logics (e.g. Dempster-shafer theory).
+	\item Is easily extendable to support more kinds of probablistic logics (e.g. Dempster-shafer theory).
 	\item Is efficient.
 \end{itemize}
 
 \par
-On item 3 above: we plan to utilize monads from Category Theory as the functional abstraction
-to support such generality. As for efficiency, many of the core operators in Subjective Logic
-are naively exponential in terms of the size of the frame of discernment. We plan on investigating
-kinds of memoization and dynamic programming in order to curtail some of the computations.
+We address the above items in the proceeding sections.
+Our language of implementation is to be the pure functional programming language Haskell, as it's purity
+and non-strict semantics offer various advantages over contemporary imperative languages.
+
+\subsection{A Standalone Workbench}
 
 \par
-Our implementation will be done using the Haskell programming language. Haskell is a pure functional
-language with non-strict semantics as the default evaluation method. Furthermore we will provide a
-binding to the C programming langauge, which will allow our framework to be utilized by programs
-written in C, C++, Python, etc. Any language that can call C subroutines will be able to take
-advantage of our proposed framework.
+We plan to leverage the GHC compiler's read-eval-print loop in order to create an easy-to-use environment
+for which users can model and explore situations that require uncertain reasoning. Assuming a UNIX-like
+environment, a typical session might look like the following:
+
+\begin{itemize}
+	\item $> \mbox{ghci}$
+	\item $> \mbox{import SL}$
+	\item $> \mbox{data Atoms} = \mbox{Red} | \mbox{Green} | \mbox{Blue}$
+	\item $> \mbox{let mass = fromList} [ ([Red], 1/4), ([Green], 1/4), ([Green, Blue], 1/3) ]$
+	\item $> \mbox{expectation} [Blue]$
+	\item $\mbox{Some value here}$
+\end{itemize}
+
+\par
+The workbench will allow the users to experiment with the full range of Subjective Logic operators in
+an incremental manner.
+
+
+\subsection{An embeddable reasoning engine}
+
+\par
+Our framework will comprise of a set of modules that can be imported not only from GHC's REPL, as seen
+in the previous section, but also from arbitrary Haskell programs. This allows users to construct
+real-world applications that utilize our framework. 
+
+\par
+Furthermore we expect to construct a foreign interface to the C programming language. This will allow
+for users to interface with our framework from any language that supports calling arbitrary C functions,
+including (but not exhaustive)
+
+\begin{itemize}
+	\item C++
+	\item Python
+	\item Ruby
+\end{itemize}
+
+
+
+
+\subsection{Ease of extension}
+
+\par
+We plan to utilize monads from Category Theory as the functional abstraction
+to support such generality.
+
+\subsection{Efficiency}
+
+\par
+The naive descriptions of the operators in Subjective Logic have exponential runtime with respect
+to the size of the frame of discernment because the most general form of opinion - the hyper
+opinion - is computed over the powerset of the frame. We propose exploring the use of memoization
+in order to curtain this runtime by re-using pre-calculated subexpressions.
+
 
 \section{Justification for our approach}
 
