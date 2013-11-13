@@ -16,6 +16,13 @@ with, and embedding subjective logic into applications. Software that requires a
 of artifical reasoning and wish to utilize subjective logic appear to be doomed to
 rewrite the core operators by hand, which can lead to buggy, slow software.
 
+\section{previous work on the problem}
+
+\par
+At the time of this writing, we are unaware of any other frameworks that have been
+developed for users wishing to leverage the power of Subjective Logic. However we
+are continuing to search for similar work.
+
 \section{Our approach}
 
 \par
@@ -36,7 +43,7 @@ and non-strict semantics offer various advantages over contemporary imperative l
 \subsection{A Standalone Workbench}
 
 \par
-We plan to leverage the GHC compiler's read-eval-print loop in order to create an easy-to-use environment
+We plan to leverage the GHC compiler's read-eval-print loop (REPL) in order to create an easy-to-use environment
 for which users can model and explore situations that require uncertain reasoning. Assuming a UNIX-like
 environment, a typical session might look like the following:
 
@@ -53,7 +60,6 @@ environment, a typical session might look like the following:
 The workbench will allow the users to experiment with the full range of Subjective Logic operators in
 an incremental manner.
 
-
 \subsection{An embeddable reasoning engine}
 
 \par
@@ -62,24 +68,19 @@ in the previous section, but also from arbitrary Haskell programs. This allows u
 real-world applications that utilize our framework. 
 
 \par
-Furthermore we expect to construct a foreign interface to the C programming language. This will allow
-for users to interface with our framework from any language that supports calling arbitrary C functions,
-including (but not exhaustive)
-
-\begin{itemize}
-	\item C++
-	\item Python
-	\item Ruby
-\end{itemize}
-
-
-
+Furthermore we propose to construct a foreign interface to the C programming language. This will allow
+for users to interface with our framework from any language that supports calling arbitrary C functions.
+Examples of such languages are C++, Python, and Ruby.
 
 \subsection{Ease of extension}
 
 \par
-We plan to utilize monads from Category Theory as the functional abstraction
-to support such generality.
+We plan to utilize monads from Category Theory as an abstraction mechanism to support
+extension. 
+
+\par
+TODO: Provide more detail here regarding the "Reasoner" type, how it is a monad, and
+what kinds of benefits that brings.
 
 \subsection{Efficiency}
 
@@ -88,13 +89,27 @@ The naive descriptions of the operators in Subjective Logic have exponential run
 to the size of the frame of discernment because the most general form of opinion - the hyper
 opinion - is computed over the powerset of the frame. We propose exploring the use of memoization
 in order to curtain this runtime by re-using pre-calculated subexpressions.
-
-
-
+We also expect that Haskell's non-strict evaluation strategy will also lend a hand to
+increasing the efficiency of the operators, as any unused values will never be computed.
 
 \section{Justification for our approach}
 
+\par
+TODO
 
+\section{Verifying our work}
+
+\par
+We plan to verify the extensibility of our framework by implementing not only the
+operators of Subjective Logic, but also functions for working with Dempster-Shafer
+theory. We strongly believe that this will suitably demonstrate that our framework can
+easily be extended to support various forms of probablistic reasoning.
+
+\par
+To verify our efficiency claims, we propose to perform a thourough complexity analysis
+of the implementations of the Subjective Logic operators. We will compare these results
+with the complexities of the naive implementations that do not leverage memoization in
+order to solidify our claim. Furthermore we will perform proofs of termination.
 
 
 
