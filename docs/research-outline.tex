@@ -78,9 +78,23 @@ Examples of such languages are C++, Python, and Ruby.
 We plan to utilize monads from Category Theory as an abstraction mechanism to support
 extension. 
 
+% TODO: The following is a bit murky. Clean it up.
+
 \par
-TODO: Provide more detail here regarding the "Reasoner" type, how it is a monad, and
-what kinds of benefits that brings.
+In more detail, we propose to develop a polymorphic type Reasoner t c a, with t being a sum-type
+representing the atoms that comprise the frame of discernment, c being a type of probablistic logic
+calculus (e.g. Subjective Logic), and a being the result of a computation within this type. If we
+consider all legal types in a Haskell program, these paired with the set of all unary functions over
+these types form a category. Call such a category Hask. Now, consider the sub-category comprised of
+all types Reasoner Atoms SubjLogic a, where Atoms and SubjLogic are fixed, and a is free to reign over
+any type in Hask. Clearly this category is a sub-category of Hask, and we can prove that there exists
+a monad over this sub-category, representing every closed computation within it.
+
+\par
+Therefore given an arbitrary type Atoms representing all possible items in the frame of discernment,
+and a type Calc -an arbitrary probablistic logic calculus, the type Reasoner Atoms Calc a contains a
+unique monad, and we can therefore take advantage of the many monadic operators defined in Haskell
+to represent arbitrary computations within any defined probablistic logic.
 
 \subsection{Efficiency}
 
@@ -112,6 +126,15 @@ with the complexities of the naive implementations that do not leverage memoizat
 order to solidify our claim. Furthermore we will perform proofs of termination.
 
 \section{Expected outcomes}
+
+\par
+We expect to have achieved the first extensible framework for experimenting with
+Subjective Logic that also supports the ability to be embedded into larger more complex
+applications. Furthermore we expect to have delivered the first thourough complexity
+analysis of the Subjective Logic operators. We hope that through this thesis we will be
+able to deliver an efficient, modular framework with which further research can be
+based upon.
+
 
 \section{Further research}
 
