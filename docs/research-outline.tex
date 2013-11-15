@@ -76,25 +76,29 @@ Examples of such languages are C++, Python, and Ruby.
 
 \par
 We plan to utilize monads from Category Theory as an abstraction mechanism to support
-extension. 
-
-% TODO: The following is a bit murky. Clean it up.
-
-\par
-In more detail, we propose to develop a polymorphic type Reasoner t c a, with t being a sum-type
-representing the atoms that comprise the frame of discernment, c being a type of probablistic logic
-calculus (e.g. Subjective Logic), and a being the result of a computation within this type. If we
-consider all legal types in a Haskell program, these paired with the set of all unary functions over
-these types form a category. Call such a category Hask. Now, consider the sub-category comprised of
-all types Reasoner Atoms SubjLogic a, where Atoms and SubjLogic are fixed, and a is free to reign over
-any type in Hask. Clearly this category is a sub-category of Hask, and we can prove that there exists
-a monad over this sub-category, representing every closed computation within it.
+extension. Monads have gained popularity as a method of representing effectful computation
+in functional programming languages. In our case, we will be utilizing a Reasoner monad that,
+when given a sum-type representing the atoms of our frame of discernment, and a type that
+represents the underlying probablistic logic system (e.g. Subjective Logic), behaves similar to
+that of a Reader monad, which allows for computations encapsulated within to access the
+belief mass assignment that underpins the more complex opinions built on top of our framework.
 
 \par
-Therefore given an arbitrary type Atoms representing all possible items in the frame of discernment,
-and a type Calc -an arbitrary probablistic logic calculus, the type Reasoner Atoms Calc a contains a
-unique monad, and we can therefore take advantage of the many monadic operators defined in Haskell
-to represent arbitrary computations within any defined probablistic logic.
+In more detail, we have a polymorphic type Reasoner a l c, where a is the set of atoms, and l is
+the probablistic logic. By plugging those types, we obtain a new type that is parameterized over
+c, the computation result. For example, if we have the following types
+
+$$\mbox{data Balls} = Red | Green | Blue$$
+$$\mbox{data SLogic -- implementation details omitted}$$
+$$\mbox{type SLReasoner c = Reasoner Balls SLogic c}$$
+
+\par
+And thus SLReasoner is a new monad that can be combined using the standard monad operators bind, join,
+etc. Therefore extending our framework to support new probablistic logics simply requires the user
+to define a new type that supports the minimum required operators for combining opinions. That type
+can then be slotted into our Reasoner type.
+
+
 
 \subsection{Efficiency}
 
