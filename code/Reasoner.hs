@@ -132,10 +132,23 @@ mass = makeMassAssignment [ ([Red], 1%4)
 runTest = flip runReasoner mass
 
 
+
+runSL :: Reasoner SL atoms b -> MassAssignment atoms -> b
+runSL = runReasoner
+
 -- Some examples of applicative style.
 
 -- | Get a list of all events in the mass assignment.
-test1 = runTest $ map fst . M.toList . unMass <$> getMass
+test0 = runTest $ map fst . M.toList . unMass <$> getMass
+
+data FL = FL
+
+-- Forced to execute in the SL monad.
+test1 = flip runSL mass f
+  where
+    f :: Reasoner SL Atoms [[Atoms]] 
+--    f :: Reasoner FL Atoms [[Atoms]] 
+    f = map fst . M.toList . unMass <$> getMass
 
 -- | Add the mass of [Red] to the mass of [Blue]
 test2 = runTest $ (+) <$> massOf [Red] <*> massOf [Blue]
