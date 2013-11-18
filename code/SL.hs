@@ -6,6 +6,9 @@ module SL
        , Opinion(..)
        , runSL
        , fusion
+       , discount
+       , (<&&>)
+       , (<||>)
        ) where
 
 
@@ -28,3 +31,14 @@ runSL = runReasoner
 fusion :: Opinion SL -> Opinion SL -> Opinion SL
 fusion = undefined
 
+
+discount :: Opinion SL -> Opinion SL -> Opinion SL
+discount = undefined
+
+
+(<&&>) :: Opinion SL -> Opinion SL -> Opinion SL
+op1 <&&> op2 = undefined
+
+
+(<||>) :: Opinion SL -> Opinion SL -> Opinion SL
+op1 <||> op2 = undefined
