@@ -1,5 +1,35 @@
 \documentclass[a4paper]{article}
 
+% Possible title: Constructing uncertain reasoning systems using applicative functors
+
+% Problem addresssed: stays the same.
+
+% Previous work: stays the same.
+
+% Our idea: implement the set of SL operators on top of a framework constructed from
+% applicative functors.
+
+% Justification for the approach:
+%  1. Applicative functors are more general than monads, more powerful than functors.
+%  2. Allow for cleaner composition: we can construct more probablistic logics than simply SL.
+%     and merge/work with them all without breaking a sweat.
+%  3. Applicative functors are becomming popular in the pure functional world for controlling
+%     computation when the full power of monads is not required.
+
+% Verification of our work:
+%  1. Prove the required applicative functor laws of our types.
+%  2. Prove termination of our operators.
+%  3. Perform complexity analysis of our operators.
+
+% Expected outcomes:
+%  1. A new embeddable library for uncertain reasoning that can be utilized via familiar
+%     applicative functor syntax.
+%  2. Room for extending the library to support more than SL (think DS theory, fuzzy logic, etc.)
+
+% Future work:
+%  1. Hope to see our library be put to use in the near future. Talk about the SL+concepts project,
+%     the SL web workbench, USMS, etc.
+
 \title{A modular framework for aiding in the construction of uncertain reasoning systems}
 \author{Bryan St. Amour}
 
