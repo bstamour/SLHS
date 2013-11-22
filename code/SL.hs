@@ -25,7 +25,7 @@ instance Logic SL where
 
 
 runSL :: Reasoner SL atoms b -> MassAssignment atoms -> b
-runSL = runReasoner
+runSL = run
 
 
 fusion :: Opinion SL -> Opinion SL -> Opinion SL

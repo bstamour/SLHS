@@ -22,7 +22,7 @@ mass = makeMassAssignment [ ([Red],       1%4)
                           ]
 
 
-runTest = flip runReasoner mass
+runTest r = flip run mass r
 
 
 test0 = runTest $ map fst . M.toList . unMass <$> getMass
