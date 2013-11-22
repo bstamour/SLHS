@@ -28,10 +28,10 @@ runTest r = flip run mass r
 test0 = runTest $ map fst . M.toList . unMass <$> getMass
 
 
-test1 = flip runSL mass f
-  where
-    f :: Reasoner SL Atoms [[Atoms]] 
-    f = map fst . M.toList . unMass <$> getMass
+test1 = f <~~ mass
+
+f :: Reasoner SL a [[a]]
+f = map fst . M.toList . unMass <$> getMass
 
 
 test2 = runTest $ (+) <$> massOf [Red] <*> massOf [Blue]

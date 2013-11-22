@@ -56,14 +56,6 @@ instance Monad (Reasoner calcType atomType) where
                              in unR y m
 
 
-{-
-runReasoner :: Reasoner calcType atomType a
-               -> MassAssignment atomType
-               -> a
-runReasoner = unR
--}
-
-
 getMass :: Reasoner calcType atomType (MassAssignment atomType)
 getMass = Reasoner $ \mass -> mass
 
@@ -75,6 +67,23 @@ massOf event = fromMaybe 0 . M.lookup event . unMass <$> getMass
 
 -----------------------------------------------------------------------------------
 -- Allow for Reasoners to be composed easily.
+--
+-- The <~~ (thread) operator is for threading a mass assignment through the
+-- equations. For example:
+--
+--     (opinion [Red, Blue] <&&> opinion [Blue, Green]) <~~ beliefMass
+--
+-- will compute the resulting opinion with respect to `beliefMass`. If you have
+-- an operator that requires multiple frames of discernment, then you can feed
+-- mass for each frame through via chaining, ala:
+--
+--     (opinion [Red] <@> opinion [Big]) <~~ colorMass <~~ sizeMass
+--
+-- (assuming the operator <@> has type 
+--
+--     :: Reasoner SL a1 (Opinion SL)
+--     -> Reasoner SL a2 (Opinion SL)
+--     -> Combine (Reasoner SL a1) (Reasoner SL a2) (Opinion SL)
 -----------------------------------------------------------------------------------
 
 
