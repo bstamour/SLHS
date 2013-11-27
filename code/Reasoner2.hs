@@ -48,6 +48,9 @@ data (r1 :*: r2) t =
   }
 
 
+infixr :*:
+
+
 data ProductMass m1 m2 = ProductMass { mass1 :: m1, mass2 :: m2 }
 
 
