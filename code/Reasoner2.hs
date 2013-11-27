@@ -1,6 +1,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE TypeOperators #-}
 
 
 module Reasoner2 where
@@ -41,7 +42,7 @@ getMass :: Reasoner l a (MassAssignment a)
 getMass = Reasoner id
 
 
-data ProductReasoner r1 r2 t =
+data (r1 :*: r2) t =
   ProductReasoner
   { unProductReasoner :: ProductMass (MassType r1) (MassType r2) -> t
   }
@@ -50,11 +51,11 @@ data ProductReasoner r1 r2 t =
 data ProductMass m1 m2 = ProductMass { mass1 :: m1, mass2 :: m2 }
 
 
-instance Functor (ProductReasoner r1 r2) where
+instance Functor (r1 :*: r2) where
   fmap f prx = ProductReasoner $ \m -> f (unProductReasoner prx m)
 
 
-instance Applicative (ProductReasoner r1 r2) where
+instance Applicative (r1 :*: r2) where
   pure x = ProductReasoner $ \_ -> x
 
   prf <*> prx = ProductReasoner $ \m -> let f = unProductReasoner prf m
@@ -62,19 +63,19 @@ instance Applicative (ProductReasoner r1 r2) where
                                         in f x
 
 
-type instance MassType (ProductReasoner r1 r2) =
+type instance MassType (r1 :*: r2) =
   ProductMass (MassType r1) (MassType r2)
 
 
-getProductMass :: ProductReasoner r1 r2 (ProductMass (MassType r1) (MassType r2))
+getProductMass :: (r1 :*: r2) (ProductMass (MassType r1) (MassType r2))
 getProductMass = ProductReasoner id
 
 
-getFirstMass :: ProductReasoner r1 r2 (MassType r1)
+getFirstMass :: (r1 :*: r2) (MassType r1)
 getFirstMass = mass1 <$> getProductMass
 
 
-getSecondMass :: ProductReasoner r1 r2 (MassType r2)
+getSecondMass :: (r1 :*: r2) (MassType r2)
 getSecondMass = mass2 <$> getProductMass
 
 
@@ -93,8 +94,8 @@ instance RunnableReasoner (Compose (Reasoner l a) r2) t where
   run = unReasoner . getCompose
 
 
-instance RunnableReasoner (ProductReasoner r1 r2) t where
-  type ResultType (ProductReasoner r1 r2) t = t
+instance RunnableReasoner (r1 :*: r2) t where
+  type ResultType ( r1 :*: r2) t = t
   run = unProductReasoner
 
 
@@ -116,7 +117,7 @@ data Sizes = Small | Large
 
 type SLColorReasoner = Reasoner SL Colors
 type SLSizeReasoner = Reasoner SL Sizes
-type SLColorSizeReasoner t = ProductReasoner SLColorReasoner SLSizeReasoner t
+type SLColorSizeReasoner  = SLColorReasoner :*: SLSizeReasoner
 
 
 data Opinion = Opinion
