@@ -1,4 +1,6 @@
-{-# LANGUAGE TypeFamilies, FlexibleInstances, MultiParamTypeClasses #-}
+{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
 
 
 module Reasoner2 where
@@ -18,7 +20,7 @@ data MassAssignment a = MassAssignment a
 
 
 instance Functor (Reasoner l a) where
-  fmap f rx = Reasoner $ \m -> let x = unReasoner rx m in f x
+  fmap f rx = Reasoner $ \m -> f (unReasoner rx m)
 
 
 instance Applicative (Reasoner l a) where
@@ -30,12 +32,13 @@ instance Applicative (Reasoner l a) where
 
 
 type family MassType (r :: * -> *)
+
 type instance MassType (Reasoner l a) = MassAssignment a
 type instance MassType (Compose (Reasoner l a) r2) = MassAssignment a
 
 
 getMass :: Reasoner l a (MassAssignment a)
-getMass = Reasoner $ \m -> m
+getMass = Reasoner id
 
 
 data ProductReasoner r1 r2 t =
@@ -44,7 +47,7 @@ data ProductReasoner r1 r2 t =
   }
 
 
-data ProductMass m1 m2 = ProductMass m1 m2
+data ProductMass m1 m2 = ProductMass { mass1 :: m1, mass2 :: m2 }
 
 
 instance Functor (ProductReasoner r1 r2) where
@@ -64,15 +67,15 @@ type instance MassType (ProductReasoner r1 r2) =
 
 
 getProductMass :: ProductReasoner r1 r2 (ProductMass (MassType r1) (MassType r2))
-getProductMass = ProductReasoner $ \m -> m
+getProductMass = ProductReasoner id
 
 
 getFirstMass :: ProductReasoner r1 r2 (MassType r1)
-getFirstMass = ProductReasoner $ \(ProductMass m _) -> m
+getFirstMass = mass1 <$> getProductMass
 
 
 getSecondMass :: ProductReasoner r1 r2 (MassType r2)
-getSecondMass = ProductReasoner $ \(ProductMass _ m) -> m
+getSecondMass = mass2 <$> getProductMass
 
 
 class RunnableReasoner r t where
@@ -99,6 +102,10 @@ instance RunnableReasoner (ProductReasoner r1 r2) t where
 (<~~) = run
 
 
+(<~>) :: m1 -> m2 -> ProductMass m1 m2
+(<~>) = ProductMass
+
+
 -------------------------------------------------------------------------------------
 
 
@@ -121,3 +128,26 @@ combine :: SLColorReasoner Opinion
 combine op1 op2 = let x = run <$> pure op1 <*> getFirstMass
                       y = run <$> pure op2 <*> getSecondMass
                   in const <$> x <*> y
+
+
+type SLOperator a = Reasoner SL a Opinion
+                    -> Reasoner SL a Opinion
+                    -> Reasoner SL a Opinion
+
+
+makeOpinion :: Reasoner SL a Opinion
+makeOpinion = pure Opinion
+
+
+(<&&>) :: SLOperator a
+op1 <&&> op2 = op2
+
+
+(<||>) :: SLOperator a
+op1 <||> op2 = op1
+
+
+expr :: Opinion
+expr = (makeOpinion <||> makeOpinion) `combine` (makeOpinion <&&> makeOpinion)
+       <~~
+       (MassAssignment Red <~> MassAssignment Small)

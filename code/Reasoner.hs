@@ -31,6 +31,11 @@ makeMassAssignment :: Ord atomType => [([atomType], Rational)]
 makeMassAssignment = MassAssignment . M.fromList
 
 
+-----------------------------------------------------------------------------------
+-- The code Reasoner type.
+-----------------------------------------------------------------------------------
+
+
 data Reasoner calcType atomType a =
   Reasoner
   { unR :: MassAssignment atomType -> a
@@ -79,7 +84,7 @@ massOf event = fromMaybe 0 . M.lookup event . unMass <$> getMass
 --
 --     (opinion [Red] <@> opinion [Big]) <~~ colorMass <~~ sizeMass
 --
--- (assuming the operator <@> has type 
+-- (assuming the operator <@> has type
 --
 --     :: Reasoner SL a1 (Opinion SL)
 --     -> Reasoner SL a2 (Opinion SL)
@@ -106,11 +111,13 @@ instance (RunReasoner (r2 t)) => RunReasoner (Compose (Reasoner c1 a1) r2 t) whe
 
 
 (<~~) :: RunReasoner r => r -> MassType r -> ResultType r
-(<~~) = run 
+(<~~) = run
+
+
+-----------------------------------------------------------------------------------
+-- test shit.
+-----------------------------------------------------------------------------------
 
 
 
-
-
-
-
+--
