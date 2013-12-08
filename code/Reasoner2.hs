@@ -4,6 +4,23 @@
 {-# LANGUAGE TypeOperators #-}
 
 
+{- This module contains the core reasoner code. A reasoner is a type
+
+       Reasoner l h a t
+
+   where
+       l is the underlying logic that the reasoner uses in its computations.
+       h is the type representing the belief holders.
+       a is the type representing the atoms of the frame of discernment.
+       t is the result of the computation.
+
+   The reason why the holders and the atoms are baked into the type is to
+   restrict what users can do with reasoners. Only reasoners of the same
+   type can be combined, which means that users cannot stray out of one
+   universe of discourse and into another.
+-}
+
+
 module Reasoner2 where
 
 
@@ -30,9 +47,12 @@ data MassAssignment h a =
   }
 
 
-mkMass :: [(h, [([a], Rational)])] -> MassAssignment h a
-mkMass _ = MassAssignment $ M.empty
+-- | Create a mass assignment from a list of pairs.
+mkMass :: (Ord h, Ord a) => [(h, [([a], Rational)])] -> MassAssignment h a
+mkMass masses = MassAssignment $ M.map M.fromList $ M.fromList masses
 
+
+-- Functor and Applicative instances for the Reasoner type.
 
 instance Functor (Reasoner l h a) where
   fmap f rx = Reasoner $ \m -> f (unReasoner rx m)
@@ -56,6 +76,7 @@ type instance MassType (Reasoner l h a) = MassAssignment h a
 type instance MassType (Compose (Reasoner l h a) r2) = MassAssignment h a
 
 
+-- | Access the mass within a reasoner.
 getMass :: Reasoner l h a (MassAssignment h a)
 getMass = Reasoner id
 
@@ -78,12 +99,17 @@ data (r1 :*: r2) t =
 infixr :*:
 
 
-data ProductMass m1 m2 =
-  ProductMass
-  { mass1 :: m1
-  , mass2 :: m2
-  }
+-- | A cartesian product of mass assignments. Just stores the two masses
+--   side-by-side for now.
+data ProductMass m1 m2 = ProductMass { mass1 :: m1, mass2 :: m2 }
 
+
+-- | A simple helper operator for multiplying mass assignments.
+(<~>) :: m1 -> m2 -> ProductMass m1 m2
+(<~>) = ProductMass
+
+
+-- Functor and Applicative instances for the ProductReasoner.
 
 instance Functor (r1 :*: r2) where
   fmap f prx = ProductReasoner $ \m -> f (unProductReasoner prx m)
@@ -99,6 +125,8 @@ instance Applicative (r1 :*: r2) where
 
 type instance MassType (r1 :*: r2) = ProductMass (MassType r1) (MassType r2)
 
+
+-- Access the masses of the ProductReasoner.
 
 getProductMass :: (r1 :*: r2) (ProductMass (MassType r1) (MassType r2))
 getProductMass = ProductReasoner id
@@ -138,12 +166,10 @@ instance RunnableReasoner (r1 :*: r2) t where
 (<~~) = run
 
 
--- | A simple helper operator for multiplying mass assignments.
-(<~>) :: m1 -> m2 -> ProductMass m1 m2
-(<~>) = ProductMass
-
-
 -------------------------------------------------------------------------------------
+
+
+{- This needs to be moved into a different module. -}
 
 
 class Logic l where
@@ -155,10 +181,14 @@ class Logic l where
 
 -------------------------------------------------------------------------------------
 
--- Here we flesh out the subjective logic operators. We make SL an instance of
--- class Logic, with it's associated opinion (the hyper opinion) and for combination
--- we choose cumulative fusion, though any combination operator should do the
--- trick just as well.
+
+{- Here we flesh out the subjective logic operators. We make SL an instance of
+   class Logic, with it's associated opinion (the hyper opinion) and for combination
+   we choose cumulative fusion, though any combination operator should do the
+   trick just as well.
+
+   This needs to be moved to a different module.
+-}
 
 
 data SL = SL
@@ -185,16 +215,18 @@ mkHyper = undefined
 
 -------------------------------------------------------------------------------------
 
--- The following code is an example of how one can program using the SL Reasoner.
--- There are two frames of discernment: colors, and sizes. We can define more
--- complicated reasoners by multiplying the reasoners together. We can create
--- functions to combine results from the separate reasoners into the larger one,
--- and we can even do some programming with opinions.
+
+{- The following code is an example of how one can program using the SL Reasoner.
+   There are two frames of discernment: colors, and sizes. We can define more
+   complicated reasoners by multiplying the reasoners together. We can create
+   functions to combine results from the separate reasoners into the larger one,
+   and we can even do some programming with opinions.
+-}
 
 
-data Colors = Red | Blue | Yellow
-data Sizes = Small | Large
-data Holders = Holders
+data Colors  = Red   | Blue | Yellow deriving (Eq, Ord)
+data Sizes   = Small | Large         deriving (Eq, Ord)
+data Holders = Bryan | Bob           deriving (Eq, Ord)
 
 
 type SLColorReasoner = Reasoner SL Holders Colors
