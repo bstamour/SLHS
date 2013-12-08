@@ -103,7 +103,7 @@ type defined as
 
 \begin{code}
   data Reasoner logic holders atoms a = Reasoner {
-    unR :: MassAssignment holders atoms -> a 
+    unR :: MassAssignment holders atoms -> a
   }
 \end{code}
 
@@ -136,7 +136,7 @@ Reasoner.
     fmap f r = Reasoner $ \mass -> f (unR r mass)
 
   instance Monad (Reasoner logic holders atoms) where
-    return x = Reasoner $ \_ -> x 
+    return x = Reasoner $ \_ -> x
 
     ma >>= f = Reasoner $ \mass -> let a  = unR ma mass
                                        mb = f a
@@ -151,12 +151,12 @@ Reasoner.
 In short, given an underlying logic system, a set of belief holders, and a set of
 atomic events, the Reasoner data type creates a custom Functor, Monad, and Applicative.
 This allows us the construct programs for evaluating logical expressions while giving no
-consideration to the under-the-hood details of how the expression is implemented. In order
+consideration to the underlying details of how the expression is implemented. In order
 to evaluate such expressions we provide a helper function
 
 \begin{code}
-  runReasoner :: Reasoner logic holders atoms a 
-              -> MassAssignment holders atoms 
+  runReasoner :: Reasoner logic holders atoms a
+              -> MassAssignment holders atoms
               -> a
   runReasoner r mass = unR r mass
 \end{code}
