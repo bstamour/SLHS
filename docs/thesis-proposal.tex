@@ -1,0 +1,139 @@
+\documentclass{beamer}
+
+\mode<presentation>
+{ \usetheme{boxes} }
+
+\title{A Type-safe Framework for Uncertain Reasoning with Subjective Logic}
+
+\author{Bryan St. Amour}
+
+%\AtBeginSection[]
+%{
+%  \begin{frame}<beamer>
+%  \frametitle{Outline}
+%  \tableofcontents[currentsection]
+%  \end{frame}
+%}
+
+\begin{document}
+
+
+\begin{frame}
+\titlepage
+\end{frame}
+
+\begin{frame}
+\tableofcontents
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{Motivation}
+
+\begin{frame}
+\frametitle{Motivation of this Thesis - Decision Support}
+
+\par
+Decision support systems help professionals make better sense of their data.
+
+\pause
+
+\par
+Require powerful reasoning systems in order to understand the data.
+
+\pause
+
+\begin{itemize}
+  \item Deduction
+  \item Induction
+  \item Abduction
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Motivation - Lack of Library Support}
+
+\par
+Subjective Logic is a probablistic logic for handling uncertainty.
+
+\par
+Similar to Dempster-Shafer Theory, but handles many cases where DS-Theory falls flat.
+
+\pause
+
+\par
+Unfortunately, no libraries/tools for SL exist.
+
+\par
+There are demos, however.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{Subjective Logic}
+
+
+\begin{frame}
+\frametitle{Subjective Logic Overview}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{Category Theory and Haskell}
+
+\begin{frame}
+\frametitle{An Overview of Category Theory and Haskell}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{A Subjective Logic Framework}
+
+\begin{frame}
+\frametitle{Our Proposal - A Subjective Logic Framework}
+
+\par
+We propose to develop a framework for working with Subjective Logic that...
+
+\pause
+
+\begin{itemize}
+  \item is type-safe: catches problems at compile-time
+  \item can be used as a command-line workbench
+  \item can be embedded into larger reasoning applications
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Type-safety}
+
+\par
+Subjective Opinions over different frames cannot be combined (unless an operator
+allows it.)
+
+\pause
+
+$$ \omega_{ \{Red, blue\} }^{A} \land \omega_{ \{ Small \} }^{A} $$
+
+\pause
+
+\par
+Not allowed by the type system! (Different frames of discernment)
+
+\end{frame}
+
+\begin{frame}
+\frametitle{A Command Line Workbench}
+
+% TODO: Add code fragment here.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\end{document}

@@ -229,8 +229,8 @@ data Sizes   = Small | Large         deriving (Eq, Ord)
 data Holders = Bryan | Bob           deriving (Eq, Ord)
 
 
-type SLColorReasoner = Reasoner SL Holders Colors
-type SLSizeReasoner = Reasoner SL Holders Sizes
+type SLColorReasoner     = Reasoner SL Holders Colors
+type SLSizeReasoner      = Reasoner SL Holders Sizes
 type SLColorSizeReasoner = SLColorReasoner :*: SLSizeReasoner
 
 
