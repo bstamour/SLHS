@@ -1,3 +1,5 @@
+{-# LANGUAGE TypeFamilies #-}
+
 
 module Reasoner where
 
@@ -6,7 +8,7 @@ import Control.Applicative
 import qualified Data.Map as M
 
 
-data MassIndex f = Items [f]    -- ^ A subset of the frame f.
+data MassIndex f = Items [f]       -- ^ A subset of the frame f.
                  | AllItems        -- ^ The whole frame.
 
 
@@ -31,3 +33,17 @@ instance Applicative (Environment h f) where
   ef <*> ex = Environment $ \mass -> let f = runEnvironment ef mass
                                          x = runEnvironment ex mass
                                      in f x
+
+
+-- | Some operators are defined to work over multiple frames. Therefore
+--   we need a way to run different types of environments with the same
+--   interface.
+class Runnable r where
+  type MassType r
+  run :: r a -> MassType r -> a
+
+
+instance Runnable (Environment h f) where
+  type MassType (Environment h f) = MassAssignment h f
+
+  run = runEnvironment  
