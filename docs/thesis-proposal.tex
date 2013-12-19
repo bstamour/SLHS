@@ -1,7 +1,7 @@
 \documentclass{beamer}
 
 \mode<presentation>
-{ \usetheme{boxes} }
+{ \usetheme{Antibes} }
 
 \title{A Type-safe Framework for Uncertain Reasoning with Subjective Logic}
 
@@ -17,7 +17,6 @@
 
 \begin{document}
 
-
 \begin{frame}
 \titlepage
 \end{frame}
@@ -28,45 +27,21 @@
 
 %-------------------------------------------------------------------------------
 
-\section{Motivation}
+\section{Introduction}
 
 \begin{frame}
-\frametitle{Motivation of this Thesis - Decision Support}
+\frametitle{Introduction - Decision Support}
 
-\par
-Decision support systems help professionals make better sense of their data.
+Decision support systems are systems that support decision making
+through the use of analytics, modelling, etc \cite{sprague_framework_1980}.
 
-\pause
-
-\par
-Require powerful reasoning systems in order to understand the data.
-
-\pause
+Example application areas include
 
 \begin{itemize}
-  \item Deduction
-  \item Induction
-  \item Abduction
+  \item Clinical \cite{berner2007clinical}
+  \item Business \cite{klein_knowledge-based}
+  \item Survey analysis \cite{kent2010application}
 \end{itemize}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Motivation - Lack of Library Support}
-
-\par
-Subjective Logic is a probablistic logic for handling uncertainty.
-
-\par
-Similar to Dempster-Shafer Theory, but handles many cases where DS-Theory falls flat.
-
-\pause
-
-\par
-Unfortunately, no libraries/tools for SL exist.
-
-\par
-There are demos, however.
 
 \end{frame}
 
@@ -74,63 +49,187 @@ There are demos, however.
 
 \section{Subjective Logic}
 
-
 \begin{frame}
-\frametitle{Subjective Logic Overview}
+\frametitle{Subjective Logic}
 
-\end{frame}
+Subjective Logic is a probablistic logic for uncertain reasoning
+\cite{josang_logic_2001}.
 
-%-------------------------------------------------------------------------------
-
-\section{Category Theory and Haskell}
-
-\begin{frame}
-\frametitle{An Overview of Category Theory and Haskell}
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\section{A Subjective Logic Framework}
-
-\begin{frame}
-\frametitle{Our Proposal - A Subjective Logic Framework}
-
-\par
-We propose to develop a framework for working with Subjective Logic that...
-
-\pause
+Basic object is the subjective opinion, defined over a frame of discernment.
 
 \begin{itemize}
-  \item is type-safe: catches problems at compile-time
-  \item can be used as a command-line workbench
-  \item can be embedded into larger reasoning applications
+  \item Binomial opinions
+  \item Multinomial opinions
+  \item Hyper opinions \cite{josang2012interpretation}
 \end{itemize}
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Type-safety}
+\frametitle{Subj-logic - Frame of Discernment}
 
-\par
-Subjective Opinions over different frames cannot be combined (unless an operator
-allows it.)
+A set of atomic entities
 
-\pause
+$$\Theta = \lbrace Red, Blue, Green, Yellow \rbrace$$
 
-$$ \omega_{ \{Red, blue\} }^{A} \land \omega_{ \{ Small \} }^{A} $$
+Effectively, the universe of discourse.
 
-\pause
-
-\par
-Not allowed by the type system! (Different frames of discernment)
+We define opinions over subsets of $\Theta$.
 
 \end{frame}
 
 \begin{frame}
-\frametitle{A Command Line Workbench}
+\frametitle{Subj-logic - binomial opinions}
 
-% TODO: Add code fragment here.
+Given a binary frame $\Theta = \lbrace x, \lnot x \rbrace$, we can define a
+\emph{binomial opinion} of $x$.
+
+$$\omega_{x}^A = \langle b_x, d_x, u_x, a_x \rangle$$
+
+satisfying $b_x + d_x + u_x = 1$, and $0 \leq a_x \leq 1$.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - binomial opinions}
+
+For example...
+
+$$\Theta = \lbrace Red, \lnot Red \rbrace$$
+
+$$\omega_{Red}^{Bryan} = \langle 0.5, 0.4, 0.1, 0.5 \rangle$$
+
+... maybe I'm colour-blind?
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - multinomial opinions}
+
+For larger frames ($|\Theta| > 2$) we define \emph{multinomial opinions}.
+
+$$ \omega_\Theta^A = \langle \vec{b}, u, \vec{a} \rangle $$
+
+such that
+
+$$u + \sum_{x \in \Theta} \vec{b}(x) = 1$$
+
+and
+
+$$\sum_{x\in \Theta} \vec{a}(x) = 1$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - hyper opinions}
+
+Most general of all subjective opinions. Assigns belief mass to subsets of the
+frame (elements of the reduced powerset.)
+
+Reduced powerset: $R^\Theta = 2^\Theta \backslash \lbrace \emptyset, \Theta \rbrace$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - hyper opinions}
+
+e.g.
+
+$$\Theta = \lbrace Red, Blue, Yellow \rbrace$$
+
+$$\omega = \langle \vec{b}, u, \vec{a} \rangle$$
+$$\vec{b}\left(\lbrace Red, Blue \rbrace \right) = \frac{1}{2}$$
+$$\vec{b}\left(\lbrace Blue, Yellow \rbrace \right) = \frac{1}{4}$$
+$$\vec{b}\left(\lbrace Yellow \rbrace \right) = \frac{1}{8}$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - hyper opinions}
+
+Similar to multinomial opinions, rules apply
+
+$$u + \sum_{x \in R^\Theta} \vec{b}\left(x\right) = 1$$
+
+$$\sum_{x \in R^\Theta} \vec{a}\left(x\right) = 1$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - benefts}
+
+\begin{itemize}
+  \item Wealth of operators for working with beliefs
+     \footnote{\url{http://folk.uio.no/josang/papers/subjective_logic.pdf}}
+  \item Beta, Dirichlet, Hyper-dirichlet interpretations
+  \item Easy to model many situations
+    \cite{josang2008conditional}, \cite{josang2006trust}, \cite{kent2010application}
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Subj-logic - drawbacks}
+
+\begin{itemize}
+  \item No widely available frameworks/toolkits/libraries!
+\end{itemize}
+
+There exists an online demo\footnote{\url{http://folk.uio.no/josang/sl/BV.html}},
+but we cannot find any other published implementations.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{Research Focus}
+
+\begin{frame}
+\frametitle{A Subjective Logic Framework}
+
+Can we develop a Subjective Logic framework that is
+
+\begin{itemize}
+  \item Type-safe
+  \item Embeddable as a library
+  \item A standalone workbench
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{A Subjective Logic Framework}
+
+Furthermore we propose to
+
+\begin{itemize}
+  \item Explore strategies for efficiently implementing \emph{hyper opinions}
+  \item Perform formal complexity analysis on the various operators
+\end{itemize}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\section{Progress Thus Far}
+
+%-------------------------------------------------------------------------------
+
+\section{Roadmap Toward Completion}
+
+%-------------------------------------------------------------------------------
+
+\section{Conclusion}
+
+%-------------------------------------------------------------------------------
+
+\section{References}
+
+\begin{frame}[allowframebreaks]
+\frametitle{References}
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
 
 \end{frame}
 
