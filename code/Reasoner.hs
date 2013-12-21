@@ -12,7 +12,7 @@
 
 module Reasoner where
 
-
+import Data.Ratio
 import Data.Maybe
 import Control.Applicative
 import Control.Monad
@@ -25,14 +25,14 @@ newtype Frame a = Frame a
 
 data MassIndex f = Subset [f]    -- ^ Just a subset of the entire frame.
                  | Theta         -- ^ The whole thing.
-                 deriving Eq
+                 deriving (Eq, Show)
 
 
 instance (Ord f) => Ord (MassIndex f) where
-  (Subset x) < (Subset y) = x < y
-  (Subset _) < Theta      = True
-  Theta      < (Subset _) = False
-  Theta      < Theta      = False
+  compare (Subset x) (Subset y) = compare x y
+  compare Theta      Theta      = EQ
+  compare (Subset _) Theta      = LT
+  compare Theta      (Subset _) = GT
 
 
 {- | Maps subsets of a frame f (or all of f) to fractions.
@@ -44,11 +44,14 @@ instance (Ord f) => Ord (MassIndex f) where
      as Int, without having to store a key such as [minBound :: Int, maxBound :: Int]
      in the structure, which would cause massive slowdowns.
 -}
-newtype MassMap f = MassMap (M.Map (MassIndex f) Rational)
+newtype MassMap f = MassMap (M.Map (MassIndex f) Rational) deriving (Show)
 
 
 -- | Associates belief holders (h) to mass maps.
-newtype MassAssignment h f = MassAssignment (M.Map h (MassMap f))
+newtype MassAssignment h f = MassAssignment (M.Map h (MassMap f)) deriving Show
+
+
+newtype BaseRate f = BaseRate (M.Map f Rational) deriving Show
 
 
 {- | The core reasoner type. Type-safe over the belief holders as well as the frame
@@ -59,31 +62,35 @@ newtype MassAssignment h f = MassAssignment (M.Map h (MassMap f))
      SL code must run within a reasoner to ensure type safety.
 -}
 newtype Reasoner h f a = Reasoner {
-  unR :: MassAssignment h f -> a
+  unR :: MassAssignment h f -> BaseRate f -> a
 }
 
 
 instance Functor (Reasoner h f) where
-  fmap f rx = Reasoner $ \mass -> f (unR rx mass)
+  fmap f rx = Reasoner $ \mass baseRate -> f (unR rx mass baseRate)
 
 
 instance Applicative (Reasoner h f) where
-  pure x    = Reasoner $ \_ -> x
+  pure x    = Reasoner $ \_ _ -> x
 
-  rf <*> rx = Reasoner $ \mass -> let f = unR rf mass
-                                      x = unR rx mass
-                                  in f x
+  rf <*> rx = Reasoner $ \mass baseRate -> let f = unR rf mass baseRate
+                                               x = unR rx mass baseRate
+                                           in f x
 
 
 -- | Access the belief mass that we are towing around.
 getMass :: (Ord h, Ord f) => h -> Reasoner h f (MassMap f)
-getMass holder = Reasoner $ \ (MassAssignment m) ->
+getMass holder = Reasoner $ \ (MassAssignment m) _ ->
   fromMaybe emptyMass (M.lookup holder m)
 
 
 -- | In the absense of any mass, we assume total uncertainty.
 emptyMass :: Ord f => MassMap f
 emptyMass = MassMap $ M.fromList [(Theta, 1)]
+
+
+getBaseRate :: Reasoner h f (BaseRate f)
+getBaseRate = Reasoner $ \_ baseRate -> baseRate
 
 
 {- SL-related code.
@@ -101,18 +108,19 @@ data HyperOpinion f =
   { hyperBelief      :: M.Map [f] Rational
   , hyperUncertainty :: Rational
   , hyperBaseRate    :: M.Map f Rational
-  }
+  } deriving Show
 
 
 -- | Construct a hyper opinion from the belief mass. This must be constrained
 --   to within the reasoner because it requires direct access to the belief mass.
 opinion :: (Ord h, Ord f) => h -> Reasoner h f (HyperOpinion f)
-opinion holder = go <$> getMass holder
+opinion holder = go <$> getMass holder <*> getBaseRate
   where
-    go (MassMap mass) = let u = fromMaybe 0 (M.lookup Theta mass)
-                            b = M.mapKeys (\(Subset s) -> s) $ M.delete Theta mass
-                            a = M.empty -- TODO
-                        in HyperOpinion b u a
+    go (MassMap m) (BaseRate br) = let u = fromMaybe 0 (M.lookup Theta m)
+                                       m' = M.delete Theta m
+                                       b = M.mapKeys (\(Subset s) -> s) m'
+                                       a = br
+                              in HyperOpinion b u a
 
 
 -- | Not as general as a hyper opinion.
@@ -121,7 +129,7 @@ data MultinomialOpinion f =
   { multiBelief      :: M.Map f Rational
   , multiUncertainty :: Rational
   , multiBaseRate    :: M.Map f Rational
-  }
+  } deriving Show
 
 
 isMultinomial :: HyperOpinion f -> Bool
@@ -146,7 +154,7 @@ data BinomialOpinion f =
   , binDisbelief   :: Rational
   , binUncertainty :: Rational
   , binBaseRate    :: Rational
-  }
+  } deriving Show
 
 
 isBinomial :: MultinomialOpinion f -> Bool
@@ -208,3 +216,49 @@ binomialDiff op1 op2 =
     uy = binUncertainty op2
     ax = binBaseRate op1
     ay = binBaseRate op2
+
+
+{- Some test code -}
+
+
+data Holders = Bryan | Bob deriving (Eq, Ord, Show)
+type MyFrame = Int
+
+
+mass :: MassAssignment Holders MyFrame
+mass = MassAssignment $ M.fromList
+       [ (Bryan, MassMap $ M.fromList
+                 [ (Theta,      1%3)
+                 , (Subset [1], 1%3)
+                 , (Subset [2], 1%3)
+                 ])
+       ]
+
+
+baseRate :: BaseRate MyFrame
+baseRate = BaseRate $ M.fromList
+           [ (1, 1%2)
+           , (2, 1%2)
+           ]
+
+
+binomialSum' = liftA2 binomialSum
+
+binomialBelief' :: Applicative f => f (BinomialOpinion t) -> f Rational
+binomialBelief' = liftA binBelief
+
+binomialDisbelief' :: Applicative f => f (BinomialOpinion t) -> f Rational
+binomialDisbelief' = liftA binDisbelief
+
+binomialUncertainty' :: Applicative f => f (BinomialOpinion t) -> f Rational
+binomialUncertainty' = liftA binUncertainty
+
+binomialBaseRate' :: Applicative f => f (BinomialOpinion t) -> f Rational
+binomialBaseRate' = liftA binBaseRate
+
+
+test1 :: Maybe Rational
+test1 = let op1  = (binomial 1 <=< multinomial) <$> opinion Bryan
+            op2  = (binomial 2 <=< multinomial) <$> opinion Bryan
+            expr = binomialBaseRate' <$> (binomialSum' <$> op1 <*> op2)
+        in unR expr mass baseRate
