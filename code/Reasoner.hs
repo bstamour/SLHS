@@ -1,3 +1,4 @@
+{-# LANGUAGE ScopedTypeVariables #-}
 
 
 {- | This module represents the core reasoner architecture: reasoners, frames,
@@ -12,6 +13,7 @@
 
 module Reasoner where
 
+import Data.Functor.Compose
 import Data.Ratio
 import Data.Maybe
 import Control.Applicative
@@ -64,6 +66,9 @@ newtype BaseRate f = BaseRate (M.Map f Rational) deriving Show
 newtype Reasoner h f a = Reasoner {
   unR :: MassAssignment h f -> BaseRate f -> a
 }
+
+
+run = unR
 
 
 instance Functor (Reasoner h f) where
@@ -157,14 +162,21 @@ data BinomialOpinion f =
   } deriving Show
 
 
-isBinomial :: MultinomialOpinion f -> Bool
-isBinomial = (2 ==) . M.size . multiBelief
+-- | For this function to work, all we have to look at is the underlying
+--   frame of discernment for which the multinomial is defined over.
+isBinomial :: forall f. (Bounded f, Enum f) => MultinomialOpinion f -> Bool
+isBinomial _ = let upper = fromIntegral $ fromEnum (maxBound :: f) :: Integer
+                   lower = fromIntegral $ fromEnum (minBound :: f) :: Integer
+               in upper - lower == 1
 
 
 -- | Create a binomial opinion from a multinomial opinion if the multinomial
 --   is actually a binomial opinion (frame has cardinality 2). Else, return
 --   Nothing.
-binomial :: Ord f => f -> MultinomialOpinion f -> Maybe (BinomialOpinion f)
+binomial :: (Bounded f, Enum f, Ord f)
+            => f
+            -> MultinomialOpinion f
+            -> Maybe (BinomialOpinion f)
 binomial f multi = do guard (isBinomial multi)
                       b <- M.lookup f (multiBelief multi)
                       a <- M.lookup f (multiBaseRate multi)
@@ -222,43 +234,35 @@ binomialDiff op1 op2 =
 
 
 data Holders = Bryan | Bob deriving (Eq, Ord, Show)
-type MyFrame = Int
+data MyFrame = Red | Blue deriving (Eq, Ord, Show, Bounded, Enum)
 
 
 mass :: MassAssignment Holders MyFrame
 mass = MassAssignment $ M.fromList
-       [ (Bryan, MassMap $ M.fromList
-                 [ (Theta,      1%3)
-                 , (Subset [1], 1%3)
-                 , (Subset [2], 1%3)
+       [ (Bryan, MassMap $ M.fromList    -- Bryan's mass is a binomial opinion.
+                 [ (Theta,         1%3)
+                 , (Subset [Red],  1%3)
+                 , (Subset [Blue], 1%3)
                  ])
+       , (Bob, MassMap $ M.fromList      -- Bob's mass is a hyper opinion.
+               [ (Theta,              1%4)
+               , (Subset [Red, Blue], 1%4)
+               , (Subset [Blue],      1%4)
+               , (Subset [Red],       1%4)
+               ])
        ]
 
 
 baseRate :: BaseRate MyFrame
 baseRate = BaseRate $ M.fromList
-           [ (1, 1%2)
-           , (2, 1%2)
+           [ (Red,  1%2)
+           , (Blue, 1%2)
            ]
 
 
-binomialSum' = liftA2 binomialSum
-
-binomialBelief' :: Applicative f => f (BinomialOpinion t) -> f Rational
-binomialBelief' = liftA binBelief
-
-binomialDisbelief' :: Applicative f => f (BinomialOpinion t) -> f Rational
-binomialDisbelief' = liftA binDisbelief
-
-binomialUncertainty' :: Applicative f => f (BinomialOpinion t) -> f Rational
-binomialUncertainty' = liftA binUncertainty
-
-binomialBaseRate' :: Applicative f => f (BinomialOpinion t) -> f Rational
-binomialBaseRate' = liftA binBaseRate
-
-
 test1 :: Maybe Rational
-test1 = let op1  = (binomial 1 <=< multinomial) <$> opinion Bryan
-            op2  = (binomial 2 <=< multinomial) <$> opinion Bryan
-            expr = binomialBaseRate' <$> (binomialSum' <$> op1 <*> op2)
-        in unR expr mass baseRate
+test1 = let op1  = Compose $ (binomial Red  <=< multinomial) <$> opinion Bryan
+            op2  = Compose $ (binomial Blue <=< multinomial) <$> opinion Bryan
+            op3  = binomialSum <$> op1 <*> op2
+            expr = getCompose $ binBelief <$> op3
+        in run expr mass baseRate
