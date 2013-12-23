@@ -1,4 +1,6 @@
 {-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 
 {- | This module represents the core reasoner architecture: reasoners, frames,
@@ -13,16 +15,12 @@
 
 module Reasoner where
 
-import Data.Functor.Compose
-import Data.Ratio
-import Data.Maybe
+
+import Data.Ratio ((%))
+import Data.Maybe (fromMaybe)
 import Control.Applicative
 import Control.Monad
 import qualified Data.Map as M
-
-
--- | A simple wrapper around frame types. For best effects, a should be bounded.
-newtype Frame a = Frame a
 
 
 data MassIndex f = Subset [f]    -- ^ Just a subset of the entire frame.
@@ -53,30 +51,85 @@ newtype MassMap f = MassMap (M.Map (MassIndex f) Rational) deriving (Show)
 newtype MassAssignment h f = MassAssignment (M.Map h (MassMap f)) deriving Show
 
 
+data DMassIndex f = DElem f
+                  | DTheta
+                  deriving Eq
+
+
+instance (Ord f) => Ord (DMassIndex f) where
+  compare (DElem x) (DElem y) = compare x y
+  compare DTheta    DTheta    = EQ
+  compare (DElem _) DTheta    = LT
+  compare DTheta    (DElem _) = GT
+
+
+newtype DMassMap f = DMassMap (M.Map (DMassIndex f) Rational)
+
+
+newtype DMassAssignment h f = DMassAssignment (M.Map h (DMassMap f))
+
+
+{- The following heirarchy of BMA's exists so that we can constrain the main
+   reasoner type over the kind of BMA that it carries around. BMA is the most
+   general, and DirichletBMA is more restrictive, while still being a BMA.
+-}
+
+
+class BMA m h f where
+  getHyperMass :: m h f -> MassAssignment h f
+
+
+class BMA m h f => DirichletBMA m h f where
+  getDirichletMass :: m h f -> DMassAssignment h f
+
+
+instance BMA MassAssignment h f where
+  getHyperMass = id
+
+
+instance BMA DMassAssignment h f where
+  getHyperMass (DMassAssignment m) = undefined
+
+
+instance DirichletBMA DMassAssignment h f where
+  getDirichletMass = id
+
+
 newtype BaseRate f = BaseRate (M.Map f Rational) deriving Show
+
+
+-----------------------------------------------------------------------------------------
 
 
 {- | The core reasoner type. Type-safe over the belief holders as well as the frame
      of discernment. One cannot combine reasoners that are of different types (for now.)
 
+     Also parameterized over m, the mass type. Mass assignments can either be BMA's,
+     where anything goes; or Dirichlet BMA's, where mass must be assigned only to the
+     elements of the frame. The reason for this separation is so that if we want to
+     write expressions that are "ambiguous" and require hyper opinions, we can use
+     BMA. However if our observations are crisp and we want to use multinomial
+     opinions, then we can restrict ourselves to dirichlet.
+
      To run a reasoner, you must supply it with a MassAssignment that is then threaded
      through the equations, which are built up using applicative combinators. All
      SL code must run within a reasoner to ensure type safety.
 -}
-newtype Reasoner h f a = Reasoner {
-  unR :: MassAssignment h f -> BaseRate f -> a
-}
 
 
+newtype Reasoner m h f a = Reasoner { unR :: m h f -> BaseRate f -> a }
+
+
+run :: BMA m h f => Reasoner m h f a -> m h f -> BaseRate f -> a
 run = unR
 
 
-instance Functor (Reasoner h f) where
+instance Functor (Reasoner m h f) where
   fmap f rx = Reasoner $ \mass baseRate -> f (unR rx mass baseRate)
 
 
-instance Applicative (Reasoner h f) where
-  pure x    = Reasoner $ \_ _ -> x
+instance Applicative (Reasoner m h f) where
+  pure x = Reasoner $ \_ _ -> x
 
   rf <*> rx = Reasoner $ \mass baseRate -> let f = unR rf mass baseRate
                                                x = unR rx mass baseRate
@@ -84,9 +137,18 @@ instance Applicative (Reasoner h f) where
 
 
 -- | Access the belief mass that we are towing around.
-getMass :: (Ord h, Ord f) => h -> Reasoner h f (MassMap f)
-getMass holder = Reasoner $ \ (MassAssignment m) _ ->
-  fromMaybe emptyMass (M.lookup holder m)
+hyperMass :: (Ord h, Ord f, BMA m h f) => h -> Reasoner m h f (MassMap f)
+hyperMass holder = Reasoner $ \m  _ ->
+  let (MassAssignment m') = getHyperMass m
+  in  fromMaybe emptyMass (M.lookup holder m')
+
+
+dirichletMass :: (Ord h, Ord f, DirichletBMA m h f)
+                    => h
+                    -> Reasoner m h f (DMassMap f)
+dirichletMass holder = Reasoner $ \ m _ ->
+  let (DMassAssignment m') = getDirichletMass m
+  in  fromMaybe emptyMass' (M.lookup holder m')
 
 
 -- | In the absense of any mass, we assume total uncertainty.
@@ -94,8 +156,15 @@ emptyMass :: Ord f => MassMap f
 emptyMass = MassMap $ M.fromList [(Theta, 1)]
 
 
-getBaseRate :: Reasoner h f (BaseRate f)
+emptyMass' :: Ord f => DMassMap f
+emptyMass' = DMassMap $ M.fromList [(DTheta, 1)]
+
+
+getBaseRate :: Reasoner m h f (BaseRate f)
 getBaseRate = Reasoner $ \_ baseRate -> baseRate
+
+
+-----------------------------------------------------------------------------------------
 
 
 {- SL-related code.
@@ -116,16 +185,15 @@ data HyperOpinion f =
   } deriving Show
 
 
--- | Construct a hyper opinion from the belief mass. This must be constrained
---   to within the reasoner because it requires direct access to the belief mass.
-opinion :: (Ord h, Ord f) => h -> Reasoner h f (HyperOpinion f)
-opinion holder = go <$> getMass holder <*> getBaseRate
+-- | Construct a hyper opinion from the belief mass.
+opinion :: (Ord h, Ord f, BMA m h f) => h -> Reasoner m h f (HyperOpinion f)
+opinion holder = go <$> hyperMass holder <*> getBaseRate
   where
     go (MassMap m) (BaseRate br) = let u = fromMaybe 0 (M.lookup Theta m)
                                        m' = M.delete Theta m
                                        b = M.mapKeys (\(Subset s) -> s) m'
                                        a = br
-                              in HyperOpinion b u a
+                                   in HyperOpinion b u a
 
 
 -- | Not as general as a hyper opinion.
@@ -137,18 +205,9 @@ data MultinomialOpinion f =
   } deriving Show
 
 
-isMultinomial :: HyperOpinion f -> Bool
-isMultinomial = M.foldrWithKey (\k _ x -> x && length k == 1) True . hyperBelief
-
-
--- | If the given hyper opinion is actually multinomial, then return it,
---   else return Nothing.
-multinomial :: Ord f => HyperOpinion f -> Maybe (MultinomialOpinion f)
-multinomial hyper = do guard (isMultinomial hyper)
-                       let b = M.mapKeys (\k -> head k) $ hyperBelief hyper
-                       let u = hyperUncertainty hyper
-                       let a = hyperBaseRate hyper
-                       return $ MultinomialOpinion b u a
+-- | Multinomial opinions can only be constructed using Dirichlet BMA's.
+multinomial :: (DirichletBMA m h f) => h -> Reasoner m h f (MultinomialOpinion f)
+multinomial = undefined
 
 
 -- | A binomial opinion is either a binary frame, or a binary partitioning
@@ -162,79 +221,81 @@ data BinomialOpinion f =
   } deriving Show
 
 
--- | For this function to work, all we have to look at is the underlying
---   frame of discernment for which the multinomial is defined over.
-isBinomial :: forall f. (Bounded f, Enum f) => MultinomialOpinion f -> Bool
-isBinomial _ = let upper = fromIntegral $ fromEnum (maxBound :: f) :: Integer
-                   lower = fromIntegral $ fromEnum (minBound :: f) :: Integer
-               in upper - lower == 1
+-- | Given a subset x of f, compute the binomial opinion over the binary partition
+--   frame {x, ~x}.
+binomial :: BMA m h f => h -> [f] -> Reasoner m h f (BinomialOpinion f)
+binomial = undefined
 
 
--- | Create a binomial opinion from a multinomial opinion if the multinomial
---   is actually a binomial opinion (frame has cardinality 2). Else, return
---   Nothing.
-binomial :: (Bounded f, Enum f, Ord f)
-            => f
-            -> MultinomialOpinion f
-            -> Maybe (BinomialOpinion f)
-binomial f multi = do guard (isBinomial multi)
-                      b <- M.lookup f (multiBelief multi)
-                      a <- M.lookup f (multiBaseRate multi)
-                      let u = multiUncertainty multi
-                      let d = 1 - b - u
-                      return $ BinomialOpinion b d u a
-
-
--- | Coarsen a multinomial opinion down into a binomial opinion. This creates
---   a binomial opinion over a binary partitioning of the frame.
-coarsen :: [f] -> MultinomialOpinion f -> BinomialOpinion f
-coarsen subset multi = undefined
+-----------------------------------------------------------------------------------------
 
 
 {- Subjective Logic operators -}
 
 
-binomialSum :: BinomialOpinion f -> BinomialOpinion f -> BinomialOpinion f
+instance Num a => Num (Reasoner m h f a) where
+  rx + ry       = (+)    <$> rx <*> ry
+  rx * ry       = (*)    <$> rx <*> ry
+  rx - ry       = (-)    <$> rx <*> ry
+  negate rx     = negate <$> rx
+  abs rx        = abs    <$> rx
+  signum rx     = signum <$> rx
+  fromInteger i = pure (fromInteger i)
+
+
+instance Fractional a => Fractional (Reasoner m h f a) where
+  rx / ry        = (/) <$> rx <*> ry
+  fromRational r = pure (fromRational r)
+
+
+binomialSum :: Reasoner m h f (BinomialOpinion f)
+               -> Reasoner m h f (BinomialOpinion f)
+               -> Reasoner m h f (BinomialOpinion f)
 binomialSum op1 op2 =
   let b = bx + by
       d = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
       u = (ax * ux + ay * uy) / (ax + ay)
       a = ax + ay
-  in BinomialOpinion b d u a
+  in BinomialOpinion <$> b <*> d <*> u <*> a
   where
-    bx = binBelief op1
-    by = binBelief op2
-    dx = binDisbelief op1
-    dy = binDisbelief op2
-    ux = binUncertainty op1
-    uy = binUncertainty op2
-    ax = binBaseRate op1
-    ay = binBaseRate op2
+    bx = binBelief      <$> op1
+    by = binBelief      <$> op2
+    dx = binDisbelief   <$> op1
+    dy = binDisbelief   <$> op2
+    ux = binUncertainty <$> op1
+    uy = binUncertainty <$> op2
+    ax = binBaseRate    <$> op1
+    ay = binBaseRate    <$> op2
 
 
-binomialDiff :: BinomialOpinion f -> BinomialOpinion f -> BinomialOpinion f
+binomialDiff :: Reasoner m h f (BinomialOpinion f)
+                -> Reasoner m h f (BinomialOpinion f)
+                -> Reasoner m h f (BinomialOpinion f)
 binomialDiff op1 op2 =
   let b = bx - by
       d = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
       u = (ax * ux - ay * uy) / (ax - ay)
       a = ax - ay
-  in BinomialOpinion b d u a
+  in BinomialOpinion <$> b <*> d <*> u <*> a
   where
-    bx = binBelief op1
-    by = binBelief op2
-    dx = binDisbelief op1
-    dy = binDisbelief op2
-    ux = binUncertainty op1
-    uy = binUncertainty op2
-    ax = binBaseRate op1
-    ay = binBaseRate op2
+    bx = binBelief      <$> op1
+    by = binBelief      <$> op2
+    dx = binDisbelief   <$> op1
+    dy = binDisbelief   <$> op2
+    ux = binUncertainty <$> op1
+    uy = binUncertainty <$> op2
+    ax = binBaseRate    <$> op1
+    ay = binBaseRate    <$> op2
+
+
+-----------------------------------------------------------------------------------------
 
 
 {- Some test code -}
 
 
-data Holders = Bryan | Bob deriving (Eq, Ord, Show)
-data MyFrame = Red | Blue deriving (Eq, Ord, Show, Bounded, Enum)
+data Holders = Bryan | Bob  deriving (Eq, Ord, Show)
+data MyFrame = Red   | Blue deriving (Eq, Ord, Show, Bounded, Enum)
 
 
 mass :: MassAssignment Holders MyFrame
@@ -253,6 +314,17 @@ mass = MassAssignment $ M.fromList
        ]
 
 
+-- An example of a dirichlet mass assignment.
+dmass :: DMassAssignment Holders MyFrame
+dmass = DMassAssignment $ M.fromList
+        [ (Bryan, DMassMap $ M.fromList
+                  [ (DTheta,     1%2)
+                  , (DElem Red,  1%4)
+                  , (DElem Blue, 1%4)
+                  ])
+        ]
+
+
 baseRate :: BaseRate MyFrame
 baseRate = BaseRate $ M.fromList
            [ (Red,  1%2)
@@ -260,9 +332,12 @@ baseRate = BaseRate $ M.fromList
            ]
 
 
-test1 :: Maybe Rational
-test1 = let op1  = Compose $ (binomial Red  <=< multinomial) <$> opinion Bryan
-            op2  = Compose $ (binomial Blue <=< multinomial) <$> opinion Bryan
-            op3  = binomialSum <$> op1 <*> op2
-            expr = getCompose $ binBelief <$> op3
+test1 :: Rational
+test1 = let op1  = binomial Bryan [Red]
+            op2  = binomial Bryan [Blue]
+            expr = binBelief <$> binomialSum op1 op2
         in run expr mass baseRate
+
+
+test2 :: MultinomialOpinion MyFrame
+test2 = run (multinomial Bryan) dmass baseRate
