@@ -5,6 +5,7 @@ module Test where
 
 
 import Reasoner
+import SL
 import Control.Applicative
 import Data.Ratio
 import qualified Data.Map as M
