@@ -233,6 +233,10 @@ binomial = undefined
 {- Subjective Logic operators -}
 
 
+-- These instances just make the equations easier to write, instead of
+-- lifting all of the mathematical operators into the applicative.
+
+
 instance Num a => Num (Reasoner m h f a) where
   rx + ry       = (+)    <$> rx <*> ry
   rx * ry       = (*)    <$> rx <*> ry
@@ -294,6 +298,7 @@ binomialDiff op1 op2 =
 {- Some test code -}
 
 
+{-
 data Holders = Bryan | Bob  deriving (Eq, Ord, Show)
 data MyFrame = Red   | Blue deriving (Eq, Ord, Show, Bounded, Enum)
 
@@ -341,3 +346,4 @@ test1 = let op1  = binomial Bryan [Red]
 
 test2 :: MultinomialOpinion MyFrame
 test2 = run (multinomial Bryan) dmass baseRate
+-}
