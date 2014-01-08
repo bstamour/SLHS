@@ -1,5 +1,10 @@
 \documentclass{beamer}
 
+\usepackage{fancyvrb}
+\DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
+\DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
+\newcommand{\ignore}[1]{}
+
 \mode<presentation>
 { \usetheme{Antibes} }
 
@@ -52,7 +57,7 @@ Example application areas include
 \begin{itemize}
   \item Clinical \cite{berner2007clinical}
   \item Business \cite{klein_knowledge-based}
-  \item Survey analysis \cite{kent2010application}
+  \item Health and Safety \cite{kent2010application}
 \end{itemize}
 
 \end{frame}
@@ -204,43 +209,105 @@ Can we develop a Subjective Logic framework that is
 \begin{itemize}
   \item Type-safe
   \item Embeddable as a library
-  \item A standalone workbench
+  \item Utilisable as a standalone workbench
 \end{itemize}
 
 \end{frame}
 
 \begin{frame}
-\frametitle{A Subjective Logic Framework}
-
-Furthermore we propose to
+\frametitle{Similar Languages/Frameworks}
 
 \begin{itemize}
-  \item Explore strategies for efficiently implementing \emph{hyper opinions}
-  \item Perform formal complexity analysis on the various operators
+  \item R (statistical language)
+  \item SciPy/NumPy (libraries for Python)
 \end{itemize}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Research Focus - Type Safety}
-
-Subjective Logic statements can only be combined in certain \emph{meaningful} ways.
-
-\begin{itemize}
-  \item Some operators are defined only for binomials...
-  \item Some operators only work with different belief holders...
-  \item Some operators must share the same frame of discernment...
-  \item ...
-\end{itemize}
-
-Can we catch these kinds of errors at compile time?
 
 \pause
 
-Yes we can!
+Like R, should be usable by mathematicians/statisticians. Not just programmers.
+
+\pause
+
+Like SciPy/NumPy, retains full access to a general purpose programming language.
+
+\pause
+
+We propose to use Haskell :-)
 
 \end{frame}
 
+\begin{frame}
+\frametitle{Haskell - overview}
+
+\begin{itemize}
+  \item Pure functional programming language
+  \item General purpose
+  \item Strong, statically typed
+  \item Lazy evaluation
+\end{itemize}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example}
+
+\begin{code}
+  data Person = Alice | Bob
+  data Color  = Red | Blue | Yellow
+  beliefMass  = mass
+    [ (Alice, [ (Item Red,  1/2)
+              , (Item Blue, 1/3)
+              , (Theta,     1/6)
+              ])
+    , (Bob,   [ (Item Red,          1/4)
+              , (Items [Red, Blue], 1/4)
+              , (Theta,             1/2)
+              ])
+    ]
+\end{code}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example cont'd}
+
+\begin{code}
+  baseRate = [ (Red,    1/3)
+             , (Blue,   1/3)
+             , (Yellow, 1/3)
+             ]
+\end{code}
+
+\end{frame}
+
+\begin{frame}[fragile]
+\frametitle{Example cont'd}
+
+\begin{code}
+  opinion1 = binomialOpinion Alice Red
+  opinion2 = binomialOpinion Alice Blue
+  opinion3 = binomialOpinion Bob   Red
+  opinion4 = binomialOpinion Bob   Blue
+
+  expr     = belief $
+               (opinion1 `or` opinion2) `concensus`
+               (opinion2 `or` opinion3)
+
+  result   = run expr beliefMass baseRate
+\end{code}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Benefits}
+
+\begin{itemize}
+  \item Type-safe with respect to opinions
+  \item Type-safe with respect to belief holders
+  \item Statements cannot be run outside of their context
+\end{itemize}
+
+\end{frame}
 
 %-------------------------------------------------------------------------------
 
