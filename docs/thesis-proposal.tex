@@ -1,6 +1,8 @@
 \documentclass{beamer}
 
 \usepackage{fancyvrb}
+\usepackage{stmaryrd}
+
 \DefineVerbatimEnvironment{code}{Verbatim}{fontsize=\small}
 \DefineVerbatimEnvironment{example}{Verbatim}{fontsize=\small}
 \newcommand{\ignore}[1]{}
@@ -8,7 +10,7 @@
 \mode<presentation>
 { \usetheme{Antibes} }
 
-\title{A Type-safe Framework for Uncertain Reasoning with Subjective Logic}
+\title{A Denotational Semantics for Subjective Logic}
 
 \author{Bryan St. Amour}
 
@@ -21,6 +23,10 @@
 %}
 
 \begin{document}
+
+%-------------------------------------------------------------------------------
+
+% Front matter.
 
 \begin{frame}
 \titlepage
@@ -44,6 +50,8 @@ Thesis committee
 
 %-------------------------------------------------------------------------------
 
+% Thesis intro.
+
 \section{Introduction}
 
 \begin{frame}
@@ -63,6 +71,8 @@ Example application areas include
 \end{frame}
 
 %-------------------------------------------------------------------------------
+
+% Introduction to Subjective Logic
 
 \section{Subjective Logic}
 
@@ -199,119 +209,137 @@ but we cannot find any other published implementations.
 
 %-------------------------------------------------------------------------------
 
-\section{Research Focus}
+% Research focus + thesis statement.
+
+\section{Thesis Statement}
 
 \begin{frame}
-\frametitle{A Subjective Logic Framework}
+\frametitle{Focus of research}
 
-Can we develop a Subjective Logic framework that is
-
-\begin{itemize}
-  \item Type-safe
-  \item Embeddable as a library
-  \item Utilisable as a standalone workbench
-\end{itemize}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Similar Languages/Frameworks}
+To construct a type-safe Subjective Logic implementation, we need to know the following:
 
 \begin{itemize}
-  \item R (statistical language)
-  \item SciPy/NumPy (libraries for Python)
+  \item What is the meaning of a Subjective Logic expression?
+  \item How we can tell the valid expressions from the invalid ones?
 \end{itemize}
 
-\pause
-
-Like R, should be usable by mathematicians/statisticians. Not just programmers.
-
-\pause
-
-Like SciPy/NumPy, retains full access to a general purpose programming language.
-
-\pause
-
-We propose to use Haskell :-)
+Therefore, we need a formal semantics for Subjective Logic.
 
 \end{frame}
 
 \begin{frame}
-\frametitle{Haskell - overview}
+\frametitle{Thesis statement}
 
-\begin{itemize}
-  \item Pure functional programming language
-  \item General purpose
-  \item Strong, statically typed
-  \item Lazy evaluation
-\end{itemize}
+If we can construct a formal semantics for Subjective Logic, then we can construct
+type-safe implementations (frameworks, libraries, tools, etc.)
 
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Example}
-
-\begin{code}
-  data Person = Alice | Bob
-  data Color  = Red | Blue | Yellow
-  beliefMass  = mass
-    [ (Alice, [ (Item Red,  1/2)
-              , (Item Blue, 1/3)
-              , (Theta,     1/6)
-              ])
-    , (Bob,   [ (Item Red,          1/4)
-              , (Items [Red, Blue], 1/4)
-              , (Theta,             1/2)
-              ])
-    ]
-\end{code}
-
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Example cont'd}
-
-\begin{code}
-  baseRate = [ (Red,    1/3)
-             , (Blue,   1/3)
-             , (Yellow, 1/3)
-             ]
-\end{code}
-
-\end{frame}
-
-\begin{frame}[fragile]
-\frametitle{Example cont'd}
-
-\begin{code}
-  opinion1 = binomialOpinion Alice Red
-  opinion2 = binomialOpinion Alice Blue
-  opinion3 = binomialOpinion Bob   Red
-  opinion4 = binomialOpinion Bob   Blue
-
-  expr     = belief $
-               (opinion1 `or` opinion2) `concensus`
-               (opinion2 `or` opinion3)
-
-  result   = run expr beliefMass baseRate
-\end{code}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Benefits}
-
-\begin{itemize}
-  \item Type-safe with respect to opinions
-  \item Type-safe with respect to belief holders
-  \item Statements cannot be run outside of their context
-\end{itemize}
+We propose to construct a \emph{denotational semantics} for Subjective Logic and use it as
+a basis for a type-safe implementation in the \emph{Haskell} programming language.
 
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
-\section{Progress Thus Far}
+% Give a brief introduction to denotational semantics here.
+
+\section{Denotational Semantics}
+
+\begin{frame}
+\frametitle{Denotational Semantics Overview}
+
+Formal semantics, popular for programming languages.
+
+Maps statements onto mathematical objects (e.g. lambda expressions)
+
+Compositional: meaning of statement is comprised of meaning of sub-statements.
+
+$$\llbracket 4 + 5 \rrbracket \equiv \llbracket + \rrbracket \left(\llbracket 4 \rrbracket, \llbracket 5 \rrbracket\right)$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Denotational Semantics Overview}
+
+An example from Subjective Logic...
+
+\begin{equation}
+\begin{split}
+\llbracket \omega^{A}_{\mbox{x}} \land \omega^{A}_{\mbox{y}} \rrbracket
+    & \equiv \llbracket \land \rrbracket \left(
+                 \llbracket \omega^{A}_{\mbox{x}} \rrbracket,
+                 \llbracket \omega^{A}_{\mbox{y}} \rrbracket
+              \right) \\
+    & \equiv \left(\lambda x. \lambda y. \mbox{logical-and(x,y)}\right)
+             \llbracket \omega^{A}_{\mbox{x}} \rrbracket
+             \llbracket \omega^{A}_{\mbox{y}} \rrbracket \\
+    & \equiv \left(\lambda x. \lambda y. \mbox{logical-and(x,y)}\right)
+             \mbox{binl-op(A, x)} \mbox{bin-op(A, y)} \\
+    & \equiv \mbox{logical-and(bin-op(A, x), bin-op(A, y))}
+\end{split}
+\end{equation}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{A Denotational Semantics for Subjective Logic}
+
+We propose to map subjective expressions to expressions in a \emph{typed lambda calculus}
+(e.g. simply-typed $\lambda$-calculus, System-F, etc.)
+
+$$
+\llbracket \omega_{\mbox{x}} \rrbracket
+    \equiv \lambda m : Mass. \mbox{opinion}\left(\llbracket x\rrbracket, m\right): \mbox{Op}
+$$
+
+$$
+\llbracket \land \rrbracket
+    \equiv \lambda x:\mbox{Op}.
+             \lambda y:\mbox{Op}.
+               \lambda m:\mbox{Mass}.
+                 \mbox{logical-and}(\mbox{x m}, \mbox{y m}) : \mbox{Op}
+$$
+
+$$
+\llbracket \alpha \odot \beta \rrbracket
+    \equiv \llbracket \odot \rrbracket \left(\llbracket \alpha \rrbracket, \llbracket \beta \rrbracket\right)
+$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{A Denotational Semantics for Subjective Logic}
+
+Types play an important role in Subjective Logic.
+
+\begin{itemize}
+  \item Frames of discernment must be the same (or not!)
+  \item Belief holders must occasionally be the same (e.g. concensus)
+  \item Cannot combine binomial with multinomial opinions directly
+  \item Multinomials can only be constructed from \emph{dirichlet mass assignments}
+  \item etc...
+\end{itemize}
+
+Expressions are valid \emph{iff} the types match.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{A Denotational Semantics for Subjective Logic}
+
+By representing subjective expressions as typed $\lambda$-calculus terms, we can exclude
+expressions that are invalid (i.e. they fail to \emph{type-check}.)
+
+With a strongly typed language such as \emph{Haskell}, we can build systems that reject
+\emph{absurd} expressions before they are ever compiled.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+% How far along are we toward completion of the work?
+
+\section{Current Progress}
+
 
 %-------------------------------------------------------------------------------
 
