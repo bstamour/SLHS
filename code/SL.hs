@@ -30,10 +30,10 @@ data HyperOpinion f =
 opinion :: (Ord h, Ord f, BMA m h f) => h -> Reasoner m h f (HyperOpinion f)
 opinion holder = go <$> hyperMass holder <*> getBaseRate
   where
-    go (MassMap m) (BaseRate br) = let u = fromMaybe 0 (M.lookup Theta m)
+    go (MassMap m) (BaseRate br) = let u  = fromMaybe 0 (M.lookup Theta m)
                                        m' = M.delete Theta m
-                                       b = M.mapKeys (\(Subset s) -> s) m'
-                                       a = br
+                                       b  = M.mapKeys (\(Subset s) -> s) m'
+                                       a  = br
                                    in HyperOpinion b u a
 
 
@@ -66,9 +66,6 @@ data BinomialOpinion f =
 --   frame {x, ~x}.
 binomial :: BMA m h f => h -> [f] -> Reasoner m h f (BinomialOpinion f)
 binomial = undefined
-
-
------------------------------------------------------------------------------------------
 
 
 {- Subjective Logic operators -}

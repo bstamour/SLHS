@@ -158,4 +158,4 @@ emptyMass' = DMassMap $ M.fromList [(DTheta, 1)]
 
 
 getBaseRate :: Reasoner m h f (BaseRate f)
-getBaseRate = Reasoner $ \_ baseRate -> baseRate
+getBaseRate = Reasoner $ flip const
