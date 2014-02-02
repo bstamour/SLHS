@@ -1,8 +1,6 @@
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
-
 module Test where
-
 
 import Reasoner
 import SL
@@ -10,10 +8,8 @@ import Control.Applicative
 import Data.Ratio
 import qualified Data.Map as M
 
-
 data Holders = Bryan | Bob  deriving (Eq, Ord, Show)
 data MyFrame = Red   | Blue deriving (Eq, Ord, Show, Bounded, Enum)
-
 
 mass :: MassAssignment Holders MyFrame
 mass = MassAssignment $ M.fromList
@@ -30,15 +26,16 @@ mass = MassAssignment $ M.fromList
                ])
        ]
 
-
 baseRate :: BaseRate MyFrame
 baseRate = BaseRate $ M.fromList
            [ (Red,  1%2)
            , (Blue, 1%2)
            ]
 
-
 op1 = binomial Bryan [Red]
 op2 = binomial Bryan [Blue]
 expr = binBelief <$> binomialSum op1 op2
 value = run expr mass baseRate
+
+main :: IO ()
+main = putStrLn "Hello"
