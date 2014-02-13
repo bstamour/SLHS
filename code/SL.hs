@@ -1,7 +1,7 @@
 module SL where
 
 
-import Control.Monad (ap)
+import Control.Monad (ap, join)
 import Control.Applicative
 
 
@@ -66,26 +66,44 @@ runSL = unSLExpr
 -- Opinions and their operators.
 --
 -- TODO: Write all code in terms of hyper opinions. Specialize when applicable.
---
--- Write the operators to work internally directly on Opinion types, that way
--- we can do tricks with short-circuit computation (thank you, SLValue).
---
--- We will offer make_opinion functions to construct opinions. They require
--- access to the state in order to compute them. A typical operator may look
--- like this
---
--- op1 <*> op2 = do op1' <- op1
---                  op2' <- op2
---                  return $ op_impl <$> op1' <*> op2'
---   where
---     op_impl :: Opinion -> Opinion -> Opinion
 
 data Opinion = Opinion deriving Show
 
 
+-- For now...
+opinion :: SL Opinion
+opinion = pure . pure $ Opinion
+
+
+-- Simply take an operator and do the plumbing for us. The reason why
+-- the operators return SLValues instead of Opinions is so they can
+-- catch runtime errors like bad frame of discernment, bad belief holders,
+-- wrong opinion type, etc.
+wrapOper :: (Opinion -> Opinion -> SLValue Opinion)
+            -> SL Opinion
+            -> SL Opinion
+            -> SL Opinion
+wrapOper oper op1 op2 = run <$> op1 <*> op2
+  where
+    run :: SLValue Opinion -> SLValue Opinion -> SLValue Opinion
+    run o1 o2 = join $ oper <$> o1 <*> o2
+
+
 (<++>) :: SL Opinion -> SL Opinion -> SL Opinion
-op1 <++> op2  = pure $ Error "(<++>): Not yet implemented."
+(<++>) = wrapOper impl
+  where
+    impl _ _ = Error "(<++>): Not yet implemented."
 
 
 (</\>) :: SL Opinion -> SL Opinion -> SL Opinion
-op1 </\> op2  = pure $ Error "(</\\>): Not yet implemented."
+(</\>) = wrapOper impl
+  where
+    impl _ _ = Error "(</\\>): Not yet implemented."
+
+
+-- A few test expressions.
+e1 = opinion <++> opinion
+e2 = opinion </\> (opinion <++> opinion)
+e3 = (opinion </\> opinion) <++> (opinion </\> opinion)
+
+runTest = flip runSL undefined
