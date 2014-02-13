@@ -30,6 +30,17 @@ instance Monad SLValue where
 
 
 -- A custom state monad for SL computations.
+--
+-- TODO: We need a type to represent the frame of discernment. Frames can
+-- be of different types, such as
+--   1. Simple: just a set of atomic elements.
+--   2. Products: we can have cartesian products of frames.
+--   3. Conditional: these frames are seen in the deduction/abduction code. Might
+--      not need to be treated special though. We will see...
+--
+-- We also need a belief mass assignment type. This needs to have fast lookup but
+-- also should represent sparse assignments (lots of zeros.) Perhaps either a map
+-- or a trie will work...
 
 data SLState = SLState -- TODO
 
@@ -71,6 +82,17 @@ data Opinion = Opinion deriving Show
 
 
 -- For now...
+--
+-- TODO: We can create lots of cool helper functions such as
+--    1. opinion: create a hyper opinion
+--    2. binomialOpinion x: create a binomial opinion about x
+--    3. binomialOpinionSubset xs: create a coarsened binomial
+--       opinion about the subset xs
+--    4. binomialOpinionPred p: create a coarsened binomial opinion
+--       about the subset x in xs where p(x) is true.
+--    5. multinomialOpinion: somehow cast as a multinomial. Maybe don't
+--       offer this one: make it a requirement for operators that they
+--       have ``dirichlet'' mass instead of ``hyper-dirichlet''.
 opinion :: SL Opinion
 opinion = pure . pure $ Opinion
 
