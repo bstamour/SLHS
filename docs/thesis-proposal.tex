@@ -365,13 +365,12 @@ library by
 \begin{frame}
 \frametitle{Monads}
 
-A monad, formally, is a special kind of \emph{functor} from Category Theory (cite). In
-practice, it is a \emph{data type} M with the following operations (cite):
+A monad, formally, is a special kind of \emph{functor} from Category Theory \cite{mac1998categories}. In
+practice, it is a \emph{data type} M with the following operations \cite{Wadler:1992:EFP:143165.143169}:
 
 \begin{itemize}
-  \item $\mbox{inject :: } \alpha \rightarrow \mbox{M } \alpha$.
-  \item $\mbox{bind :: } \mbox{M } \alpha \rightarrow \left(\alpha \rightarrow \mbox{M } \beta\right) \rightarrow \mbox{M } \beta$
-
+  \item $\mbox{unitM :: } \alpha \rightarrow \mbox{M } \alpha$.
+  \item $\mbox{bindM :: } \mbox{M } \alpha \rightarrow \left(\alpha \rightarrow \mbox{M } \beta\right) \rightarrow \mbox{M } \beta$
 \end{itemize}
 
 \end{frame}
