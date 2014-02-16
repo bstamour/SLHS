@@ -10,9 +10,13 @@
 \mode<presentation>
 { \usetheme{Antibes} }
 
-\title{A Denotational Semantics for Subjective Logic}
+\title{A Monad-based, Lazy, Purely Functional Subjective Logic Combinator Library}
 
 \author{Bryan St. Amour}
+
+
+% The following will inject the table of contents with the current section
+% highlighted between each section.
 
 %\AtBeginSection[]
 %{
@@ -24,9 +28,11 @@
 
 \begin{document}
 
-%-------------------------------------------------------------------------------
-
+%===============================================================================
+%
 % Front matter.
+%
+%===============================================================================
 
 \begin{frame}
 \titlepage
@@ -38,11 +44,13 @@ Thesis committee
 
 \begin{itemize}
   \item \emph{Advisor:} Dr. Robert Kent
-  \item \emph{Internal Reader:} Dr. Ziad Kobti
+  \item \emph{Internal Reader:} Dr. Richard Frost
   \item \emph{External Reader:} Dr. Rick Caron (Math/Stats)
 \end{itemize}
 
 \end{frame}
+
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 \tableofcontents
@@ -50,7 +58,11 @@ Thesis committee
 
 %-------------------------------------------------------------------------------
 
+%===============================================================================
+%
 % Thesis intro.
+%
+%===============================================================================
 
 \section{Introduction}
 
@@ -70,9 +82,11 @@ Example application areas include
 
 \end{frame}
 
-%-------------------------------------------------------------------------------
-
+%===============================================================================
+%
 % Introduction to Subjective Logic
+%
+%===============================================================================
 
 \section{Subjective Logic}
 
@@ -83,17 +97,32 @@ Subjective Logic is a probablistic logic for uncertain reasoning
 \cite{josang_logic_2001}.
 
 Basic object is the subjective opinion, defined over a frame of discernment.
+Opinions come in three flavours:
 
 \begin{itemize}
   \item Binomial opinions
   \item Multinomial opinions
-  \item Hyper opinions \cite{josang2012interpretation}
+  \item Hyper opinions \cite{josang2012interpretation}. Also known simply as
+    \emph{Subjective opinions}.
 \end{itemize}
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - Frame of Discernment}
+\frametitle{Subjective Logic}
+
+Has some similarities with \emph{Dempster-Shafer Theory}.
+
+% TODO: More details here.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Frame of Discernment}
 
 A set of atomic entities
 
@@ -105,8 +134,10 @@ We define opinions over subsets of $\Theta$.
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - binomial opinions}
+\frametitle{Binomial Opinions}
 
 Given a binary frame $\Theta = \lbrace x, \lnot x \rbrace$, we can define a
 \emph{binomial opinion} of $x$.
@@ -117,8 +148,19 @@ satisfying $b_x + d_x + u_x = 1$, and $0 \leq a_x \leq 1$.
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - binomial opinions}
+\frametitle{Binomial Opinions}
+
+Can be mapped to \emph{Beta distributions} using the following relation:
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Binomial Opinions}
 
 For example...
 
@@ -130,8 +172,23 @@ $$\omega_{Red}^{Bryan} = \langle 0.5, 0.4, 0.1, 0.5 \rangle$$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - multinomial opinions}
+\frametitle{Binomial Opinions}
+
+We can also construct binomial opinions over a subset of a frame $\Theta$
+through \emph{coarsening}.
+
+
+\end{frame}
+
+
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Multinomial Opinions}
 
 For larger frames ($|\Theta| > 2$) we define \emph{multinomial opinions}.
 
@@ -147,8 +204,19 @@ $$\sum_{x\in \Theta} \vec{a}(x) = 1$$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - hyper opinions}
+\frametitle{Multinomial Opinions}
+
+Can be mapped to \emph{Dirichlet distributions}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Hyper Opinions}
 
 Most general of all subjective opinions. Assigns belief mass to subsets of the
 frame (elements of the reduced powerset.)
@@ -157,8 +225,19 @@ Reduced powerset: $R^\Theta = 2^\Theta \backslash \lbrace \emptyset, \Theta \rbr
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - hyper opinions}
+\frametitle{Hyper Opinions}
+
+Can be mapped to \emph{Hyper-dirichlet distributions}.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Hyper Opinions}
 
 e.g.
 
@@ -171,6 +250,8 @@ $$\vec{b}\left(\lbrace Yellow \rbrace \right) = \frac{1}{8}$$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 \frametitle{Subj-logic - hyper opinions}
 
@@ -182,8 +263,10 @@ $$\sum_{x \in R^\Theta} \vec{a}\left(x\right) = 1$$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - benefts}
+\frametitle{Benefts}
 
 \begin{itemize}
   \item Wealth of operators for working with beliefs
@@ -195,8 +278,10 @@ $$\sum_{x \in R^\Theta} \vec{a}\left(x\right) = 1$$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
-\frametitle{Subj-logic - drawbacks}
+\frametitle{Drawbacks}
 
 \begin{itemize}
   \item No widely available frameworks/toolkits/libraries!
@@ -207,142 +292,201 @@ but we cannot find any other published implementations.
 
 \end{frame}
 
-%-------------------------------------------------------------------------------
-
+%===============================================================================
+%
 % Research focus + thesis statement.
+%
+%===============================================================================
 
 \section{Thesis Statement}
 
 \begin{frame}
-\frametitle{Focus of research}
+\frametitle{Thesis Statement}
 
-To construct a type-safe Subjective Logic implementation, we need to know the following:
+Is it possible to construct a \emph{lazy, purely functional combinator library} for Subjective
+Logic using \emph{monads}?
 
 \begin{itemize}
-  \item What is the meaning of a Subjective Logic expression?
-  \item How we can tell the valid expressions from the invalid ones?
+  \item \emph{Lazy:} Only compute what's necessary. Memoize large computations. Based
+    on \emph{Graph Reduction}.
+  \item \emph{Purely Functional:} Computations are functions in the mathematical sense.
+    No side effects. Based on \emph{$\lambda$-calculus}.
+  \item \emph{Combinators:} All expressions are built from a small set of operators that
+    can be combined through function application.
+  \item \emph{Monads:} Mathematical objects from \emph{Category Theory}. Have gained
+    popularity in Functional Programming for controlling effects.
 \end{itemize}
-
-Therefore, we need a formal semantics for Subjective Logic.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Thesis statement}
-
-If we can construct a formal semantics for Subjective Logic, then we can construct
-type-safe implementations (frameworks, libraries, tools, etc.)
-
-We propose to construct a \emph{denotational semantics} for Subjective Logic and use it as
-a basis for a type-safe implementation in the \emph{Haskell} programming language.
 
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
-% Give a brief introduction to denotational semantics here.
-
-\section{Denotational Semantics}
-
 \begin{frame}
-\frametitle{Denotational Semantics Overview}
+\frametitle{Research Objectives}
+
+Through our research we expect to achieve the following objectives.
 
 \begin{itemize}
-  \item Formal semantics
-  \item popular for programming languages.
-  \item Maps statements onto mathematical objects (e.g. lambda expressions)
-  \item Compositional: meaning of statement is comprised of meaning of sub-statements.
+  \item Implement all Subjective Logic operators as currently published by Josang
+    using the \emph{Haskell} programming language.
+  \item Perform a complexity analysis on the operators. Perhaps discover more efficient
+    methods for implementation.
+  \item Prove that the operators terminate for all finite inputs.
 \end{itemize}
-
-$$\llbracket 4 + 5 \rrbracket \equiv \llbracket + \rrbracket \left(\llbracket 4 \rrbracket, \llbracket 5 \rrbracket\right)$$
-
-\end{frame}
-
-\begin{frame}
-\frametitle{Denotational Semantics Overview}
-
-An example from Subjective Logic...
-
-\begin{equation}
-\begin{split}
-\llbracket \omega^{A}_{\mbox{x}} \land \omega^{A}_{\mbox{y}} \rrbracket
-    & \equiv \llbracket \land \rrbracket \left(
-                 \llbracket \omega^{A}_{\mbox{x}} \rrbracket,
-                 \llbracket \omega^{A}_{\mbox{y}} \rrbracket
-              \right) \\
-    & \equiv \left(\lambda x. \lambda y. \mbox{logical-and(x,y)}\right)
-             \llbracket \omega^{A}_{\mbox{x}} \rrbracket
-             \llbracket \omega^{A}_{\mbox{y}} \rrbracket \\
-    & \equiv \left(\lambda x. \lambda y. \mbox{logical-and(x,y)}\right)
-             \mbox{binl-op(A, x)} \mbox{bin-op(A, y)} \\
-    & \equiv \mbox{logical-and(bin-op(A, x), bin-op(A, y))}
-\end{split}
-\end{equation}
-
-\end{frame}
-
-\begin{frame}
-\frametitle{A Denotational Semantics for Subjective Logic}
-
-We propose to map subjective expressions to expressions in a \emph{typed lambda calculus}
-(e.g. simply-typed $\lambda$-calculus, System-F, etc.)
-
-$$
-\llbracket \omega_{\mbox{x}} \rrbracket
-    \equiv \lambda m : Mass. \mbox{opinion}\left(\llbracket x\rrbracket, m\right): \mbox{Op}
-$$
-
-$$
-\llbracket \land \rrbracket
-    \equiv \lambda x:\mbox{Op}.
-             \lambda y:\mbox{Op}.
-               \lambda m:\mbox{Mass}.
-                 \mbox{logical-and}(\mbox{x m}, \mbox{y m}) : \mbox{Op}
-$$
-
-$$
-\llbracket \alpha \odot \beta \rrbracket
-    \equiv \llbracket \odot \rrbracket \left(\llbracket \alpha \rrbracket, \llbracket \beta \rrbracket\right)
-$$
-
-\end{frame}
-
-\begin{frame}
-\frametitle{A Denotational Semantics for Subjective Logic}
-
-Types play an important role in Subjective Logic.
-
-\begin{itemize}
-  \item Frames of discernment must be the same (or not!)
-  \item Belief holders must occasionally be the same (e.g. concensus)
-  \item Cannot combine binomial with multinomial opinions directly
-  \item Multinomials can only be constructed from \emph{dirichlet mass assignments}
-  \item etc...
-\end{itemize}
-
-Expressions are valid \emph{iff} the types match.
-
-\end{frame}
-
-\begin{frame}
-\frametitle{A Denotational Semantics for Subjective Logic}
-
-By representing subjective expressions as typed $\lambda$-calculus terms, we can exclude
-expressions that are invalid (i.e. they fail to \emph{type-check}.)
-
-With a strongly typed language such as \emph{Haskell}, we can build systems that reject
-\emph{absurd} expressions before they are ever compiled.
 
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
+\begin{frame}
+\frametitle{Research Objectives}
+
+Furthermore, we hope to demonstrate the effectiveness of our combinator
+library by
+
+\begin{itemize}
+  \item Developing a reasoning application which uses our combinators as an
+    external library.
+  \item Develop a small parser front-end so that our combinators may communicate
+    with an external web application.
+  \item Experiment with possible extensions of Subjective Logic.
+\end{itemize}
+
+\end{frame}
+
+%===============================================================================
+%
+% What the hell are monads?
+%
+%===============================================================================
+
+\section{Monads}
+
+\begin{frame}
+\frametitle{Monads}
+
+A monad, formally, is a special kind of \emph{functor} from Category Theory. In
+practice, it is a \emph{data type} M with the following operations:
+
+\begin{itemize}
+  \item $\mbox{inject :: } \alpha \rightarrow \mbox{M } \alpha$.
+  \item $\mbox{bind :: } \mbox{M } \alpha \rightarrow \left(\alpha \rightarrow \mbox{M } \beta\right) \rightarrow \mbox{M } \beta$
+
+\end{itemize}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Monad Laws}
+
+Laws that M must abide by to be considered a monad:
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Examples}
+
+An \emph{optional} data type: either contains a value or does not.
+
+\begin{code}
+data Optional a = Value a | Nothing
+
+instance Monad Optional where
+  return x = Value x        -- inject
+
+  Nothing   >>= f = Nothing -- bind
+  (Value x) >>= f = f x
+\end{code}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Examples}
+
+Example usage:
+
+\begin{code}
+safeDivide :: Int -> Int -> Optional Int
+safeDivide x 0 = Nothing
+safeDivide x y = x / y
+
+result = safeDivide a b >>= safeDivide c
+                        >>= safeDivide d
+\end{code}
+
+If any of the above fails, then entire computation fails.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Examples}
+
+Another example: carrying around \emph{state}
+
+\begin{code}
+data State s a = State { unState :: s -> a }
+
+instance Monad (State s) where
+  return x = State (\_ -> x)
+  sa >>= f = State (\st -> let a  = unState sa st
+                               sb = f a
+                               b  = unState sb st
+                           in b)
+\end{code}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Examples}
+
+Other examples of monads include
+
+%\begin{itemize}
+%  \item
+%\end{itemize}
+
+\end{frame}
+
+%===============================================================================
+%
 % How far along are we toward completion of the work?
+%
+%===============================================================================
 
 \section{Current Progress}
 
+\begin{frame}
+\frametitle{Library Implementation}
+
+So far we have implemented the core structures of Subjective Logic:
+
+\begin{itemize}
+  \item Subjective opinions
+  \item Frames, belief holders, etc.
+\end{itemize}
+
+\end{frame}
 
 %-------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
 
 \section{Roadmap Toward Completion}
 
