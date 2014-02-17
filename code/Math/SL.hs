@@ -10,7 +10,7 @@ module Math.SL
        , (</\>)
        ) where
 
-
+import Math.SL.State
 import Math.SL.Core
 import Math.SL.Opinion
 import Math.SL.Operators
