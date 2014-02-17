@@ -19,42 +19,58 @@ module SL
        ) where
 
 
-import Control.Monad (ap, join)
-import Control.Monad.State
+import Control.Monad
 import Control.Applicative
 import qualified Data.Map as M
+
+
+----------------------------------------------------------------------------------
+
+
+data SLStateObj = SLStateObj
+--               { slsBeliefMassAssignment :: Holder -> BMA
+--               , slsBaseRate             :: Holder -> BaseRate
+--               }
+
+
+newtype SLState a = SLState { runState :: SLStateObj -> (SLStateObj, a) }
+
+instance Monad SLState where
+  return x = SLState $ \st -> (st, x)
+  sa >>= f = SLState $ \st -> let (st', a)  = runState sa st
+                                  sb        = f a
+                                  (st'', b) = runState sb st'
+                              in (st'', b)
+
+instance Applicative SLState where
+  pure = return
+  (<*>) = ap
+
+instance Functor SLState where
+  fmap f sa = SLState $ \st -> let (st', a) = runState sa st
+                             in  (st', f a)
+
+evalState :: SLState a -> SLStateObj -> a
+evalState st s = snd $ runState st s
+
+
+----------------------------------------------------------------------------------
+
+
+type SL a = SLState (Either String a)
+
+
+runSL :: SL a -> SLStateObj -> SLValue a
+runSL expr st = case evalState expr st of
+  Left err -> SLError err
+  Right x  -> SLValue x
 
 
 -- | The result of an SL expression. Either it is a a value, or an error message.
 data SLValue a = SLValue a | SLError String deriving (Show, Eq)
 
 
--- Things to tow around. For each belief holder, we need to assign a belief mass
--- assignment from which to construct opinions out of. Every holder may have their
--- own mass assignments and base rates, so those create a kind of "environment"
--- for the computations to live in.
-
-
-data SLState = SLState
-
-
--- Type wrapper for easier-looking code. Maybe make this a newtype and
--- wrap it properly.
-
-
-type SL a = State SLState (Either String a)
-
-
-runSL :: SL a -> SLState -> SLValue a
-runSL expr st = case evalState expr st of
-  Left err -> SLError err
-  Right x  -> SLValue x
-
-
--- TODO: We may need different kinds of frames:
---  1. regular old frames
---  2. cartesian frames (think multiplication)
---  3. conditional frames (see deduction/abduction)
+----------------------------------------------------------------------------------
 
 
 -- | A belief holder.
@@ -109,6 +125,9 @@ isBinomial = (2 ==) . length . unFrame . opFrame
 -- | Check if an opinion is a multinomial opinion (NOT a hyper opinion.)
 isMultinomial :: (Opinion h f) -> Bool
 isMultinomial = all ((1 ==) . length . fst) . M.toList . opBelief
+
+
+----------------------------------------------------------------------------------
 
 
 -- Simply take an operator and do the plumbing for us. The reason why
