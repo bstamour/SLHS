@@ -19,7 +19,7 @@ data Opinion h a =
 
 
 -- | Create a standard hyper opinion.
-opinion :: Ord f => SL (Opinion Int f)
+opinion :: SL (Opinion Int Int)
 opinion = pure . pure $ Opinion
           (Holder 0)
           (Frame [])

@@ -1,7 +1,7 @@
 module Test where
 
 
-import SL
+import Math.SL
 
 
 -- A few test expressions.
