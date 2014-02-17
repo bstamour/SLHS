@@ -1,8 +1,8 @@
-module Operators where
+module Math.SL.Operators where
 
 
-import Opinion
-import Core
+import Math.SL.Opinion
+import Math.SL.Core
 import Control.Applicative
 import Control.Monad
 

@@ -1,8 +1,5 @@
 
-
-
-
-module SL
+module Math.SL
        ( SLValue(..)     -- Consider which ones to export. We don't want people making
        , SLState(..)     -- objects without going through the smart constructors...
        , SL
@@ -14,8 +11,6 @@ module SL
        ) where
 
 
-
-
-import Core
-import Opinion
-import Operators
+import Math.SL.Core
+import Math.SL.Opinion
+import Math.SL.Operators

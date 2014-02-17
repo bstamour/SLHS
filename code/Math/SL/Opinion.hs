@@ -1,7 +1,7 @@
-module Opinion where
+module Math.SL.Opinion where
 
 
-import Core
+import Math.SL.Core
 import Control.Applicative
 import qualified Data.Map as M
 

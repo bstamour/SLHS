@@ -1,7 +1,7 @@
 
 
 
-module Core where
+module Math.SL.Core where
 
 
 import Control.Monad
