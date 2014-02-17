@@ -1,12 +1,15 @@
 module Math.SL.State where
 
+
 import Control.Applicative
 import Control.Monad
+
 
 data SLStateObj = SLStateObj
 --               { slsBeliefMassAssignment :: Holder -> BMA
 --               , slsBaseRate             :: Holder -> BaseRate
 --               }
+
 
 newtype SLState a = SLState { runState :: SLStateObj -> (SLStateObj, a) }
 
