@@ -153,7 +153,18 @@ satisfying $b_x + d_x + u_x = 1$, and $0 \leq a_x \leq 1$.
 \begin{frame}
 \frametitle{Binomial Opinions}
 
-Can be mapped to \emph{Beta distributions} using the following relation:
+Can be mapped to \emph{Beta distributions} using the following relations:
+
+$$
+\begin{array}{l}
+  b = \frac{r}{W + r + s} \\
+  d = \frac{s}{W + r + s} \\
+  u = \frac{W}{W + r + s}
+\end{array}
+$$
+
+where $\omega_x = \langle b, d, u, a\rangle$ and $\mbox{Beta}(p | r, s, a)$
+are defined over the same proposition $x$.
 
 \end{frame}
 
@@ -377,15 +388,6 @@ practice, it is a \emph{data type} M with the following operations \cite{Wadler:
 
 %-------------------------------------------------------------------------------
 
-\begin{frame}
-\frametitle{Monad Laws}
-
-Laws that M must abide by to be considered a monad:
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
 \begin{frame}[fragile]
 \frametitle{Examples}
 
@@ -395,9 +397,9 @@ An \emph{optional} data type: either contains a value or does not.
 data Optional a = Value a | Nothing
 
 instance Monad Optional where
-  return x = Value x        -- inject
+  return x = Value x        -- unitM
 
-  Nothing   >>= f = Nothing -- bind
+  Nothing   >>= f = Nothing -- bindM
   (Value x) >>= f = f x
 \end{code}
 
@@ -431,13 +433,13 @@ If any of the above fails, then entire computation fails.
 Another example: carrying around \emph{state}
 
 \begin{code}
-data State s a = State { unState :: s -> a }
+data State s a = State { unState :: s -> (s, a) }
 
 instance Monad (State s) where
   return x = State (\_ -> x)
-  sa >>= f = State (\st -> let a  = unState sa st
-                               sb = f a
-                               b  = unState sb st
+  sa >>= f = State (\st -> let (st', a)  = unState sa st
+                               sb        = f a
+                               (st'', b) = unState sb st'
                            in b)
 \end{code}
 
@@ -445,14 +447,116 @@ instance Monad (State s) where
 
 %-------------------------------------------------------------------------------
 
-\begin{frame}
-\frametitle{Examples}
+\begin{frame}[fragile]
+\frametitle{Monad Laws}
 
-Other examples of monads include
+Any type M that has a monadic instance should also abide by the following
+laws.
+
+\begin{itemize}
+  \item \emph{Left unit:}
+    \begin{code}
+      return x >>= k = k x
+    \end{code}
+
+  \item \emph{Right unit:}
+    \begin{code}
+      m >>= return = m
+    \end{code}
+
+  \item \emph{Associativity:}
+    \begin{code}
+      m >>= (\x -> (k x) >>= h)
+        = (m >>= (\x -> (k x)) >>= h)
+    \end{code}
+
+\end{itemize}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+%\begin{frame}
+%\frametitle{Other Examples}
+
+%Other examples of monads include
 
 %\begin{itemize}
 %  \item
 %\end{itemize}
+
+%\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Why Monads?}
+
+We propose to use monads for two reasons:
+
+\begin{itemize}
+  \item \emph{Error propogation:} If any sub expression fails, we carry the
+    error to the top, curtailing further computations.
+  \item \emph{Carrying around state:} The state monad allows us to carry state
+    (belief mass assignments, base rates, etc) throughout our operators implicitly.
+\end{itemize}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Why Monads?}
+
+Error reporting:
+
+\begin{code}
+data SLValue a = SLValue a | SLError String
+instance Monad SLValue where
+  return x = SLValue x
+  (SLValue x) >>= f = f x
+  (SLError s) >>= _ = SLError s
+\end{code}
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Why Moands?}
+
+Carrying state:
+
+\begin{code}
+data SLStateObj = SLStateObj {
+  massAssignment :: BeliefMassAssignment,
+  baseRate       :: BaseRate
+}
+type SLState a = State SLStateObj a
+\end{code}
+
+Here we use a pre-packaged \emph{State Monad} to avoid re-inventing any wheels.
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}[fragile]
+\frametitle{Subjective Logic Operators}
+
+Now, operators can be defined like the following:
+
+\begin{code}
+(<+>) :: SLState Opinion -> SLState Opinion -> SLState Opinion
+op1 <+> op2 = -- details omitted
+
+(<*>) :: SLState Opinion -> SLState Opinion -> SLState Opinion
+op1 <*> op2 = -- details omitted
+
+eqn :: SLState Opinion
+eqn = (op1 <*> op2) <+> (op1 <*> op3) <+> ... <+> (op1 <*> opN)
+
+result = runSL eqn mass baseRate -- run the equation...
+\end{code}
 
 \end{frame}
 
@@ -462,7 +566,7 @@ Other examples of monads include
 %
 %===============================================================================
 
-\section{Current Progress}
+\section{Current Progress / Roadmap Toward Completion}
 
 \begin{frame}
 \frametitle{Library Implementation}
@@ -470,30 +574,54 @@ Other examples of monads include
 So far we have implemented the core structures of Subjective Logic:
 
 \begin{itemize}
-  \item Subjective opinions
-  \item Frames, belief holders, etc.
+  \item Subjective opinions: binomial, multinomial and hyper.
+  \item The monads from which we will be constructing our operator set.
+  \item Basic operators between opinions.
 \end{itemize}
 
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
+\begin{frame}
+\frametitle{What's Left?}
 
+\begin{itemize}
+  \item Remaining operators.
+  \item Complexity analysis of the operators.
+  \item Proofs of termination.
+  \item Demo applications.
+\end{itemize}
 
+\end{frame}
 
-
-
-
-
-
-
-\section{Roadmap Toward Completion}
-
-%-------------------------------------------------------------------------------
+%===============================================================================
+%
+% Close it off.
+%
+%===============================================================================
 
 \section{Conclusion}
 
-%-------------------------------------------------------------------------------
+\begin{frame}
+\frametitle{Conclusion}
+
+Subjective Logic is a fairly new, powerful logic for uncertain reasoning. The lack
+of tooling, however, is an issue that needs to be overcome.
+
+We propose to develop a comprehensive library of operators, alongside an analysis of
+of complexity, and proofs of termination.
+
+In addition we propose to develop a set of demo applications to display the flexibility
+of our library.
+\end{frame}
+
+
+%===============================================================================
+%
+% Citations.
+%
+%===============================================================================
 
 \section{References}
 
