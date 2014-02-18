@@ -1,15 +1,9 @@
 module Math.SL.Core where
 
 
-import Math.SL.State
-
 import Control.Monad
 import Control.Applicative
 import qualified Data.Map as M
-
-
--- | A convenience wrapper.
-type SL a = SLState (SLValue a)
 
 
 -- | The result of an SL expression. Either it is a a value, or an error message.
@@ -20,12 +14,12 @@ instance Functor SLValue where
   fmap _ (SLError e) = SLError e
 
 instance Applicative SLValue where
-  pure = return
+  pure  = return
   (<*>) = ap
 
 instance Monad SLValue where
-  return x = SLValue x
-  (SLValue x) >>= f = f x
+  return x            = SLValue x
+  (SLValue x)   >>= f = f x
   (SLError err) >>= _ = SLError err
 
 
@@ -38,12 +32,19 @@ newtype Atom a = Atom a deriving (Show, Eq, Ord)
 
 
 -- | A frame of mutually atomic events.
-newtype Frame a = Frame { unFrame :: [Atom a] } deriving (Show, Eq, Ord)
+data Frame a = Frame [Atom a]
+             | ProductFrame (Frame a) (Frame a)
+             deriving (Show, Eq, Ord)
 
 
 -- | A mass assignment. For each holder, assign a basic belief assignment.
 newtype MassAssignment h a =
   MassAssignment { unMA :: M.Map (Holder h) (M.Map (Frame a) Rational) }
+
+
+-- | A base rate assignment.
+newtype BaseRateAssignment h a =
+  BaseRateAssignment { unBRA :: M.Map (Holder h) (M.Map (Atom a) Rational) }
 
 
 -- | Beliefs are maps from frames to numbers.

@@ -2,6 +2,7 @@ module Math.SL.Opinion where
 
 
 import Math.SL.Core
+import Math.SL.State
 import Control.Applicative
 import qualified Data.Map as M
 
@@ -19,7 +20,7 @@ data Opinion h a =
 
 
 -- | Create a standard hyper opinion.
-opinion :: SL (Opinion Int Int)
+opinion :: SL Int Int (Opinion Int Int)
 opinion = pure . pure $ Opinion
           (Holder 0)
           (Frame [])
@@ -29,21 +30,20 @@ opinion = pure . pure $ Opinion
 
 
 -- | Create a focused binomial opinion about the frame {x, not x}.
-binomialOpinion :: f -> SL (Opinion h f)
+binomialOpinion :: f -> SL h a (Opinion h a)
 binomialOpinion = undefined
 
 
 -- | Create a binomial opinion about a subset of the frame.
-binomialOpinionSubset :: Frame f -> SL (Opinion h f)
+binomialOpinionSubset :: Frame f -> SL h a (Opinion h a)
 binomialOpinionSubset = undefined
 
 
 -- | Check if an opinion is a binomial opinion.
 isBinomial :: (Opinion h f) -> Bool
-isBinomial = (2 ==) . length . unFrame . opFrame
+isBinomial = undefined
 
 
 -- | Check if an opinion is a multinomial opinion (NOT a hyper opinion.)
 isMultinomial :: (Opinion h f) -> Bool
---isMultinomial = all ((1 ==) . length . fst) . M.toList . opBelief
 isMultinomial = undefined
