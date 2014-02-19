@@ -1,5 +1,5 @@
 
-module Frame where
+module Math.SL.Frame where
 
 import qualified Data.Set as S
 
