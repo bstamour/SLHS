@@ -2,6 +2,7 @@ module Math.SL.Opinion where
 
 
 import Math.SL.Core
+import Math.SL.Frame
 import Math.SL.State
 import Control.Applicative
 import qualified Data.Map as M
@@ -23,7 +24,7 @@ data Opinion h a =
 opinion :: SL Int Int (Opinion Int Int)
 opinion = pure . pure $ Opinion
           (Holder 0)
-          (Frame [])
+          (frame [])
           (BeliefVector (M.fromList []))
           0
           (BaseRateVector (M.fromList []))

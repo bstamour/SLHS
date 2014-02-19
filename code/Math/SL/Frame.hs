@@ -5,6 +5,7 @@ import qualified Data.Set as S
 
 data Frame a = Frame (S.Set a)                  -- A simple frame.
              | FocusedFrame (S.Set a) (S.Set a) -- A frame partitioned into x, ~x
+             deriving (Eq, Ord)
 
 frame :: Ord a => [a] -> Frame a
 frame = Frame . S.fromList
