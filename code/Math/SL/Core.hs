@@ -1,33 +1,21 @@
 module Math.SL.Core where
 
+
 import Math.SL.Frame
+import Math.SL.SLValue
+
 import Control.Monad
 import Control.Applicative
+
 import qualified Data.Map as M
 
--- | The result of an SL expression. Either it is a a value, or an error message.
-data SLValue a = SLValue a | SLError String deriving (Show, Eq)
-
-instance Functor SLValue where
-  fmap f (SLValue x) = SLValue (f x)
-  fmap _ (SLError e) = SLError e
-
-instance Applicative SLValue where
-  pure  = return
-  (<*>) = ap
-
-instance Monad SLValue where
-  return x            = SLValue x
-  (SLValue x)   >>= f = f x
-  (SLError err) >>= _ = SLError err
 
 -- | A belief holder.
 newtype Holder h = Holder h deriving (Show, Eq, Ord)
 
+
 -- | An atomic event.
 newtype Atom a = Atom a deriving (Show, Eq, Ord)
-
-
 
 
 -- TODO: Look these over.

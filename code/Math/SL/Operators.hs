@@ -1,9 +1,15 @@
-module Math.SL.Operators where
+
+module Math.SL.Operators
+       ( (<++>)
+       , (</\>)
+       ) where
 
 
 import Math.SL.Opinion
 import Math.SL.Core
 import Math.SL.State
+import Math.SL.SLValue
+
 import Control.Applicative
 import Control.Monad
 
