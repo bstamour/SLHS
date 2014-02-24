@@ -12,27 +12,98 @@ import Control.Applicative
 import qualified Data.Map as M
 
 
-data BeliefVector a = BeliefVector deriving Show
+data BeliefVector a   = BeliefVector deriving Show
+data MBeliefVector a  = MBeliefVector deriving Show
 data BaseRateVector a = BaseRateVector deriving Show
 
 
--- | A subjective opinion (hyper opinion.) Can be casted to other opinion
---   types through the constructors below.
-data Opinion h a =
-  Opinion
-  { opHolder      :: Holder h           -- ^ The holder of the belief.
-  , opFrame       :: Frame a            -- ^ The frame it's defined over.
-  , opBelief      :: BeliefVector a     -- ^ Belief vector.
-  , opUncertainty :: Rational           -- ^ uncertainty mass.
-  , opBaseRate    :: BaseRateVector a   -- ^ base rate.
-  } deriving (Show)
+data Opinion h a = HyperOpinion
+                   (Holder h)         -- The belief holder.
+                   (Frame a)          -- The frame of discernment.
+                   (BeliefVector a)   -- Beliefs over the reduced powerset.
+                   Rational           -- Uncertainty.
+                   (BaseRateVector a) -- Base Rates
+                 | MultinomialOpinion
+                   (Holder h)         -- The belief holder.
+                   (Frame a)          -- The frame of discernment.
+                   (MBeliefVector a)  -- The belief vector over the frame.
+                   Rational           -- Uncertainty.
+                   (BaseRateVector a) -- The base rate vector.
+                 | BinomialOpinion
+                   (Holder h)         -- The belief holder.
+                   a                  -- x
+                   a                  -- ~x
+                   Rational           -- belief
+                   Rational           -- disbelief
+                   Rational           -- uncertainty
+                   Rational           -- base rate
+                 | CoarsenedOpinion
+                   (Holder h)         -- The belief holder.
+                   (Frame a)          -- x
+                   (Frame a)          -- ~x
+                   Rational           -- belief
+                   Rational           -- disbelief
+                   Rational           -- uncertainty
+                   Rational           -- base rate
 
 
+-------------------------------------------------------------------------------------------
+-- Constructors.
+-------------------------------------------------------------------------------------------
+
+
+-- Create a hyper opinion from the belief mass assignment.
 opinion :: Int -> Holder h -> SLState h a (SLValue (Opinion h a))
 opinion n holder = do frm <- getFrame n
-                      return $ Opinion
+                      return $ HyperOpinion
                         <$> pure holder
                         <*> frm
                         <*> pure BeliefVector
                         <*> pure 0
                         <*> pure BaseRateVector
+
+
+-- Create a binomial opinion around x, where x is an element of the frame.
+highlight :: Opinion h a -> a -> SLState h a (SLValue (Opinion h a))
+highlight = undefined
+
+
+-- Create a binomial opinion around x, where x is a sub-frame.
+coarsen :: Opinion h a -> Frame a -> SLState h a (SLValue (Opinion h a))
+coarsen = undefined
+
+
+-------------------------------------------------------------------------------------------
+-- Accessor functions.
+-------------------------------------------------------------------------------------------
+
+
+hyperBelief :: Opinion h a -> Frame a -> SLState h a (SLValue Rational)
+hyperBelief = undefined
+
+
+multinomialBelief :: Opinion h a -> a -> SLState h a (SLValue Rational)
+multinomialBelief = undefined
+
+
+binomialBelief :: Opinion h a -> SLState h a (SLValue Rational)
+binomialBelief = undefined
+
+
+binomialDiselief :: Opinion h a -> SLState h a (SLValue Rational)
+binomialDiselief = undefined
+
+
+binomialBaseRate :: Opinion h a -> SLState h a (SLValue Rational)
+binomialBaseRate = undefined
+
+
+baseRate :: Opinion h a -> a -> SLState h a (SLValue Rational)
+baseRate = undefined
+
+
+uncertainty :: Opinion h a -> SLState h a (SLValue Rational)
+uncertainty (HyperOpinion _ _ _ u _)         = pure $ pure u
+uncertainty (MultinomialOpinion _ _ _ u _)   = pure $ pure u
+uncertainty (BinomialOpinion _ _ _ _ _ u _)  = pure $ pure u
+uncertainty (CoarsenedOpinion _ _ _ _ _ u _) = pure $ pure u
