@@ -1,12 +1,4 @@
-
-module Math.SL.Frame
-       ( Frame(..)
-       , frame
-       , coarsen
-       , uncoarsen
-       , isBinomial
-       , isSubframeOf
-       ) where
+module Math.SL.Frame where
 
 
 import Math.SL.SLValue
@@ -15,7 +7,7 @@ import qualified Data.Set as S
 
 data Frame a = Frame (S.Set a)                  -- A simple frame.
              | FocusedFrame (S.Set a) (S.Set a) -- A frame partitioned into x, ~x
-             deriving (Eq, Ord)
+             deriving (Eq, Ord, Show)
 
 
 -- | Smart constructor. Build a frame from a list of items.
@@ -39,8 +31,6 @@ uncoarsen frm@(Frame _)        = frm
 uncoarsen (FocusedFrame xs ys) = Frame (xs `S.union` ys)
 
 
--- | Is the frame a binomial frame?
-isBinomial :: Frame a -> Bool
 isBinomial (FocusedFrame _ _) = True
 isBinomial (Frame set)        = hasLength (S.toList set) 2
 

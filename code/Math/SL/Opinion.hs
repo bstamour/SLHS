@@ -1,11 +1,19 @@
 module Math.SL.Opinion where
 
 
-import Math.SL.Core
 import Math.SL.Frame
+import Math.SL.Core
 import Math.SL.State
+import Math.SL.SLValue
+
+import Data.Functor.Compose
 import Control.Applicative
+
 import qualified Data.Map as M
+
+
+data BeliefVector a = BeliefVector deriving Show
+data BaseRateVector a = BaseRateVector deriving Show
 
 
 -- | A subjective opinion (hyper opinion.) Can be casted to other opinion
@@ -17,34 +25,14 @@ data Opinion h a =
   , opBelief      :: BeliefVector a     -- ^ Belief vector.
   , opUncertainty :: Rational           -- ^ uncertainty mass.
   , opBaseRate    :: BaseRateVector a   -- ^ base rate.
-  }
+  } deriving (Show)
 
 
--- | Create a standard hyper opinion.
-opinion :: SL Int Int (Opinion Int Int)
-opinion = pure . pure $ Opinion
-          (Holder 0)
-          (frame [])
-          (BeliefVector (M.fromList []))
-          0
-          (BaseRateVector (M.fromList []))
-
-
--- | Create a focused binomial opinion about the frame {x, not x}.
-binomialOpinion :: f -> SL h a (Opinion h a)
-binomialOpinion = undefined
-
-
--- | Create a binomial opinion about a subset of the frame.
-binomialOpinionSubset :: Frame f -> SL h a (Opinion h a)
-binomialOpinionSubset = undefined
-
-
--- | Check if an opinion is a binomial opinion.
-isBinomial :: (Opinion h f) -> Bool
-isBinomial = undefined
-
-
--- | Check if an opinion is a multinomial opinion (NOT a hyper opinion.)
-isMultinomial :: (Opinion h f) -> Bool
-isMultinomial = undefined
+opinion :: Int -> Holder h -> SLState h a (SLValue (Opinion h a))
+opinion n holder = do frm <- getFrame n
+                      return $ Opinion
+                        <$> pure holder
+                        <*> frm
+                        <*> pure BeliefVector
+                        <*> pure 0
+                        <*> pure BaseRateVector

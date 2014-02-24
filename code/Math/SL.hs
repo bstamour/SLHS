@@ -1,14 +1,25 @@
-
 module Math.SL
-       ( SLValue(..)     -- Consider which ones to export. We don't want people making
-       , SLState(..)     -- objects without going through the smart constructors...
-       , SL
-       , Opinion(..)
+       ( opinion
+       , frame
+       , add
+       , subtract
+       , cFuse
+       , aFuse
+       , constrain
+       , multiply
+       , comultiply
+       , divide
+       , codivide
+       , deduce
+       , abduce
        , runSL
-       , opinion
-       , (<++>)
-       , (</\>)
+       , Holder(..)
+       , SLData(..)
        ) where
+
+
+import Prelude hiding (subtract)
+import Control.Applicative
 
 import Math.SL.State
 import Math.SL.Core
