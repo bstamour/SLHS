@@ -15,6 +15,8 @@ module Math.SL
        , runSL
        , Holder(..)
        , SLData(..)
+       , BeliefMassAssignment(..)
+       , BaseRate(..)
        ) where
 
 
