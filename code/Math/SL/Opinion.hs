@@ -31,6 +31,7 @@ data Opinion h a = HyperOpinion
                    (BaseRateVector a) -- The base rate vector.
                  | BinomialOpinion
                    (Holder h)         -- The belief holder.
+                   (Frame a)          -- The frame of discernment.
                    a                  -- x
                    a                  -- ~x
                    Rational           -- belief
@@ -39,6 +40,7 @@ data Opinion h a = HyperOpinion
                    Rational           -- base rate
                  | CoarsenedOpinion
                    (Holder h)         -- The belief holder.
+                   (Frame a)          -- The frame of discernment.
                    (Frame a)          -- x
                    (Frame a)          -- ~x
                    Rational           -- belief
@@ -74,8 +76,27 @@ coarsen = undefined
 
 
 -------------------------------------------------------------------------------------------
+-- Querying functions.
+-------------------------------------------------------------------------------------------
+
+
+isBinomial :: Opinion h a -> Bool
+isBinomial (BinomialOpinion _ _ _ _ _ _ _ _) = True
+isBinomial (CoarsenedOpinion _ _ _ _ _ _ _ _) = True
+isBinomial _ = False
+
+
+-------------------------------------------------------------------------------------------
 -- Accessor functions.
 -------------------------------------------------------------------------------------------
+
+
+holder :: Opinion h a -> Holder h
+holder = undefined
+
+
+opFrame :: Opinion h a -> Frame a
+opFrame = undefined
 
 
 hyperBelief :: Opinion h a -> Frame a -> SLState h a (SLValue Rational)
@@ -90,8 +111,8 @@ binomialBelief :: Opinion h a -> SLState h a (SLValue Rational)
 binomialBelief = undefined
 
 
-binomialDiselief :: Opinion h a -> SLState h a (SLValue Rational)
-binomialDiselief = undefined
+binomialDisbelief :: Opinion h a -> SLState h a (SLValue Rational)
+binomialDisbelief = undefined
 
 
 binomialBaseRate :: Opinion h a -> SLState h a (SLValue Rational)
@@ -105,5 +126,5 @@ baseRate = undefined
 uncertainty :: Opinion h a -> SLState h a (SLValue Rational)
 uncertainty (HyperOpinion _ _ _ u _)         = pure $ pure u
 uncertainty (MultinomialOpinion _ _ _ u _)   = pure $ pure u
-uncertainty (BinomialOpinion _ _ _ _ _ u _)  = pure $ pure u
-uncertainty (CoarsenedOpinion _ _ _ _ _ u _) = pure $ pure u
+uncertainty (BinomialOpinion _ _ _ _ _ _ u _)  = pure $ pure u
+uncertainty (CoarsenedOpinion _ _ _ _ _ _ u _) = pure $ pure u
