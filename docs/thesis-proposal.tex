@@ -142,6 +142,8 @@ $\mathbb{R}^\Theta = \lbrace
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 \frametitle{Belief Distributions}
 
@@ -162,6 +164,8 @@ $$
 is called the \emph{uncertainty mass}.
 
 \end{frame}
+
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Belief Distributions}
@@ -186,6 +190,8 @@ Belief distributions and uncertainty can be mapped to \emph{basic belief assignm
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 \frametitle{Focal Elements}
 
@@ -194,6 +200,8 @@ Any subset of $\Theta$ that has non-zero mass distributed to it is called a
 \emph{class-2} elements (sets of cardinality 2), ...
 
 \end{frame}
+
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Opinions in Subjective Logic}
@@ -216,6 +224,12 @@ $$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+% BINOMIAL OPINIONS
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 \frametitle{Binomial Opinions}
 
@@ -232,6 +246,8 @@ $$
 
 \end{frame}
 
+%-------------------------------------------------------------------------------
+
 \begin{frame}
 \frametitle{Binomial Opinions}
 
@@ -244,6 +260,8 @@ $$
 $$
 
 \end{frame}
+
+%-------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Binomial Opinions}
@@ -265,15 +283,86 @@ $$
 \begin{frame}
 \frametitle{Binomial Coarsening}
 
+Binomial opinions can also be built from binary partitions of frames.
+
+e.g. $\Theta = \lbrace \mbox{Red,Orange,Yellow,Green,Blue,Purple} \rbrace$
+
+... Split into two sets $Primary = \lbrace \mbox{Red,Yellow,Blue} \rbrace$, and
+$\lnot Primary = \lbrace \mbox{Orange,Green,Purple} \rbrace$ ...
+
+gives us a ``binary frame'' $\Theta' = \lbrace \mbox{Primary}, \lnot \mbox{Primary} \rbrace$.
+
+$$
+\omega_{Primary} = \langle b_{Primary}, d_{Primary}, u_{Primary}, a_{Primary} \rangle
+$$
+
 \end{frame}
+
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+% MULTINOMIAL OPINIONS
+%------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Multinomial Opinions}
 
+\emph{Multinomial opinions} are defined over frames with possibly more than 2 elements.
+All binomial opinions are multinomial opinions. Multinomials are \emph{more general}.
+
+Restriction: only \emph{class-1} elements of $\mathbb{R}^\Theta$ can be focal elements.
+
+Same 3-tuple representation:
+
+$$
+\omega_\Theta = \langle b_\Theta, u_\Theta, a_\Theta \rangle
+$$
+
 \end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Multinomial Opinions}
+
+Multinomials can be mapped to \emph{Dirichlet distributions}.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+% HYPER OPINIONS
+%------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Hyper Opinions}
+
+No restrictions on focal elements. Anything goes. Being the most general, hyper
+opinions are also simply called \emph{Subjective Opinions}.
+
+All multinomial opinions are also hyper opinions.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Hyper Opinions}
+
+Hyper opinions can be mapped to \emph{Hyper-dirichlet distributions}.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+% SOME SL OPERATORS.
+%------------------------------------------------------------------------------
+
+\begin{frame}
+\frametitle{Example SL Operators}
+
 
 \end{frame}
 
@@ -439,7 +528,7 @@ Another example: carrying around \emph{state}
 data State s a = State { unState :: s -> (s, a) }
 
 instance Monad (State s) where
-  return x = State (\_ -> x)
+  return x = State (\st -> (st, x))
   sa >>= f = State (\st -> let (st', a)  = unState sa st
                                sb        = f a
                                (st'', b) = unState sb st'
@@ -521,6 +610,9 @@ instance Monad SLValue where
   (SLError s) >>= _ = SLError s
 \end{code}
 
+We can detect and report errors to users. Computation stops after a single
+error is detected thanks to laziness.
+
 \end{frame}
 
 %-------------------------------------------------------------------------------
@@ -532,13 +624,15 @@ Carrying state:
 
 \begin{code}
 data SLStateObj = SLStateObj {
-  massAssignment :: BeliefMassAssignment,
-  baseRate       :: BaseRate
+  frames :: [Frame]
+  distribs :: [BeliefDistribution]
+  baseRates :: [BaseRateVector]
 }
 type SLState a = State SLStateObj a
 \end{code}
 
-Here we use a pre-packaged \emph{State Monad} to avoid re-inventing any wheels.
+We carry around the state required for the operators to work behind the scenes.
+
 \end{frame}
 
 %-------------------------------------------------------------------------------
@@ -549,16 +643,19 @@ Here we use a pre-packaged \emph{State Monad} to avoid re-inventing any wheels.
 Now, operators can be defined like the following:
 
 \begin{code}
-(<+>) :: SLState Opinion -> SLState Opinion -> SLState Opinion
-op1 <+> op2 = -- details omitted
+add :: SLState Opinion -> SLState Opinion -> SLState Opinion
+op1 `add` op2 = -- details omitted
 
-(<*>) :: SLState Opinion -> SLState Opinion -> SLState Opinion
-op1 <*> op2 = -- details omitted
+mult :: SLState Opinion -> SLState Opinion -> SLState Opinion
+op1 `mult` op2 = -- details omitted
 
 eqn :: SLState Opinion
-eqn = (op1 <*> op2) <+> (op1 <*> op3) <+> ... <+> (op1 <*> opN)
+eqn = (op1 `mult` op2) `add` (op1 `mult` op3)
+                       `add`
+                       ...
+                       `add` (op1 `mult` opN)
 
-result = runSL eqn mass baseRate -- run the equation...
+result = runSL eqn myState
 \end{code}
 
 \end{frame}
