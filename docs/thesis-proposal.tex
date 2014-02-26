@@ -96,26 +96,7 @@ Example application areas include
 Subjective Logic is a probablistic logic for uncertain reasoning
 \cite{josang_logic_2001}.
 
-Basic object is the subjective opinion, defined over a frame of discernment.
-Opinions come in three flavours:
-
-\begin{itemize}
-  \item Binomial opinions
-  \item Multinomial opinions
-  \item Hyper opinions \cite{josang2012interpretation}. Also known simply as
-    \emph{Subjective opinions}.
-\end{itemize}
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Subjective Logic}
-
-Has some similarities with \emph{Dempster-Shafer Theory} (cite).
-
-% TODO: More details here.
+Shares some similarities with \emph{belief theory}.
 
 \end{frame}
 
@@ -124,36 +105,150 @@ Has some similarities with \emph{Dempster-Shafer Theory} (cite).
 \begin{frame}
 \frametitle{Frame of Discernment}
 
-A set of atomic entities
+A \emph{frame of discernment} is a set of mutually atomic elements. e.g.
+solid colours, states in an automata, etc.
 
-$$\Theta = \lbrace Red, Blue, Green, Yellow \rbrace$$
+Some examples
 
-Effectively, the universe of discourse.
+$\Theta = \lbrace \mbox{Red, Blue, Yellow} \rbrace$
 
-We define opinions over subsets of $\Theta$.
+$\Theta = \lbrace \mbox{Male, Female} \rbrace$
 
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Binomial Opinions}
-
-Given a binary frame $\Theta = \lbrace x, \lnot x \rbrace$, we can define a
-\emph{binomial opinion} of $x$.
-
-$$\omega_{x}^A = \langle b_x, d_x, u_x, a_x \rangle$$
-
-satisfying $b_x + d_x + u_x = 1$, and $0 \leq a_x \leq 1$.
+$\Theta = \lbrace \mbox{Attack, Remain stationary} \rbrace$
 
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
 \begin{frame}
+\frametitle{Reduced Powerset}
+
+The \emph{reduced powerset} of a frame $\Theta$ is defined as $2^{\Theta} \setminus \lbrace \emptyset, \Theta \rbrace$.
+
+Denoted as $\mathbb{R}^\Theta$.
+
+e.g.
+
+$\Theta = \lbrace \mbox{Red, Blue, Yellow} \rbrace$
+
+$\mathbb{R}^\Theta = \lbrace
+  \lbrace \mbox{Red} \rbrace,
+  \lbrace \mbox{Blue} \rbrace,
+  \lbrace \mbox{Yellow} \rbrace,
+  \lbrace \mbox{Red, Blue} \rbrace,
+  \lbrace \mbox{Red, Yellow} \rbrace,
+  \lbrace \mbox{Blue, Yellow} \rbrace
+  \rbrace$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Belief Distributions}
+
+A \emph{belief distribution} is a function $b_\Theta: \mathbb{R}^\Theta \rightarrow \lbrack 0, 1 \rbrack$
+
+such that
+
+$$
+\sum_{x \in \mathbb{R}^\Theta} b_\Theta \left( x \right) \leq 1
+$$
+
+and
+
+$$
+u_\Theta = 1 - \sum_{x \in \mathbb{R}^\Theta} b_\Theta \left( x \right)
+$$
+
+is called the \emph{uncertainty mass}.
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Belief Distributions}
+
+Belief distributions and uncertainty can be mapped to \emph{basic belief assignments} from
+\emph{Belief Theory}:
+
+
+\begin{table}
+\centering
+
+\begin{tabular}{|l|l|}
+  \hline
+  Subjective Logic & Belief Theory \\
+  \hline
+  $b_\Theta\left( x \right)$ & $m_\Theta\left( x \right)$ \\
+  $u_\Theta$                 & $m_\Theta \left(\Theta\right)$ \\
+  \hline
+\end{tabular}
+
+\end{table}
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Focal Elements}
+
+Any subset of $\Theta$ that has non-zero mass distributed to it is called a
+\emph{focal element}. Focal elements can be \emph{class-1} elements (singletons),
+\emph{class-2} elements (sets of cardinality 2), ...
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Opinions in Subjective Logic}
+
+In SL, opinions come in three basic forms:
+
+\begin{itemize}
+  \item Binomial Opinions
+  \item Multinomial Opinions
+  \item Hyper Opinions
+\end{itemize}
+
+where hyper opinions are the most general.
+
+Opinions are 3-tuples: a belief distribution, uncertainty, and \emph{base rate function}.
+
+$$
+\omega_\Theta = \langle b_\Theta, u_\Theta, a_\Theta \rangle
+$$
+
+\end{frame}
+
+\begin{frame}
 \frametitle{Binomial Opinions}
 
-Can be mapped to \emph{Beta distributions} using the following relations:
+A \emph{binomial opinion} is an opinion defined over a binary frame of discernment, or
+a binary partitioning of an n-ary frame.
+
+Sometimes it is useful to distinguish an element $x$, and represent the frame as
+$\Theta = \lbrace x, \lnot x \rbrace$. In this case, we define a binomial opinion as
+the tuple
+
+$$
+\omega_x = \langle b_x, d_x, u_x, a_x \rangle
+$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Binomial Opinions}
+
+e.g. $\Theta = \lbrace \mbox{Red, Blue} \rbrace$.
+Let $b_\Theta\left(Red\right) = 0.5, b_\Theta\left(Blue\right) = 0.4$. Then we can
+define the binomial opinion of the colour being red as
+
+$$
+\omega_{Red} = \langle 0.5, 0.4, 0.1, 0.5 \rangle
+$$
+
+\end{frame}
+
+\begin{frame}
+\frametitle{Binomial Opinions}
+
+Binomial opinions can be mapped to \emph{Beta distributions} using the following relations:
 
 $$
 \begin{array}{l}
@@ -163,114 +258,22 @@ $$
 \end{array}
 $$
 
-where $\omega_x = \langle b, d, u, a\rangle$ and $\mbox{Beta}(p | r, s, a)$
-are defined over the same proposition $x$.
-
 \end{frame}
 
 %-------------------------------------------------------------------------------
 
 \begin{frame}
-\frametitle{Binomial Opinions}
-
-For example...
-
-$$\Theta = \lbrace Red, \lnot Red \rbrace$$
-
-$$\omega_{Red}^{Bryan} = \langle 0.5, 0.4, 0.1, 0.5 \rangle$$
-
-... maybe I'm colour-blind?
+\frametitle{Binomial Coarsening}
 
 \end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Binomial Opinions}
-
-We can also construct binomial opinions over a subset of a frame $\Theta$
-through \emph{coarsening}.
-
-
-\end{frame}
-
-
-
-%-------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Multinomial Opinions}
 
-For larger frames ($|\Theta| > 2$) we define \emph{multinomial opinions}.
-
-$$ \omega_\Theta^A = \langle \vec{b}, u, \vec{a} \rangle $$
-
-such that
-
-$$u + \sum_{x \in \Theta} \vec{b}(x) = 1$$
-
-and
-
-$$\sum_{x\in \Theta} \vec{a}(x) = 1$$
-
 \end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Multinomial Opinions}
-
-Can be mapped to \emph{Dirichlet distributions}
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
 
 \begin{frame}
 \frametitle{Hyper Opinions}
-
-Most general of all subjective opinions. Assigns belief mass to subsets of the
-frame (elements of the reduced powerset.)
-
-Reduced powerset: $R^\Theta = 2^\Theta \backslash \lbrace \emptyset, \Theta \rbrace$
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Hyper Opinions}
-
-Can be mapped to \emph{Hyper-dirichlet distributions}.
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Hyper Opinions}
-
-e.g.
-
-$$\Theta = \lbrace Red, Blue, Yellow \rbrace$$
-
-$$\omega = \langle \vec{b}, u, \vec{a} \rangle$$
-$$\vec{b}\left(\lbrace Red, Blue \rbrace \right) = \frac{1}{2}$$
-$$\vec{b}\left(\lbrace Blue, Yellow \rbrace \right) = \frac{1}{4}$$
-$$\vec{b}\left(\lbrace Yellow \rbrace \right) = \frac{1}{8}$$
-
-\end{frame}
-
-%-------------------------------------------------------------------------------
-
-\begin{frame}
-\frametitle{Hyper Opinions}
-
-Similar to multinomial opinions, rules apply
-
-$$u + \sum_{x \in R^\Theta} \vec{b}\left(x\right) = 1$$
-
-$$\sum_{x \in R^\Theta} \vec{a}\left(x\right) = 1$$
 
 \end{frame}
 
