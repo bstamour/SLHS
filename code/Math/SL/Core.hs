@@ -96,7 +96,7 @@ atomicityOf (BRVec m) x = fromMaybe 0 (M.lookup x m)
 --------------------------------------------------------------------------------------------
 
 
-data SLValue a = SLError String | SLValue a deriving (Show, Eq)
+data SLValue a = SLError String | SLValue a
 
 instance Functor SLValue where
   fmap f x = pure f <*> x
