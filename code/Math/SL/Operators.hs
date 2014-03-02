@@ -1,12 +1,11 @@
 module Math.SL.Operators where
 
 import Math.SL.Core
+import Math.SL.State
 import Math.SL.Opinion
 
 
-type CoarsenedBinary a = SLValue (Opinion (Coarsened a))
-                         -> SLValue (Opinion (Coarsened a))
-                         -> SLValue (Opinion (Coarsened a))
+type SL a t = SLState a (SLValue t)
 
 
 --------------------------------------------------------------------------------------------
@@ -14,22 +13,21 @@ type CoarsenedBinary a = SLValue (Opinion (Coarsened a))
 --------------------------------------------------------------------------------------------
 
 
-add :: CoarsenedBinary a
+add, subtract, multiply, divide, comultiply, codivide
+   :: SL a (Opinion (Coarsened a))
+      -> SL a (Opinion (Coarsened a))
+      -> SL a (Opinion (Coarsened a))
+
 add = undefined
 
-subtract :: CoarsenedBinary a
 subtract = undefined
 
-multiply :: CoarsenedBinary a
 multiply = undefined
 
-comultiply :: CoarsenedBinary a
 comultiply = undefined
 
-divide :: CoarsenedBinary a
 divide = undefined
 
-codivide :: CoarsenedBinary a
 codivide = undefined
 
 

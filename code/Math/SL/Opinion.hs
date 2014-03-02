@@ -84,3 +84,34 @@ isMultinomial _                     = True
 isBinomial :: Opinion a -> Bool
 isBinomial (Opinion Binomial _ _ _) = True
 isBinomial _                        = False
+
+
+--------------------------------------------------------------------------------------------
+-- Binomial access functions.
+--------------------------------------------------------------------------------------------
+
+
+isX :: Frame (Coarsened a) -> Bool
+isX frm = case frameToList frm of
+  [X _] -> True
+  _     -> False
+
+
+belief :: Ord a => Opinion (Coarsened a) -> Rational
+belief (Opinion _ b _ _) = beliefOf b x
+  where
+    [x] = filter isX (bvFocalElements b)
+
+
+disbelief :: Ord a => Opinion (Coarsened a) -> Rational
+disbelief (Opinion _ b _ _) = beliefOf b y
+  where
+    [y] = filter (not . isX) (bvFocalElements b)
+
+
+uncertainty :: Opinion (Coarsened a) -> Rational
+uncertainty (Opinion _ _ u _) = u
+
+
+baseRate :: Opinion (Coarsened a) -> Rational
+baseRate = undefined

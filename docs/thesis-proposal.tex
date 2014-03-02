@@ -147,21 +147,21 @@ $\mathbb{R}^\Theta = \lbrace
 \begin{frame}
 \frametitle{Belief Distributions}
 
-A \emph{belief distribution} is a function $b_\Theta: \mathbb{R}^\Theta \rightarrow \lbrack 0, 1 \rbrack$
-
-such that
+A \emph{belief distribution} is a vector $\vec{b}$ that denotes the amount of belief
+mass assigned to elements of the reduced powerset.
 
 $$
-\sum_{x \in \mathbb{R}^\Theta} b_\Theta \left( x \right) \leq 1
+\sum_{x \in \mathbb{R}\left(\Theta\right)} \vec{b}_\Theta \left(x \right) \leq 1 \mbox{, where }
+    \vec{b}_\Theta\left(x\right) \in \lbrack 0, 1 \rbrack, \forall x \in \mathbb{R}\left(\Theta\right)
 $$
 
 and
 
 $$
-u_\Theta = 1 - \sum_{x \in \mathbb{R}^\Theta} b_\Theta \left( x \right)
+u_\Theta = 1 - \sum_{x \in \mathbb{R}\left(\Theta\right)} b_\Theta \left( x \right)
 $$
 
-is called the \emph{uncertainty mass}.
+is the \emph{uncertainty mass}.
 
 \end{frame}
 
@@ -181,7 +181,7 @@ Belief distributions and uncertainty can be mapped to \emph{basic belief assignm
   \hline
   Subjective Logic & Belief Theory \\
   \hline
-  $b_\Theta\left( x \right)$ & $m_\Theta\left( x \right)$ \\
+  $\vec{b}_\Theta\left( x \right)$ & $m_\Theta\left( x \right)$ \\
   $u_\Theta$                 & $m_\Theta \left(\Theta\right)$ \\
   \hline
 \end{tabular}
@@ -204,6 +204,25 @@ Any subset of $\Theta$ that has non-zero mass distributed to it is called a
 %-------------------------------------------------------------------------------
 
 \begin{frame}
+\frametitle{Base Rates}
+
+Base rates represent a priori belief. For a frame of cardinality k, the
+\emph{default base rate} for each element is $\frac{1}{k}$, though other values
+can be used.
+
+Base rate vectors are additive:
+
+$$
+\sum_{x \in \Theta} \vec{a}\left(x\right) = 1
+$$
+
+A subset of the frame of cardinality n has a base rate of $\frac{n}{k}$.
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
+\begin{frame}
 \frametitle{Opinions in Subjective Logic}
 
 In SL, opinions come in three basic forms:
@@ -214,13 +233,15 @@ In SL, opinions come in three basic forms:
   \item Hyper Opinions
 \end{itemize}
 
-where hyper opinions are the most general.
-
-Opinions are 3-tuples: a belief distribution, uncertainty, and \emph{base rate function}.
+where hyper opinions are the most general. We can represent opinions as functions:
 
 $$
-\omega_\Theta = \langle b_\Theta, u_\Theta, a_\Theta \rangle
+\omega_\Theta = \langle \vec{b}_\Theta, u_\Theta, \vec{a}_\Theta \rangle
 $$
+
+Where $\vec{b}$ is a vector of beliefs assigned to focal elements,
+$u$ is the uncertainty mass, and
+$\vec{a}$ is a base rate vector over elements of the frame.
 
 \end{frame}
 
@@ -243,6 +264,7 @@ the tuple
 $$
 \omega_x = \langle b_x, d_x, u_x, a_x \rangle
 $$
+
 
 \end{frame}
 
@@ -276,6 +298,8 @@ $$
 \end{array}
 $$
 
+where $W$ is a weighting parameter (typically set to 2.)
+
 \end{frame}
 
 %-------------------------------------------------------------------------------
@@ -300,6 +324,15 @@ $$
 
 %-------------------------------------------------------------------------------
 
+\begin{frame}
+\frametitle{Binomial Coarsening}
+
+How do we compute the coarsened values?
+
+\end{frame}
+
+%-------------------------------------------------------------------------------
+
 %-------------------------------------------------------------------------------
 % MULTINOMIAL OPINIONS
 %------------------------------------------------------------------------------
@@ -311,12 +344,13 @@ $$
 All binomial opinions are multinomial opinions. Multinomials are \emph{more general}.
 
 Restriction: only \emph{class-1} elements of $\mathbb{R}^\Theta$ can be focal elements.
-
-Same 3-tuple representation:
+Thus, the function
 
 $$
 \omega_\Theta = \langle b_\Theta, u_\Theta, a_\Theta \rangle
 $$
+
+has $2k + 1$ parameters, where $k$ is the cardinality of $\Theta$.
 
 \end{frame}
 
@@ -326,6 +360,11 @@ $$
 \frametitle{Multinomial Opinions}
 
 Multinomials can be mapped to \emph{Dirichlet distributions}.
+
+\begin{eqnarray}
+  b(x_i) &=& \frac{r(x_i)}{W + \sum_{j = 1}^k r(x_j)} \\
+  u      &=& \frac{W}{W + \sum_{j = 1}^k r(x_j)}
+\end{eqnarray}
 
 \end{frame}
 
@@ -339,7 +378,13 @@ Multinomials can be mapped to \emph{Dirichlet distributions}.
 \frametitle{Hyper Opinions}
 
 No restrictions on focal elements. Anything goes. Being the most general, hyper
-opinions are also simply called \emph{Subjective Opinions}.
+opinions are also simply called \emph{Subjective Opinions}. Thus, the function
+
+$$
+\omega_\Theta = \langle b_\Theta, u_\Theta, a_\Theta \rangle
+$$
+
+has $2^{k} + k + 1$ parameters.
 
 All multinomial opinions are also hyper opinions.
 
