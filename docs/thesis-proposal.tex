@@ -260,17 +260,20 @@ The number of parameters in the tuple varies based on the type of the opinion.
 \begin{frame}
 \frametitle{Binomial Opinions}
 
-A \emph{binomial opinion} is an opinion defined over a binary frame of discernment, or
-a binary partitioning of an n-ary frame.
+A \emph{binomial opinion} is an opinion defined over a binary frame or a binary partitioning of an n-ary frame.
 
-Sometimes it is useful to distinguish an element $x$, and represent the frame as
-$\Theta = \lbrace x, \lnot x \rbrace$. In this case, we define a binomial opinion as
-the tuple
+Let $\Theta = \lbrace x, \lnot x \rbrace$, then we define the binomial opinion of
+x as
 
 $$
 \omega_x = \langle b_x, d_x, u_x, a_x \rangle
 $$
 
+with a probability projection
+
+$$
+E_x = b_x + a_x u_x
+$$
 
 \end{frame}
 
@@ -298,13 +301,14 @@ Binomial opinions can be mapped to \emph{Beta distributions} using the following
 
 $$
 \begin{array}{l}
-  b = \frac{r}{W + r + s} \\
-  d = \frac{s}{W + r + s} \\
-  u = \frac{W}{W + r + s}
+  b_x = \frac{r}{W + r + s} \\
+  d_x = \frac{s}{W + r + s} \\
+  u_x = \frac{W}{W + r + s}
 \end{array}
 $$
 
-where $W$ is a weighting parameter (typically set to 2.)
+where r is the evidence for x, s is the evidence for $\lnot x$, and
+$W$ is a non-informative prior weight (typically set to 2.)
 
 \end{frame}
 
@@ -334,6 +338,15 @@ $$
 \frametitle{Binomial Coarsening}
 
 How do we compute the coarsened values?
+
+
+
+
+
+
+
+
+
 
 \end{frame}
 
