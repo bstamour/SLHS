@@ -6,9 +6,8 @@
 \newcommand{\ignore}[1]{}
 
 
+\title{A Monadic Purely Functional Subjective Logic Combinator Library}
 
-
-\title{A Denotational Semantics for Subjective Logic}
 \author{Bryan St. Amour}
 
 \begin{document}
@@ -31,20 +30,7 @@
 
 Subjective Logic is a fairly recent addition to the family of probablistic logics. As such, though it
 is theoretically very interesting, there is a noticable lack of tools that support experimenting with
-subjective opinions and their respective operators. In particular, there does not appear to be any
-tool that can systematically discern correct subjective expressions from absurd ones. In order to
-construct such a tool, one must be able to compute the \emph{meaning} of arbitrary subjective
-expressions, and thus accept statements that are well-defined, and reject all others.
-
-Such a tool will allow for users (software engineers, logicians) to explore, construct, and evaluate
-subjective expressions, all the while knowing that the expressions that are allowed by the tool are
-indeed valid expressions within Subjective Logic. As we shall discuss in later chapters, there are
-several cases in which the owner of a particular opinion, the universe in which an opinion is defined,
-etc are crucial in determining whether the opinion can be meaningfully combined with opinions from
-different owners, different universes, etc. A system that does not filter expressions based on these
-and other criteria is a potential bag of scorpions waiting to be opened.
-
-
+subjective opinions and their respective operators.
 
 \section{Previous Work on This Problem}
 
@@ -53,25 +39,10 @@ Not a fucking thing. % Make this sound a bit more pleasing.
 
 \section{Our Proposed Solution}
 
-The solution we propose is to construct a denotational semantics to accompany subjective logic.
-Effectively we propose to map subjective expressions to terms of a typed lambda calculus, and thus
-compute the meaning of expressions through the simple act of sub-expression composition. Once such
-a semantic has been constructed, we propose to develop a framework in the \emph{Haskell} programming
-language as a proof of concept.
 
 
 \section{Organization of this Document}
 
-The organization of this thesis is as follows. In chapter \ref{chap:background-information}
-we will discuss the relevant background
-information required for the full understanding of this thesis. Topics discussed are Subjective Logic,
-Formal Semantics of programming languages, and both untyped and typed lambda calculus.
-Chapter \ref{chap:denotational-semantics} will
-detail the construction of a syntax and denotational semantics of Subjective Logic. In
-chapter \ref{chap:sl-framework} we
-will describe the system, constructed in the \emph{Haskell} programming language, that stands as a
-proof of concept for the denotational semantics described in chapter 3. Finally, concluding remarks
-are contained within chapter \ref{chap:conclusion}.
 
 
 %===============================================================================================================
@@ -80,6 +51,15 @@ are contained within chapter \ref{chap:conclusion}.
 
 \chapter{Background Information}
 \label{chap:background-information}
+
+\section{Uncertain Reasoning}
+
+
+
+
+
+
+
 
 \section{Subjective Logic}
 
@@ -94,51 +74,41 @@ are contained within chapter \ref{chap:conclusion}.
 
 
 
-\section{Formal Semantics}
-
-\subsection{Overview}
-
-\subsection{Operational Semantics}
-
-\subsection{Axiomatic Semantics}
-
-\subsection{Denotational Semantics}
-
-\subsection{Others}
 
 
 
 
-\section{Lambda Calculus}
 
-\subsection{Untyped Lambda Calculus}
 
-\subsection{Simply Typed Lambda Calculus}
+\section{Haskell Primer}
 
-\subsection{The Lambda Cube}
+\subsection{What Is Haskell?}
+
+\subsection{Functions and function composition}
+
+\subsection{Abstract and Agebraic Data Types}
+
+\subsection{Type Classes}
+
+\subsection{Functors}
+
+\subsection{Applicative Functors}
+
+\subsection{Monads}
+
+\subsection{Connections to Category Theory}
+
 
 
 
 %===============================================================================================================
 
+\chapter{A Survey of Uncertain Reasoning Tools}
 
 
-\chapter{Denotational Semantics for Subjective Logic}
-\label{chap:denotational-semantics}
 
-\section{Introduction}
 
-\section{A Syntax for Subjective Logic}
 
-\section{A Semantics for Subjective Logic}
-
-\subsection{Untyped Lambda Calculus}      % The basics. No types, just lambda-terms.
-
-\subsection{Simply Typed Lambda Calculus} % Simple types: opinions.
-
-\subsection{Structural Polymorphism}      % Add support for different mass types e.g.
-
-\subsection{Dependent Types}             % For belief holders?
 
 
 
@@ -146,7 +116,7 @@ are contained within chapter \ref{chap:conclusion}.
 %===============================================================================================================
 
 
-\chapter{The Subjective Logic Framework}
+\chapter{SLIM: Subjective Logic Implemented using Monads}
 \label{chap:sl-framework}
 
 \section{Overview}
@@ -254,12 +224,15 @@ to evaluate such expressions we provide a helper function
 \subsection{Operators Implemented}
 
 
+%===============================================================================================================
+
+\chapter{Demo Applications}
+
+\section{A Basic Decision-making Application}
+
 
 
 %===============================================================================================================
-
-
-
 
 \chapter{Conclusion}
 \label{chap:conclusion}
@@ -270,6 +243,27 @@ to evaluate such expressions we provide a helper function
 
 
 %===============================================================================================================
+
+
+\chapter{References}
+
+
+
+
+%===============================================================================================================
+
+
+\appendix
+\addcontentsline{toc}{chapter}{APPENDICES}
+
+
+
+
+\chapter{Analysis of Complexity}
+
+
+\chapter{Proofs of Termination}
+
 
 
 \end{document}
