@@ -1,228 +1,228 @@
 module Foo where
 
-import Data.Maybe
-import Control.Monad.State
+
+--import Data.Functor.Compose
+import Control.Monad
+import Control.Monad.Trans
+import Control.Applicative
+
 import qualified Data.Map as M
 import qualified Data.Set as S
 
-type Frame = S.Set
-type Subframe = S.Set
-type BeliefDistribution a = M.Map [a] Rational
-type BaseRateVector a = M.Map a Rational
 
-data BinomialOpinion a = BinOp
-                         a
-                         a
-                         Rational
-                         Rational
-                         Rational
-                         Rational
+---------------------------------------------------------------------------------------------
+-- Binomial opinions.
 
-data Coarsened a = C (Subframe a) deriving (Eq, Ord)
 
-data MultinomialOpinion a = MultOp
-                            (Frame a)
-                            (M.Map a Rational)
-                            Rational
-                            (M.Map a Rational)
+data BinomialOpinion a =
+  BinOp { b_belief      :: Rational
+        , b_disbelief   :: Rational
+        , b_uncertainty :: Rational
+        , b_baseRate    :: Rational
+        , b_x           :: a
+        , b_not_x       :: a
+        }
 
-data HyperOpinion a = HyperOp
-                      (Frame a)
-                      (M.Map (Subframe a) Rational)
-                      Rational
-                      (M.Map a Rational)
 
------------------------------------------------------------------------------------------
--- Constructors.
------------------------------------------------------------------------------------------
+class ToBinomial x where
+  toBinomial :: x a -> BinomialOpinion a
 
-makeBinomial :: Frame a
-             -> BeliefDistribution a
-             -> BaseRateVector a
-             -> Maybe (BinomialOpinion a)
-makeBinomial = undefined
 
-makeMultinomial :: BeliefDistribution a
-                -> BaseRateVector a
-                -> Maybe (MultinomialOpinion a)
-makeMultinomial = undefined
+instance ToBinomial BinomialOpinion where
+  toBinomial = id
 
-makeHyper :: BeliefDistribution a
-          -> BaseRateVector a
-          -> Maybe (HyperOpinion a)
-makeHyper = undefined
 
------------------------------------------------------------------------------------------
--- Accessor functions.
------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------
+-- Multinomial opinions.
 
-class Multinomial m where
-  mBelief :: Ord a => m a -> a -> Maybe Rational
-  mUncertainty :: m a -> Rational
-  mBaseRate :: Ord a => m a -> a -> Maybe Rational
 
-instance Multinomial BinomialOpinion where
-  mBelief (BinOp x y b d _ _) e
-    | e == x = Just b
-    | e == y = Just d
-    | otherwise = Nothing
+data MultinomialOpinion a =
+  MultiOp { m_belief      :: M.Map a Rational
+          , m_uncertainty :: Rational
+          , m_baseRate    :: M.Map a Rational
+          , m_frame       :: S.Set a
+          }
 
-  mUncertainty (BinOp _ _ _ _ u _) = u
 
-  mBaseRate (BinOp x y _ _ _ a) e
-    | e == x = Just a
-    | e == y = Just (1 - a)
-    | otherwise = Nothing
+class ToMultinomial x where
+  toMultinomial :: Ord a => x a -> MultinomialOpinion a
 
-instance Multinomial MultinomialOpinion where
-  mBelief (MultOp xs b _ _) x
-    | x `S.member` xs = Just (fromMaybe 0 (M.lookup x b))
-    | otherwise = Nothing
 
-  mUncertainty (MultOp _ _ u _) = u
-
-  mBaseRate (MultOp xs _ _ a) x
-    | x `S.member` xs = Just (fromMaybe 0 (M.lookup x a))
-    | otherwise = Nothing
-
-class Hyper h where
-  hBelief :: Ord a => h a -> Subframe a -> Maybe Rational
-  hUncertainty :: h a -> Rational
-  hBaseRate :: Ord a => h a -> a -> Maybe Rational
-
-instance Hyper BinomialOpinion where
-  hBelief (BinOp x y b d _ _) e
-    | S.size e /= 1 = Nothing
-    | e' == x = Just b
-    | e' == y = Just d
-    | otherwise = Nothing
+instance ToMultinomial BinomialOpinion where
+  toMultinomial (BinOp b d u a x y) = MultiOp bel u br f
     where
-      [e'] = S.toList e
+      bel = (M.fromList [(x, b), (y, d)])
+      br  = (M.fromList [(x, a), (y, 1 - a)])
+      f   = S.fromList [x, y]
 
-  hUncertainty (BinOp _ _ _ _ u _) = u
 
-  hBaseRate (BinOp x y _ _ _ a) e
-    | e == x = Just a
-    | e == y = Just (1 - a)
-    | otherwise = Nothing
+instance ToMultinomial MultinomialOpinion where
+  toMultinomial = id
 
-instance Hyper MultinomialOpinion where
-  hBelief (MultOp xs b _ _) e
-    | S.size e /= 1 = Nothing
-    | e' `S.member` xs = Just (fromMaybe 0 (M.lookup e' b))
-    | otherwise = Nothing
+
+---------------------------------------------------------------------------------------------
+-- Hyper opinions.
+
+
+data HyperOpinion a =
+  HypOp { h_belief      :: M.Map [a] Rational
+        , h_uncertainty :: Rational
+        , h_baseRate    :: M.Map a Rational
+        , h_frame       :: S.Set a
+        }
+
+
+class ToHyper x where
+  toHyper :: Ord a => x a -> HyperOpinion a
+
+
+instance ToHyper BinomialOpinion where
+  toHyper = toHyper . toMultinomial
+
+
+instance ToHyper MultinomialOpinion where
+  toHyper (MultiOp b u a f) = HypOp b' u a f
     where
-      [e'] = S.toList e
+      b' = M.mapKeys pure b
 
-  hUncertainty (MultOp _ _ u _) = u
 
-  hBaseRate (MultOp xs _ _ a) x
-    | x `S.member` xs = Just (fromMaybe 0 (M.lookup x a))
-    | otherwise = Nothing
+instance ToHyper HyperOpinion where
+  toHyper = id
 
-instance Hyper HyperOpinion where
-  hBelief (HyperOp xs b _ _) es
-    | es `S.isSubsetOf` xs = Just (fromMaybe 0 (M.lookup es b))
-    | otherwise = Nothing
 
-  hUncertainty (HyperOp _ _ u _) = u
+---------------------------------------------------------------------------------------------
+-- Binomial Operators.
 
-  hBaseRate (HyperOp xs _ _ a) x
-    | x `S.member` xs = Just (fromMaybe 0 (M.lookup x a))
-    | otherwise = Nothing
 
------------------------------------------------------------------------------------------
--- Binomial operators.
------------------------------------------------------------------------------------------
+bin_add' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_add' = undefined
 
-add :: Ord a
-       => BinomialOpinion (Coarsened a)
-       -> BinomialOpinion (Coarsened a)
-       -> Maybe (BinomialOpinion (Coarsened a))
-add (BinOp (C xs1) (C ys1) b1 d1 u1 a1) (BinOp (C xs2) (C ys2) b2 d2 u2 a2)
-  | frm1 /= frm2 = Nothing
-  | not (S.null $ xs1 `S.intersection` ys1) = Nothing
-  | otherwise = Just $ BinOp (C newX) (C newY) b' d' u' a'
-  where
-    newX = xs1 `S.union` xs2
-    newY = frm1 `S.difference` newX
 
-    b' = b1 + b2
-    d' = (a1 * (d1 - b2) + a2 * (d2 - b1)) / (a1 + a2)
-    u' = (a1 * u1 + a2 * u2) / (a1 + a2)
-    a' = a1 + a2
+bin_subtract' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_subtract' = undefined
 
-    frm1 = xs1 `S.union` ys1
-    frm2 = xs2 `S.union` ys2
 
-subtract :: Ord a
-            => BinomialOpinion (Coarsened a)
-            -> BinomialOpinion (Coarsened a)
-            -> Maybe (BinomialOpinion (Coarsened a))
-subtract (BinOp (C xs1) (C ys1) b1 d1 u1 a1) (BinOp (C xs2) (C ys2) b2 d2 u2 a2)
-  | frm1 /= frm2 = Nothing
-  | not (xs2 `S.isSubsetOf` xs1) = Nothing
-  | otherwise = Just $ BinOp (C newX) (C newY) b' d' u' a'
-  where
-    newX = xs1 `S.union` xs2
-    newY = frm1 `S.difference` newX
+bin_multiply' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_multiply' = undefined
 
-    b' = b1 - b2
-    d' = (a1 * (d1 + b2) - a2 * (1 + b2 - b1 - u2)) / (a1 - a2)
-    u' = (a1 * u1 - a2 * u2) / (a1 - a2)
-    a' = a1 - a2
 
-    frm1 = xs1 `S.union` ys1
-    frm2 = xs2 `S.union` ys2
+bin_comultiply' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_comultiply' = undefined
 
-times :: Ord a
-         => BinomialOpinion a
-         -> BinomialOpinion a
-         -> Maybe (BinomialOpinion a)
-times op1 op2 = undefined
 
-divide :: Ord a
-          => BinomialOpinion a
-          -> BinomialOpinion a
-          -> Maybe (BinomialOpinion a)
-divide = undefined
+bin_divide' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_divide' = undefined
 
-cotimes :: Ord a
-           => BinomialOpinion a
-           -> BinomialOpinion a
-           -> Maybe (BinomialOpinion a)
-cotimes = undefined
 
-codivide :: Ord a
-            => BinomialOpinion a
-            -> BinomialOpinion a
-            -> Maybe (BinomialOpinion a)
-codivide = undefined
+bin_codivide' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_codivide' = undefined
 
------------------------------------------------------------------------------------------
--- Multinomial operators.
------------------------------------------------------------------------------------------
 
-multiply :: Multinomial op => op a -> op b -> HyperOpinion (a, b)
-multiply = undefined
+---------------------------------------------------------------------------------------------
+-- The operators wrapped in our monad stack.
 
------------------------------------------------------------------------------------------
--- Hyper operators.
------------------------------------------------------------------------------------------
 
-cfuse :: Hyper op => op a -> op a -> HyperOpinion a
-cfuse = undefined
+type SLMonad a b = SLValueT (SLState a) b
 
-afuse :: Hyper op => op a -> op a -> HyperOpinion a
-afuse = undefined
 
------------------------------------------------------------------------------------------
--- State.
------------------------------------------------------------------------------------------
+bin_add :: ToBinomial op
+           => SLMonad a (op a)
+           -> SLMonad a (op a)
+           -> SLMonad a (BinomialOpinion a)
+bin_add op1 op2 = do op1' <- op1
+                     op2' <- op2
+                     return $ bin_add' (toBinomial op1') (toBinomial op2')
 
-data SLData h a = SLData
-                  { sldFrames :: [Frame a]
-                  , sldOwners :: [h]
-                  }
 
-type SLState h a t = State (SLData h a)
+bin_subtract :: ToBinomial op
+                => SLMonad a (op a)
+                -> SLMonad a (op a)
+                -> SLMonad a (BinomialOpinion a)
+bin_subtract op1 op2 = do op1' <- op1
+                          op2' <- op2
+                          return $ bin_subtract' (toBinomial op1') (toBinomial op2')
+
+
+bin_multiply :: ToBinomial op
+                => SLMonad a (op a)
+                -> SLMonad a (op a)
+                -> SLMonad a (BinomialOpinion a)
+bin_multiply op1 op2 = do op1' <- op1
+                          op2' <- op2
+                          return $ bin_multiply' (toBinomial op1') (toBinomial op2')
+
+
+-- And the rest...
+
+
+---------------------------------------------------------------------------------------------
+-- The types to hold it all together.
+
+
+data SLValue a = Val a | Err String
+
+
+instance Functor SLValue where
+  fmap f (Err s) = Err s
+  fmap f (Val x) = Val (f x)
+
+
+instance Applicative SLValue where
+  pure = return
+  (<*>) = ap
+
+
+instance Monad SLValue where
+  return = Val
+
+  (Err s) >>= _ = Err s
+  (Val x) >>= f = f x
+
+
+data SLStateDatum a =
+  SLStateDatum { slsFrame    :: S.Set a
+               , slsBaseRate :: M.Map a Rational
+               }
+
+
+newtype SLStateData a = SLStateData [SLStateDatum a]
+
+
+newtype SLState a b = SLState { unSLState :: SLStateData a -> (b, SLStateData a) }
+
+
+instance Functor (SLState a) where
+  fmap f sa = SLState $ \st -> let (a, st') = unSLState sa st in (f a, st')
+
+
+instance Applicative (SLState a) where
+  pure = return
+  (<*>) = ap
+
+
+instance Monad (SLState a) where
+  return x = SLState $ \st -> (x, st)
+
+  sa >>= f = SLState $ \st -> let (a, st') = unSLState sa st
+                                  sb       = f a
+                              in unSLState sb st'
+
+
+---------------------------------------------------------------------------------------------
+-- Monad transformers.
+
+
+newtype SLValueT m a = SLValueT { runSLValueT :: m (SLValue a) }
+
+
+instance Monad m => Monad (SLValueT m) where
+  return = SLValueT . return . Val
+
+  x >>= f = SLValueT $ do val <- runSLValueT x
+                          case val of
+                            Err str -> return (Err str)
+                            Val y   -> runSLValueT $ f y
+
+
+instance MonadTrans SLValueT where
+  lift = SLValueT . (liftM Val)
