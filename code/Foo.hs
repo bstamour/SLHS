@@ -1,7 +1,10 @@
+{-# LANGUAGE TupleSections #-}
+{-# LANGUAGE GADTs #-}
+
+
 module Foo where
 
 
---import Data.Functor.Compose
 import Control.Monad
 import Control.Monad.Trans
 import Control.Applicative
@@ -21,7 +24,7 @@ data BinomialOpinion a =
         , b_baseRate    :: Rational
         , b_x           :: a
         , b_not_x       :: a
-        }
+        } deriving Show
 
 
 class ToBinomial x where
@@ -41,7 +44,7 @@ data MultinomialOpinion a =
           , m_uncertainty :: Rational
           , m_baseRate    :: M.Map a Rational
           , m_frame       :: S.Set a
-          }
+          } deriving Show
 
 
 class ToMultinomial x where
@@ -69,7 +72,7 @@ data HyperOpinion a =
         , h_uncertainty :: Rational
         , h_baseRate    :: M.Map a Rational
         , h_frame       :: S.Set a
-        }
+        } deriving Show
 
 
 class ToHyper x where
@@ -122,9 +125,6 @@ bin_codivide' = undefined
 -- The operators wrapped in our monad stack.
 
 
-type SLMonad a b = SLValueT (SLState a) b
-
-
 bin_add :: ToBinomial op
            => SLMonad a (op a)
            -> SLMonad a (op a)
@@ -155,16 +155,22 @@ bin_multiply op1 op2 = do op1' <- op1
 -- And the rest...
 
 
+bin_divide :: ToBinomial op
+              => SLMonad a (op a)
+              -> SLMonad a (op a)
+              -> SLMonad a (BinomialOpinion a)
+bin_divide op1 op2 = err "Not yet implemented."
+
+
 ---------------------------------------------------------------------------------------------
 -- The types to hold it all together.
 
 
-data SLValue a = Val a | Err String
+data SLValue a = Val a | Err String deriving Show
 
 
 instance Functor SLValue where
-  fmap f (Err s) = Err s
-  fmap f (Val x) = Val (f x)
+  fmap f x = pure f <*> x
 
 
 instance Applicative SLValue where
@@ -174,7 +180,6 @@ instance Applicative SLValue where
 
 instance Monad SLValue where
   return = Val
-
   (Err s) >>= _ = Err s
   (Val x) >>= f = f x
 
@@ -192,7 +197,7 @@ newtype SLState a b = SLState { unSLState :: SLStateData a -> (b, SLStateData a)
 
 
 instance Functor (SLState a) where
-  fmap f sa = SLState $ \st -> let (a, st') = unSLState sa st in (f a, st')
+  fmap f x = pure f <*> x
 
 
 instance Applicative (SLState a) where
@@ -208,11 +213,28 @@ instance Monad (SLState a) where
                               in unSLState sb st'
 
 
+get :: SLState a (SLStateData a)
+get = SLState $ \st -> (st, st)
+
+
+put :: SLStateData a -> SLState a ()
+put st = SLState $ \st' -> ((), st)
+
+
 ---------------------------------------------------------------------------------------------
 -- Monad transformers.
 
 
 newtype SLValueT m a = SLValueT { runSLValueT :: m (SLValue a) }
+
+
+instance Monad m => Functor (SLValueT m) where
+  fmap f x = pure f <*> x
+
+
+instance Monad m => Applicative (SLValueT m) where
+  pure = return
+  (<*>) = ap
 
 
 instance Monad m => Monad (SLValueT m) where
@@ -226,3 +248,45 @@ instance Monad m => Monad (SLValueT m) where
 
 instance MonadTrans SLValueT where
   lift = SLValueT . (liftM Val)
+
+
+newtype SLStateT a m b = SLStateT { runSLStateT :: SLStateData a -> m (b, SLStateData a) }
+
+
+instance Monad m => Monad (SLStateT a m) where
+  return x = SLStateT $ \s -> return (x, s)
+
+  (SLStateT x) >>= f = SLStateT $ \s -> do (v, s') <- x s
+                                           runSLStateT (f v) s'
+
+
+instance MonadTrans (SLStateT a) where
+  lift mx = SLStateT $ \st -> mx >>= return  . (, st)
+
+
+---------------------------------------------------------------------------------------------
+-- helper functions.
+
+
+type SLMonad a b = SLValueT (SLState a) b
+
+
+err :: Monad m => String -> SLValueT m a
+err = SLValueT . return . Err
+
+
+run :: SLMonad a b -> SLStateData a -> SLValue b
+run expr = fst . unSLState (runSLValueT expr)
+
+
+---------------------------------------------------------------------------------------------
+-- Belief owners.
+
+
+data Owner a where
+  NoOwner   :: Owner a
+  Owner     :: a -> Owner a
+  Consensus :: Owner a -> Owner a -> Owner a
+  Discount  :: Owner a -> Owner a -> Owner a
+  AFuse     :: Owner a -> Owner a -> Owner a
+  AFuse     :: Owner a -> Owner a -> Owner a
