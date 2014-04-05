@@ -1,12 +1,13 @@
-{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE GADTs #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 
 module Foo where
 
 
-import Control.Monad
 import Control.Monad.Trans
+import Control.Monad.Trans.Either
+import Control.Monad.Trans.State
 import Control.Applicative
 
 import qualified Data.Map as M
@@ -17,18 +18,19 @@ import qualified Data.Set as S
 -- Binomial opinions.
 
 
-data BinomialOpinion a =
+data BinomialOpinion a o =
   BinOp { b_belief      :: Rational
         , b_disbelief   :: Rational
         , b_uncertainty :: Rational
         , b_baseRate    :: Rational
         , b_x           :: a
         , b_not_x       :: a
+        , b_owner       :: Owner o
         } deriving Show
 
 
 class ToBinomial x where
-  toBinomial :: x a -> BinomialOpinion a
+  toBinomial :: x a o -> BinomialOpinion a o
 
 
 instance ToBinomial BinomialOpinion where
@@ -39,20 +41,21 @@ instance ToBinomial BinomialOpinion where
 -- Multinomial opinions.
 
 
-data MultinomialOpinion a =
+data MultinomialOpinion a o =
   MultiOp { m_belief      :: M.Map a Rational
           , m_uncertainty :: Rational
           , m_baseRate    :: M.Map a Rational
           , m_frame       :: S.Set a
+          , m_owner       :: Owner o
           } deriving Show
 
 
 class ToMultinomial x where
-  toMultinomial :: Ord a => x a -> MultinomialOpinion a
+  toMultinomial :: Ord a => x a o -> MultinomialOpinion a o
 
 
 instance ToMultinomial BinomialOpinion where
-  toMultinomial (BinOp b d u a x y) = MultiOp bel u br f
+  toMultinomial (BinOp b d u a x y o) = MultiOp bel u br f o
     where
       bel = (M.fromList [(x, b), (y, d)])
       br  = (M.fromList [(x, a), (y, 1 - a)])
@@ -67,16 +70,17 @@ instance ToMultinomial MultinomialOpinion where
 -- Hyper opinions.
 
 
-data HyperOpinion a =
+data HyperOpinion a o =
   HypOp { h_belief      :: M.Map [a] Rational
         , h_uncertainty :: Rational
         , h_baseRate    :: M.Map a Rational
         , h_frame       :: S.Set a
+        , h_owner       :: Owner o
         } deriving Show
 
 
 class ToHyper x where
-  toHyper :: Ord a => x a -> HyperOpinion a
+  toHyper :: Ord a => x a o -> HyperOpinion a o
 
 
 instance ToHyper BinomialOpinion where
@@ -84,7 +88,7 @@ instance ToHyper BinomialOpinion where
 
 
 instance ToHyper MultinomialOpinion where
-  toHyper (MultiOp b u a f) = HypOp b' u a f
+  toHyper (MultiOp b u a f o) = HypOp b' u a f o
     where
       b' = M.mapKeys pure b
 
@@ -97,27 +101,27 @@ instance ToHyper HyperOpinion where
 -- Binomial Operators.
 
 
-bin_add' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_add' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_add' = undefined
 
 
-bin_subtract' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_subtract' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_subtract' = undefined
 
 
-bin_multiply' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_multiply' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_multiply' = undefined
 
 
-bin_comultiply' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_comultiply' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_comultiply' = undefined
 
 
-bin_divide' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_divide' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_divide' = undefined
 
 
-bin_codivide' :: BinomialOpinion a -> BinomialOpinion a -> BinomialOpinion a
+bin_codivide' :: BinomialOpinion a o -> BinomialOpinion a o -> BinomialOpinion a o
 bin_codivide' = undefined
 
 
@@ -125,63 +129,51 @@ bin_codivide' = undefined
 -- The operators wrapped in our monad stack.
 
 
+type SLMonad a b = StateT (SLStateData a) (Either String) b
+
+
 bin_add :: ToBinomial op
-           => SLMonad a (op a)
-           -> SLMonad a (op a)
-           -> SLMonad a (BinomialOpinion a)
-bin_add op1 op2 = do op1' <- op1
-                     op2' <- op2
-                     return $ bin_add' (toBinomial op1') (toBinomial op2')
+           => SLMonad a (op a o)
+           -> SLMonad a (op a o)
+           -> SLMonad a (BinomialOpinion a o)
+bin_add op1 op2 = do
+  op1' <- op1
+  op2' <- op2
+  return $ bin_add' (toBinomial op1') (toBinomial op2')
 
 
 bin_subtract :: ToBinomial op
-                => SLMonad a (op a)
-                -> SLMonad a (op a)
-                -> SLMonad a (BinomialOpinion a)
-bin_subtract op1 op2 = do op1' <- op1
-                          op2' <- op2
-                          return $ bin_subtract' (toBinomial op1') (toBinomial op2')
+                => SLMonad a (op a o)
+                -> SLMonad a (op a o)
+                -> SLMonad a (BinomialOpinion a o)
+bin_subtract op1 op2 = do
+  op1' <- op1
+  op2' <- op2
+  return $ bin_subtract' (toBinomial op1') (toBinomial op2')
 
 
 bin_multiply :: ToBinomial op
-                => SLMonad a (op a)
-                -> SLMonad a (op a)
-                -> SLMonad a (BinomialOpinion a)
-bin_multiply op1 op2 = do op1' <- op1
-                          op2' <- op2
-                          return $ bin_multiply' (toBinomial op1') (toBinomial op2')
+                => SLMonad a (op a o)
+                -> SLMonad a (op a o)
+                -> SLMonad a (BinomialOpinion a o)
+bin_multiply op1 op2 = do
+  op1' <- op1
+  op2' <- op2
+  return $ bin_multiply' (toBinomial op1') (toBinomial op2')
 
 
 -- And the rest...
 
 
 bin_divide :: ToBinomial op
-              => SLMonad a (op a)
-              -> SLMonad a (op a)
-              -> SLMonad a (BinomialOpinion a)
+              => SLMonad a (op a o)
+              -> SLMonad a (op a o)
+              -> SLMonad a (BinomialOpinion a o)
 bin_divide op1 op2 = err "Not yet implemented."
 
 
 ---------------------------------------------------------------------------------------------
 -- The types to hold it all together.
-
-
-data SLValue a = Val a | Err String deriving Show
-
-
-instance Functor SLValue where
-  fmap f x = pure f <*> x
-
-
-instance Applicative SLValue where
-  pure = return
-  (<*>) = ap
-
-
-instance Monad SLValue where
-  return = Val
-  (Err s) >>= _ = Err s
-  (Val x) >>= f = f x
 
 
 data SLStateDatum a =
@@ -193,90 +185,12 @@ data SLStateDatum a =
 newtype SLStateData a = SLStateData [SLStateDatum a]
 
 
-newtype SLState a b = SLState { unSLState :: SLStateData a -> (b, SLStateData a) }
-
-
-instance Functor (SLState a) where
-  fmap f x = pure f <*> x
-
-
-instance Applicative (SLState a) where
-  pure = return
-  (<*>) = ap
-
-
-instance Monad (SLState a) where
-  return x = SLState $ \st -> (x, st)
-
-  sa >>= f = SLState $ \st -> let (a, st') = unSLState sa st
-                                  sb       = f a
-                              in unSLState sb st'
-
-
-get :: SLState a (SLStateData a)
-get = SLState $ \st -> (st, st)
-
-
-put :: SLStateData a -> SLState a ()
-put st = SLState $ \st' -> ((), st)
-
-
----------------------------------------------------------------------------------------------
--- Monad transformers.
-
-
-newtype SLValueT m a = SLValueT { runSLValueT :: m (SLValue a) }
-
-
-instance Monad m => Functor (SLValueT m) where
-  fmap f x = pure f <*> x
-
-
-instance Monad m => Applicative (SLValueT m) where
-  pure = return
-  (<*>) = ap
-
-
-instance Monad m => Monad (SLValueT m) where
-  return = SLValueT . return . Val
-
-  x >>= f = SLValueT $ do val <- runSLValueT x
-                          case val of
-                            Err str -> return (Err str)
-                            Val y   -> runSLValueT $ f y
-
-
-instance MonadTrans SLValueT where
-  lift = SLValueT . (liftM Val)
-
-
-newtype SLStateT a m b = SLStateT { runSLStateT :: SLStateData a -> m (b, SLStateData a) }
-
-
-instance Monad m => Monad (SLStateT a m) where
-  return x = SLStateT $ \s -> return (x, s)
-
-  (SLStateT x) >>= f = SLStateT $ \s -> do (v, s') <- x s
-                                           runSLStateT (f v) s'
-
-
-instance MonadTrans (SLStateT a) where
-  lift mx = SLStateT $ \st -> mx >>= return  . (, st)
-
-
 ---------------------------------------------------------------------------------------------
 -- helper functions.
 
 
-type SLMonad a b = SLValueT (SLState a) b
-
-
-err :: Monad m => String -> SLValueT m a
-err = SLValueT . return . Err
-
-
-run :: SLMonad a b -> SLStateData a -> SLValue b
-run expr = fst . unSLState (runSLValueT expr)
+err :: String -> SLMonad a b
+err = StateT . pure . Left
 
 
 ---------------------------------------------------------------------------------------------
@@ -289,4 +203,7 @@ data Owner a where
   Consensus :: Owner a -> Owner a -> Owner a
   Discount  :: Owner a -> Owner a -> Owner a
   AFuse     :: Owner a -> Owner a -> Owner a
-  AFuse     :: Owner a -> Owner a -> Owner a
+  CFuse     :: Owner a -> Owner a -> Owner a
+
+
+deriving instance Show a => Show (Owner a)
