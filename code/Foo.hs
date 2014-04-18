@@ -207,3 +207,10 @@ data Owner a where
 
 
 deriving instance Show a => Show (Owner a)
+
+
+---------------------------------------------------------------------------------------------
+-- Some stats objects.
+
+
+data BetaParams a = BetaParams Rational Rational
