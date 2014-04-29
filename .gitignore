@@ -1,0 +1,7 @@
+*~
+
+*.aux
+*.log
+docs/scraps
+*.pdf
+*.toc
