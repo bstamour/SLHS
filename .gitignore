@@ -5,3 +5,6 @@
 docs/scraps
 *.pdf
 *.toc
+*.o
+*.hi
+code/SLHS/dist/
