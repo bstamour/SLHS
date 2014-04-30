@@ -14,6 +14,20 @@ import Control.Applicative
 
 data SLValue a = Val a | Err String
 
+instance Monad SLValue where
+  return = Val
+
+  Val x >>= f = f x
+  Err e >>= _ = Err e
+
+instance Applicative SLValue where
+  pure = return
+  (<*>) = ap
+
+instance Functor SLValue where
+  fmap f x = pure f <*> x
+
+
 data SLState a = SLState a
 
 newtype SLExpr s a = SLExpr { runSL :: s -> (SLValue a, s) }
