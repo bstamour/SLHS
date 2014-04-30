@@ -12,7 +12,7 @@ import Control.Monad
 import Control.Applicative
 
 
-data SLValue a = Val a | Err String
+data SLValue a = Val a | Err String deriving (Eq, Show)
 
 instance Monad SLValue where
   return = Val
@@ -29,6 +29,7 @@ instance Functor SLValue where
 
 
 data SLState a = SLState a
+
 
 newtype SLExpr s a = SLExpr { runSL :: s -> (SLValue a, s) }
 

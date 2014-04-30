@@ -11,8 +11,8 @@ data Binomial a =
            , binDisbelief   :: Rational
            , binUncertainty :: Rational
            , binBaseRate    :: Rational
-           , binX           :: Frame a
-           , binNotX        :: Frame a
+           , binX           :: a
+           , binNotX        :: a
            }
 
 
@@ -20,7 +20,12 @@ class ToBinomial op where
   toBinomial :: op a -> Binomial a
 
 
-data Multinomial a = Multinomial a
+data Multinomial a =
+  Multinomial { mulBelief      :: BeliefVector a
+              , mulUncertainty :: Rational
+              , mulBaseRate    :: BaseRateVector a
+              , mulFrame       :: Frame a
+              }
 
 
 class ToMultinomial op where
