@@ -7,8 +7,10 @@ module Math.SLHS.Core
        , runSL
        ) where
 
+
 import Control.Monad
 import Control.Applicative
+
 
 data SLValue a = Val a | Err String
 

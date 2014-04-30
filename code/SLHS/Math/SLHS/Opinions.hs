@@ -3,7 +3,17 @@
 module Math.SLHS.Opinions where
 
 
-data Binomial a = Binomial a
+import Math.SLHS.Base
+
+
+data Binomial a =
+  Binomial { binBelief      :: Rational
+           , binDisbelief   :: Rational
+           , binUncertainty :: Rational
+           , binBaseRate    :: Rational
+           , binX           :: Frame a
+           , binNotX        :: Frame a
+           }
 
 
 class ToBinomial op where
