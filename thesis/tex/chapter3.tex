@@ -5,6 +5,18 @@
 
 \chapter{SLHS: Subjective Logic in Haskell}
 
+In this chapter we introduce our combinator library \emph{SLHS: Subjective Logic
+in Haskell}. SLHS is a monadic combinator library for constructing and evaluating
+expressions of Subjective Logic. It can be embedded into any existing Haskell
+project, and, through Haskell's \emph{Foreign Function Interface}, can be utilized
+by other programming languages, most notably $C$ and $C++$.
+
+The following sections are \emph{literate Haskell}, meaning that the same
+\LaTeX source used to generate this thesis document can be utilized as a standalone
+Haskell module.
+
+\subfile{../../code/SLHS/Math/SLHS/Core.lhs}
+\subfile{../../code/SLHS/Math/SLHS/Base.lhs}
 \subfile{../../code/SLHS/Math/SLHS/Opinions.lhs}
 \subfile{../../code/SLHS/Math/SLHS/Operators.lhs}
 

@@ -16,6 +16,8 @@ import Control.Applicative
 \end{code}
 }
 
+\section{Core Foundations}
+
 \begin{code}
 data SLValue a = Val a | Err String deriving (Eq, Show)
 

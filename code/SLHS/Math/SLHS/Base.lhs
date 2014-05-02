@@ -2,7 +2,6 @@
 
 \begin{document}
 
-
 \ignore{
 \begin{code}
 module Math.SLHS.Base
@@ -14,6 +13,9 @@ module Math.SLHS.Base
 import qualified Data.Set as S
 import qualified Data.Map as M
 \end{code}
+}
+
+\section{Base Types}
 
 \begin{code}
 newtype Frame a = Frame (S.Set a)
