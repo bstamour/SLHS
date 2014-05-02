@@ -4,6 +4,7 @@
 module Math.SLHS.Base
        ( Frame()
        , BeliefVector()
+       , BaseRateVector()
        ) where
 
 
