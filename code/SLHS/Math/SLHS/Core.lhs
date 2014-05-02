@@ -1,5 +1,9 @@
+\documentclass[thesis.tex]{subfiles}
 
+\begin{document}
 
+\ignore{
+\begin{code}
 module Math.SLHS.Core
        ( SLValue(..)
        , SLState(..)
@@ -7,11 +11,12 @@ module Math.SLHS.Core
        , runSL
        ) where
 
-
 import Control.Monad
 import Control.Applicative
+\end{code}
+}
 
-
+\begin{code}
 data SLValue a = Val a | Err String deriving (Eq, Show)
 
 instance Monad SLValue where
@@ -27,9 +32,7 @@ instance Applicative SLValue where
 instance Functor SLValue where
   fmap f x = pure f <*> x
 
-
 data SLState a = SLState a
-
 
 newtype SLExpr s a = SLExpr { runSL :: s -> (SLValue a, s) }
 
@@ -46,3 +49,6 @@ instance Applicative (SLExpr s) where
 
 instance Functor (SLExpr s) where
   fmap f x = pure f <*> x
+\end{code}
+
+\end{document}
