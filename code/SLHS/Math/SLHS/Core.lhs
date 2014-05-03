@@ -36,7 +36,7 @@ instance Functor SLValue where
 
 data SLState a = SLState a
 
-newtype SLExpr s a = SLExpr { runSL :: s -> (SLValue a, s) }
+newtype SLExpr s a = SLExpr { runSL :: SLState s -> (SLValue a, SLState s) }
 
 instance Monad (SLExpr s) where
   return a = SLExpr $ \s -> (Val a, s)

@@ -14,6 +14,7 @@ module Math.SLHS.Operators
        ) where
 
 import Prelude hiding (subtract)
+import Control.Monad (liftM2, join)
 import Math.SLHS.Core
 import Math.SLHS.Opinions
 \end{code}
@@ -30,22 +31,28 @@ resulting values, and the outermost layer \emph{lifts} the operators to work wit
 the monadic context.
 
 \begin{code}
-add' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+add' :: (ToBinomial op1, ToBinomial op2)
+        => op1 a -> op2 a -> SLExpr a (Binomial a)
 add' = undefined
 
-subtract' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+subtract' :: (ToBinomial op1, ToBinomial op2)
+             => op1 a -> op2 a -> SLExpr a (Binomial a)
 subtract' = undefined
 
-multiply' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+multiply' :: (ToBinomial op1, ToBinomial op2)
+             => op1 a -> op2 a -> SLExpr a (Binomial a)
 multiply' = undefined
 
-divide' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+divide' :: (ToBinomial op1, ToBinomial op2)
+           => op1 a -> op2 a -> SLExpr a (Binomial a)
 divide' = undefined
 
-comultiply' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+comultiply' :: (ToBinomial op1, ToBinomial op2)
+               => op1 a -> op2 a -> SLExpr a (Binomial a)
 comultiply' = undefined
 
-codivide' :: Binomial a -> Binomial a -> SLExpr (SLState a) (Binomial a)
+codivide' :: (ToBinomial op1, ToBinomial op2)
+             => op1 a -> op2 a -> SLExpr a (Binomial a)
 codivide' = undefined
 \end{code}
 
@@ -56,20 +63,46 @@ because these functions can update the internal memoization table.
 We then lift the above functions into the monad like so
 
 \begin{code}
-add        = wrap2 add'
-subtract   = wrap2 subtract'
-multiply   = wrap2 multiply'
-divide     = wrap2 divide'
+add :: (ToBinomial op1, ToBinomial op2)
+       => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+add = wrap2 add'
+
+subtract :: (ToBinomial op1, ToBinomial op2)
+            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+subtract = wrap2 subtract'
+
+multiply :: (ToBinomial op1, ToBinomial op2)
+            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+multiply = wrap2 multiply'
+
+divide :: (ToBinomial op1, ToBinomial op2)
+          => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+divide = wrap2 divide'
+
+comultiply :: (ToBinomial op1, ToBinomial op2)
+              => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
 comultiply = wrap2 multiply'
-codivide   = wrap2 divide'
+
+codivide :: (ToBinomial op1, ToBinomial op2)
+            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+codivide = wrap2 divide'
 \end{code}
 
 where \emph{wrap2} is a helper function, defined as follows:
 
 \begin{code}
 wrap2 :: Monad m => (a -> b -> m c) -> m a -> m b -> m c
-wrap2 f ma mb = ma >>= \a -> mb >>= \b -> f a b
+wrap2 f ma mb = join $ liftM2 f ma mb
 \end{code}
+
+\subsection{Multinomial Operators}
+
+\begin{code}
+m_multiply' :: Multinomial a -> Multinomial a -> SLExpr (SLState a) (Multinomial a)
+m_multiply' = undefined
+\end{code}
+
+
 
 
 \end{document}
