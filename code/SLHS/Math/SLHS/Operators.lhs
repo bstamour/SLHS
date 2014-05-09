@@ -7,14 +7,15 @@
 module Math.SLHS.Operators
        ( add
        , subtract
-       , multiply
-       , divide
-       , comultiply
-       , codivide
+       , product
+       , coproduct
+       , quotient
+       , coquotient
        ) where
 
-import Prelude hiding (subtract)
+import Prelude hiding (subtract, product)
 import Control.Monad (liftM2, join)
+import Control.Applicative
 import Math.SLHS.Core
 import Math.SLHS.Opinions
 \end{code}
@@ -28,72 +29,123 @@ We begin this section by describing the operators defined over \emph{Binomial op
 Many of these operators have equivalents in standard logic or set theory. The operators
 are defined in layers: the innermost layer contains the actual code to compute the
 resulting values, and the outermost layer \emph{lifts} the operators to work within
-the monadic context.
+the monadic context. We begin by implementing the innermost layer, whose functions are
+denoted by a trailing prime symbol:
 
 \begin{code}
-add' :: (ToBinomial op1, ToBinomial op2)
-        => op1 a -> op2 a -> SLExpr a (Binomial a)
-add' = undefined
+add' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+add' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bx + by
+    d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
+    u' = (ax * ux + ay * uy) / (ax + ay)
+    a' = ax + ay
 
-subtract' :: (ToBinomial op1, ToBinomial op2)
-             => op1 a -> op2 a -> SLExpr a (Binomial a)
-subtract' = undefined
 
-multiply' :: (ToBinomial op1, ToBinomial op2)
-             => op1 a -> op2 a -> SLExpr a (Binomial a)
-multiply' = undefined
+subtract' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bx - by
+    d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
+    u' = (ax * ux - ay * uy) / (ax - ay)
+    a' = ax - ay
 
-divide' :: (ToBinomial op1, ToBinomial op2)
-           => op1 a -> op2 a -> SLExpr a (Binomial a)
-divide' = undefined
 
-comultiply' :: (ToBinomial op1, ToBinomial op2)
-               => op1 a -> op2 a -> SLExpr a (Binomial a)
-comultiply' = undefined
+product' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+product' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
+         / (1 - ax * ay)
+    d' = dx + dy - dx * dy
+    u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
+         / (1 - ax * ay)
+    a' = ax * ay
 
-codivide' :: (ToBinomial op1, ToBinomial op2)
-             => op1 a -> op2 a -> SLExpr a (Binomial a)
-codivide' = undefined
+
+coproduct' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+coproduct' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bx + by - bx * by
+    d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
+         / (ax + ay - ax * ay)
+    u' = ux * uy + (ay * dx * uy + ax * ux * dy)
+         / (ax + ay - ax * ay)
+    a' = ax + ay - ax * ay
+
+
+quotient' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+quotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
+         - ax * (1 - dx) / ((ay - ax) * (1 - dy))
+    d' = (dx - dy) / (1 - dy)
+    u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
+         - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
+    a' = ax / ay
+
+
+coquotient' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+coquotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = (bx - by) / (1 - by)
+    d' = ((1 - ay) * (dx + (1 - ax) * ux)
+          / ((ax - ay) * (dy + (1 - ay) * uy)))
+         - (1 - ax) * (1 - bx) / ((ax - ay) * (1 - by))
+    u' = ((1 - ay) * (1 - bx) / ((ax - ay) * (1 - by)))
+         - ((1 - ay) * (dx + (1 - ax) * ux)
+            / ((ax - ay) * (dy + (1 - ay) * uy)))
+    a' = (ax - ay) / (1 - ay)
 \end{code}
 
-As the type signatures show, the innermost functions compute over binomials, without
-mention of any monadic context. However the return value is in fact monadic. This is
-because these functions can update the internal memoization table.
-
-We then lift the above functions into the monad like so
+We then lift the above functions into the monad like so:
 
 \begin{code}
 add :: (ToBinomial op1, ToBinomial op2)
        => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-add = wrap2 add'
+add opx opy = join $ add' <$>
+              (fmap toBinomial opx) <*> (fmap toBinomial opy)
+
 
 subtract :: (ToBinomial op1, ToBinomial op2)
             => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-subtract = wrap2 subtract'
+subtract opx opy = join $ subtract' <$>
+                   (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
-multiply :: (ToBinomial op1, ToBinomial op2)
+
+product :: (ToBinomial op1, ToBinomial op2)
             => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-multiply = wrap2 multiply'
+product opx opy = join $ product' <$>
+                  (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
-divide :: (ToBinomial op1, ToBinomial op2)
-          => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-divide = wrap2 divide'
 
-comultiply :: (ToBinomial op1, ToBinomial op2)
+coproduct :: (ToBinomial op1, ToBinomial op2)
               => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-comultiply = wrap2 multiply'
+coproduct opx opy = join $ coproduct' <$>
+                    (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
-codivide :: (ToBinomial op1, ToBinomial op2)
+
+quotient :: (ToBinomial op1, ToBinomial op2)
+          => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+quotient opx opy = join $ quotient' <$>
+                   (fmap toBinomial opx) <*> (fmap toBinomial opy)
+
+
+coquotient :: (ToBinomial op1, ToBinomial op2)
             => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
-codivide = wrap2 divide'
+coquotient opx opy = join $ coquotient' <$>
+                     (fmap toBinomial opx) <*> (fmap toBinomial opy)
 \end{code}
 
-where \emph{wrap2} is a helper function, defined as follows:
+These are the functions that are exposed to the user of the combinator library.
 
-\begin{code}
-wrap2 :: Monad m => (a -> b -> m c) -> m a -> m b -> m c
-wrap2 f ma mb = join $ liftM2 f ma mb
-\end{code}
+
+
 
 \subsection{Multinomial Operators}
 
