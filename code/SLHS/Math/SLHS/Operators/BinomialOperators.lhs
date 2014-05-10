@@ -2,15 +2,22 @@
 
 \begin{document}
 
+% TODO: Change add      -> sum
+               subtract -> difference
+
+
 \ignore{
 \begin{code}
 module Math.SLHS.Operators.BinomialOperators
+       -- Logical operators.
        ( add
        , subtract
        , product
        , coproduct
        , quotient
        , coquotient
+         -- discounting.
+       , discount
        ) where
 
 import Prelude hiding (subtract, product)
@@ -204,32 +211,57 @@ discounting:
 
 \begin{code}
 discount_u :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
-discount_u = undefined
+discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bb * bx
+    d' = bb * dx
+    u' = db + ub + bb * ux
+    a' = ax
 \end{code}
 
 Next, opposite belief favouring discounting:
 
 \begin{code}
 discount_o :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
-discount_o = undefined
+discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = bb * bx + db * dx
+    d' = bb * dx + db * bx
+    u' = ub + (bb + db) * ux
+    a' = ax
 \end{code}
 
 And lastly, base rate sensitive discounting:
 
 \begin{code}
 discount_b :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
-discount_b = undefined
+discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
+  return $ Binomial b' d' u' a' undefined undefined
+  where
+    b' = expectation op1 * bx
+    d' = expectation op1 * dx
+    u' = 1 - expectation op1 * (bx + dx)
+    a' = ax
+\end{code}
+
+To finish things up, we wrap the \emph{discount'} function into the monad for
+end-user consumption:
+
+\begin{code}
+discount :: (ToBinomial op1, ToBinomial op2)
+            => Favouring
+            ->SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+discount f opx opy = join $ discount' f <$>
+                     (fmap toBinomial opx) <*> (fmap toBinomial opy)
 \end{code}
 
 
 
 \subsubsection{Reasoning Operators}
 
-
-
-
-
-
+TODO: Implement deduction and abduction.
 
 
 \end{document}
