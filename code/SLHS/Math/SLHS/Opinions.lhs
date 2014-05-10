@@ -62,5 +62,13 @@ class ToHyper op where
 \end{code}
 
 
+\begin{code}
+class Opinion op where
+  expectation :: op a -> Rational
+
+instance Opinion Binomial where
+  expectation (Binomial b d u a _ _) = b + a * u
+\end{code}
+
 
 \end{document}
