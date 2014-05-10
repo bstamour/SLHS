@@ -22,6 +22,8 @@ library
   other-modules: Math.SLHS.Core
                , Math.SLHS.Base
                , Math.SLHS.Operators
+               , Math.SLHS.Operators.BinomialOperators
+               , Math.SLHS.Operators.MultinomialOperators
                , Math.SLHS.Opinions
 
   -- other-extensions:
