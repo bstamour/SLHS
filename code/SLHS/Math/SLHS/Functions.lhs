@@ -11,6 +11,6 @@ import Math.SLHS.BeliefVector
 
 
 \begin{code}
-coarsen :: BeliefVector a -> [Frame a] -> BeliefVector (Frame a)
+coarsen :: BeliefVector a -> [Frame a] -> BeliefVector (Subframe a)
 coarsen = undefined
 \end{code}

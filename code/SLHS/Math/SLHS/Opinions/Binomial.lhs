@@ -6,9 +6,11 @@
 
 \ignore{
 \begin{code}
-module Math.SLHS.Opinions where
+module Math.SLHS.Opinions.Binomial where
 
-import Math.SLHS.Base
+import Math.SLHS.Core
+import Math.SLHS.BeliefVector
+import Math.SLHS.Frame
 \end{code}
 }
 
@@ -28,18 +30,25 @@ data Binomial a =
            }
 \end{code}
 
+
 We also introduce a special \emph{type class} called \emph{ToBinomial} which allows
 us to define a range of types that can be converted to a binomial opinion. An example
 of such a type could be a \emph{Beta PDF}.
+
 
 \begin{code}
 class ToBinomial op where
   toBinomial :: op a -> Binomial a
 \end{code}
 
+
 \subsection{Multinomial Opinions}
 
+
 \begin{code}
+
+type BaseRateVector = BeliefVector
+
 data Multinomial a =
   Multinomial { mulBelief      :: BeliefVector a
               , mulUncertainty :: Rational
@@ -53,6 +62,7 @@ class ToMultinomial op where
 
 
 \subsection{Hyper Opinions}
+
 
 \begin{code}
 data Hyper a = Hyper a

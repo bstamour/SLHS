@@ -8,7 +8,7 @@
 
 \ignore{
 \begin{code}
-module Math.SLHS.Operators.BinomialOperators
+module Math.SLHS.Operators.Binomial
        -- Logical operators.
        ( add
        , subtract
@@ -23,10 +23,13 @@ module Math.SLHS.Operators.BinomialOperators
 import Prelude hiding (subtract, product)
 import Control.Monad (liftM2, join)
 import Control.Applicative
-import Math.SLHS.Core
-import Math.SLHS.Opinions
+
+import Math.SLHS.SLVal
+import Math.SLHS.SLExpr
+import Math.SLHS.Opinions.Binomial
 \end{code}
 }
+
 
 \subsection{Binomial Operators}
 
@@ -58,8 +61,9 @@ flatten the monadic structure via the monadic function \emph{join}.
 
 We begin with the internal function definitions:
 
+
 \begin{code}
-add' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+add' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 add' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -68,7 +72,7 @@ add' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     u' = (ax * ux + ay * uy) / (ax + ay)
     a' = ax + ay
 
-subtract' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+subtract' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -77,7 +81,7 @@ subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     u' = (ax * ux - ay * uy) / (ax - ay)
     a' = ax - ay
 
-product' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+product' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 product' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -88,7 +92,7 @@ product' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
          / (1 - ax * ay)
     a' = ax * ay
 
-coproduct' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+coproduct' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 coproduct' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -99,7 +103,7 @@ coproduct' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
          / (ax + ay - ax * ay)
     a' = ax + ay - ax * ay
 
-quotient' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+quotient' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 quotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -110,7 +114,7 @@ quotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
          - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
     a' = ax / ay
 
-coquotient' :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+coquotient' :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 coquotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -130,35 +134,34 @@ And now we lift the operators into the expression monad.
 
 \begin{code}
 add :: (ToBinomial op1, ToBinomial op2)
-       => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+       => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 add opx opy = join $ add' <$>
               (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
 subtract :: (ToBinomial op1, ToBinomial op2)
-            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+            => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 subtract opx opy = join $ subtract' <$>
                    (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
 product :: (ToBinomial op1, ToBinomial op2)
-            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+            => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 product opx opy = join $ product' <$>
                   (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
 coproduct :: (ToBinomial op1, ToBinomial op2)
-              => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+              => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 coproduct opx opy = join $ coproduct' <$>
                     (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
 quotient :: (ToBinomial op1, ToBinomial op2)
-          => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+          => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 quotient opx opy = join $ quotient' <$>
                    (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
 coquotient :: (ToBinomial op1, ToBinomial op2)
-            => SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+            => SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 coquotient opx opy = join $ coquotient' <$>
                      (fmap toBinomial opx) <*> (fmap toBinomial opy)
-
 \end{code}
 
 
@@ -199,18 +202,20 @@ library. \emph{discount'} is a simple function that takes in a favouring as it's
 argument and dispatches the computation to one of three helper functions, for each
 favouring type respectively.
 
+
 \begin{code}
-discount' :: Favouring -> Binomial a -> Binomial a -> SLExpr a (Binomial a)
+discount' :: Favouring -> Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 discount' Uncertainty       = discount_u
 discount' Opposite          = discount_o
 discount' BaseRateSensitive = discount_b
 \end{code}
 
+
 Next we have the three implementations of discounting. First, uncertainty favouring
 discounting:
 
 \begin{code}
-discount_u :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+discount_u :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -223,7 +228,7 @@ discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 Next, opposite belief favouring discounting:
 
 \begin{code}
-discount_o :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+discount_o :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -236,7 +241,7 @@ discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 And lastly, base rate sensitive discounting:
 
 \begin{code}
-discount_b :: Binomial a -> Binomial a -> SLExpr a (Binomial a)
+discount_b :: Binomial a -> Binomial a -> SLExpr h a (Binomial a)
 discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
   return $ Binomial b' d' u' a' undefined undefined
   where
@@ -252,7 +257,7 @@ end-user consumption:
 \begin{code}
 discount :: (ToBinomial op1, ToBinomial op2)
             => Favouring
-            ->SLExpr a (op1 a) -> SLExpr a (op2 a) -> SLExpr a (Binomial a)
+            ->SLExpr h a (op1 a) -> SLExpr h a (op2 a) -> SLExpr h a (Binomial a)
 discount f opx opy = join $ discount' f <$>
                      (fmap toBinomial opx) <*> (fmap toBinomial opy)
 \end{code}
