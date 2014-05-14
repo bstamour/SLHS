@@ -19,12 +19,13 @@ cabal-version:       >=1.10
 library
   exposed-modules: Math.SLHS
 
-  other-modules: Math.SLHS.Core
-               , Math.SLHS.Base
-               , Math.SLHS.Operators
-               , Math.SLHS.Operators.BinomialOperators
-               , Math.SLHS.Operators.MultinomialOperators
-               , Math.SLHS.Opinions
+  other-modules: Math.SLHS.Functions
+               , Math.SLHS.Frame
+               , Math.SLHS.BeliefVector
+               , Math.SLHS.Opinions.Binomial
+               , Math.SLHS.Operators.Binomial
+               , Math.SLHS.Operators.Multinomial
+
 
   -- other-extensions:
   build-depends:       base >=4.6 && <4.7
