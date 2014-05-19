@@ -19,10 +19,8 @@ cabal-version:       >=1.10
 library
   exposed-modules: Math.SLHS
 
-  other-modules: Math.SLHS.Functions
-               , Math.SLHS.Frame
-               , Math.SLHS.BeliefVector
-               , Math.SLHS.Opinions.Binomial
+  other-modules: Math.SLHS.Types
+               , Math.SLHS.Opinions
                , Math.SLHS.Operators.Binomial
                , Math.SLHS.Operators.Multinomial
 

@@ -7,16 +7,18 @@
 \begin{code}
 module Math.SLHS.Operators.Multinomial where
 
-import Math.SLHS.Opinions.Binomial
-import Math.SLHS.SLExpr
+import Math.SLHS.Opinions
+import Math.SLHS.Types
 \end{code}
 }
 
 
 \subsection{Multinomial Operators}
 
+
+
 \begin{code}
-m_multiply' :: Multinomial a -> Multinomial a -> SLExpr h a (Multinomial a)
+m_multiply' :: Multinomial s o -> Multinomial s o -> SLExpr h o (Multinomial s o)
 m_multiply' = undefined
 \end{code}
 

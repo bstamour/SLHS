@@ -1,22 +1,14 @@
 
 
 module Math.SLHS
-       ( module Math.SLHS.Frame
-       , module Math.SLHS.SLExpr
-       , module Math.SLHS.SLVal
-
+       ( module Math.SLHS.Types
        , module Math.SLHS.Operators.Binomial
        , module Math.SLHS.Operators.Multinomial
-
-       , module Math.SLHS.Opinions.Binomial
+       , module Math.SLHS.Opinions
        ) where
 
 
-import Math.SLHS.Frame
-import Math.SLHS.SLExpr
-import Math.SLHS.SLVal
-
+import Math.SLHS.Types
 import Math.SLHS.Operators.Binomial
 import Math.SLHS.Operators.Multinomial
-
-import Math.SLHS.Opinions.Binomial
+import Math.SLHS.Opinions
