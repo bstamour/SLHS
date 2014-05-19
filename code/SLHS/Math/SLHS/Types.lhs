@@ -1,4 +1,8 @@
 
+\documentclass[thesis.tex]{subfiles}
+
+\begin{document}
+
 
 \ignore{
 \begin{code}
@@ -10,6 +14,14 @@ import qualified Data.Set as S
 import qualified Data.Map as M
 \end{code}
 }
+
+
+
+\subsection{Core Types}
+
+
+
+
 
 
 
@@ -81,3 +93,7 @@ instance Applicative (SLExpr h a) where
 instance Functor (SLExpr h a) where
   fmap f ma = pure f <*> ma
 \end{code}
+
+
+
+\end{document}
