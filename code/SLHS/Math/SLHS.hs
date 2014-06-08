@@ -1,5 +1,3 @@
-
-
 module Math.SLHS
        ( module Math.SLHS.Types
        , module Math.SLHS.Operators.Binomial

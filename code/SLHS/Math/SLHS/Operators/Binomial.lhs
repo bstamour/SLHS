@@ -5,22 +5,10 @@
 
 \ignore{
 \begin{code}
-module Math.SLHS.Operators.Binomial
-       -- Logical operators.
-       ( add
-       , subtract
-       , product
-       , coproduct
-       , quotient
-       , coquotient
-         -- discounting.
-       , discount
-       ) where
+module Math.SLHS.Operators.Binomial where
 
-import Prelude hiding (subtract, product)
 import Control.Monad (liftM2, join)
 import Control.Applicative
-
 import Math.SLHS.Types
 import Math.SLHS.Opinions
 \end{code}
@@ -40,125 +28,145 @@ support deductive and abductive reasoning.
 
 \subsubsection{Logical and Set-Theoretical Operators}
 
-The binomial operators in this section are ones that correspond to certain logical
-or set theoretical operators when there is zero uncertainty. For example, the
-\emph{product} operator below corresponds to the \emph{and}, or \emph{conjunction}
-operator of binary logic when given dogmatic opinions as inputs.
 
-We use the following notation for our operator implementations. For each operator,
-we expose a function to the end user whose arguments are lifted into our expression
-monad. This way, sub expressions can be used as inputs to the operators with zero
-additional work from the end user's perspective. For each operator \emph{foo}, we
-have a matching, internal operator \emph{foo'} that does the actual computation. The
-internal operators take their parameters as non-monadic types, which makes them easier
-to inspect, and returns a value wrapped in the monad. Thus the external function
-\emph{foo}'s job is simply to unwrap it's parameters, compute the result, and then
-flatten the monadic structure via the monadic function \emph{join}.
+We will begin with the simplest of binomial operators: those of addition and subtraction.
+Addition of two binomial opinions corresponds to the set theoretic union operator. Given
+two binomial opinions representing disjoint subsets of the same frame, the sum of the
+two opinions represents the union of their respective subsets.
 
-We begin with the internal function definitions:
+
+
+
 
 
 \begin{code}
-add' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-add' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = bx + by
-    d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
-    u' = (ax * ux + ay * uy) / (ax + ay)
-    a' = ax + ay
+(+!) :: (ToBinomial op1, ToBinomial op2)
+       => SLExpr h a (op1 h (Subframe a))
+       -> SLExpr h a (op2 h (Subframe a))
+       -> SLExpr h a (Binomial h (Subframe a))
+opx +! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = bx + by
+      d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
+      u' = (ax * ux + ay * uy) / (ax + ay)
+      a' = ax + ay
+  pure $ Binomial b' d' u' a' undefined
+\end{code}
 
-subtract' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = bx - by
-    d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
-    u' = (ax * ux - ay * uy) / (ax - ay)
-    a' = ax - ay
 
-product' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-product' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
-         / (1 - ax * ay)
-    d' = dx + dy - dx * dy
-    u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
-         / (1 - ax * ay)
-    a' = ax * ay
 
-coproduct' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-coproduct' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = bx + by - bx * by
-    d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
-         / (ax + ay - ax * ay)
-    u' = ux * uy + (ay * dx * uy + ax * ux * dy)
-         / (ax + ay - ax * ay)
-    a' = ax + ay - ax * ay
 
-quotient' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-quotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
-         - ax * (1 - dx) / ((ay - ax) * (1 - dy))
-    d' = (dx - dy) / (1 - dy)
-    u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
-         - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
-    a' = ax / ay
+Binomial subtraction is the inverse operation of addition. It is equivalent to
+the set difference operator.
 
-coquotient' :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-coquotient' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
-  where
-    b' = (bx - by) / (1 - by)
-    d' = ((1 - ay) * (dx + (1 - ax) * ux)
-          / ((ax - ay) * (dy + (1 - ay) * uy)))
-         - (1 - ax) * (1 - bx) / ((ax - ay) * (1 - by))
-    u' = ((1 - ay) * (1 - bx) / ((ax - ay) * (1 - by)))
-         - ((1 - ay) * (dx + (1 - ax) * ux)
+
+\begin{code}
+(-!) :: (ToBinomial op1, ToBinomial op2)
+        => SLExpr h a (op1 h (Subframe a))
+        -> SLExpr h a (op2 h (Subframe a))
+        -> SLExpr h a (Binomial h (Subframe a))
+opx -! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = bx - by
+      d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
+      u' = (ax * ux - ay * uy) / (ax - ay)
+      a' = ax - ay
+  pure $ Binomial b' d' u' a' undefined
+\end{code}
+
+
+Multiplication of two binomial opinions is equivalent to the logical \emph{and}
+operator.
+
+
+\begin{code}
+(*!) :: (ToBinomial op1, ToBinomial op2)
+        => SLExpr h a (op1 h a)
+        -> SLExpr h a (op2 h a)
+        -> SLExpr h a (Binomial h (Subframe (a, a)))
+opx *! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
+           / (1 - ax * ay)
+      d' = dx + dy - dx * dy
+      u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
+           / (1 - ax * ay)
+      a' = ax * ay
+  pure $ Binomial b' d' u' a' undefined
+\end{code}
+
+
+... and co-multiplication is equivalent to the logical \emph{or} operator.
+
+
+\begin{code}
+(~*!) :: (ToBinomial op1, ToBinomial op2)
+         => SLExpr h a (op1 h a)
+         -> SLExpr h a (op2 h a)
+         -> SLExpr h a (Binomial h (Subframe (a, a)))
+opx ~*! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = bx + by - bx * by
+      d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
+           / (ax + ay - ax * ay)
+      u' = ux * uy + (ay * dx * uy + ax * ux * dy)
+           / (ax + ay - ax * ay)
+      a' = ax + ay - ax * ay
+  pure $ Binomial b' d' u' a' undefined
+\end{code}
+
+
+Division is the inverse of multiplication.
+
+
+\begin{code}
+(/!) :: (ToBinomial op1, ToBinomial op2)
+        => SLExpr h a (op1 h (Subframe (a, a)))
+        -> SLExpr h a (op2 h a)
+        -> SLExpr h a (Binomial h a)
+opx /! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
+           - ax * (1 - dx) / ((ay - ax) * (1 - dy))
+      d' = (dx - dy) / (1 - dy)
+      u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
+           - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
+      a' = ax / ay
+  pure $ Binomial b' d' u' a' undefined
+\end{code}
+
+
+And similarily, co-division is the inverse of co-multiplication.
+
+
+\begin{code}
+(~/!) :: (ToBinomial op1, ToBinomial op2)
+         => SLExpr h a (op1 h (Subframe (a, a)))
+         -> SLExpr h a (op2 h a)
+         -> SLExpr h a (Binomial h a)
+opx ~/! opy = do
+  (Binomial bx dx ux ax _) <- toBinomial <$> opx
+  (Binomial by dy uy ay _) <- toBinomial <$> opy
+  let b' = (bx - by) / (1 - by)
+      d' = ((1 - ay) * (dx + (1 - ax) * ux)
             / ((ax - ay) * (dy + (1 - ay) * uy)))
-    a' = (ax - ay) / (1 - ay)
+           - (1 - ax) * (1 - bx) / ((ax - ay) * (1 - by))
+      u' = ((1 - ay) * (1 - bx) / ((ax - ay) * (1 - by)))
+           - ((1 - ay) * (dx + (1 - ax) * ux)
+              / ((ax - ay) * (dy + (1 - ay) * uy)))
+      a' = (ax - ay) / (1 - ay)
+  pure $ Binomial b' d' u' a' undefined
 \end{code}
 
 
-And now we lift the operators into the expression monad.
 
 
-\begin{code}
-add :: (ToBinomial op1, ToBinomial op2)
-       => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-add opx opy = join $ add' <$>
-              (fmap toBinomial opx) <*> (fmap toBinomial opy)
 
-subtract :: (ToBinomial op1, ToBinomial op2)
-            => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-subtract opx opy = join $ subtract' <$>
-                   (fmap toBinomial opx) <*> (fmap toBinomial opy)
-
-product :: (ToBinomial op1, ToBinomial op2)
-           => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-product opx opy = join $ product' <$>
-                  (fmap toBinomial opx) <*> (fmap toBinomial opy)
-
-coproduct :: (ToBinomial op1, ToBinomial op2)
-             => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-coproduct opx opy = join $ coproduct' <$>
-                    (fmap toBinomial opx) <*> (fmap toBinomial opy)
-
-quotient :: (ToBinomial op1, ToBinomial op2)
-            => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-quotient opx opy = join $ quotient' <$>
-                   (fmap toBinomial opx) <*> (fmap toBinomial opy)
-
-coquotient :: (ToBinomial op1, ToBinomial op2)
-              => SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-coquotient opx opy = join $ coquotient' <$>
-                     (fmap toBinomial opx) <*> (fmap toBinomial opy)
-\end{code}
 
 
 
@@ -177,9 +185,13 @@ We begin by constructing a simple algebraic data type to represent each of the t
 kinds of discounting.
 
 
+
+
 \begin{code}
 data Favouring = Uncertainty | Opposite | BaseRateSensitive
 \end{code}
+
+
 
 
 By doing so, we are able to expose a single discounting function to the user with the
@@ -194,28 +206,10 @@ Since the arrow operator for function signatures is right associative, one can c
 \emph{discount} to be a function mapping discount favourings to a binary function over
 binomial opinions much like the operators discussed in the previous section.
 
-In terms of our implementation, we take the same notion as before: we introduce an internal
-function \emph{discount'} and expose the function \emph{discount} to the end users of our
-library. \emph{discount'} is a simple function that takes in a favouring as it's first
-argument and dispatches the computation to one of three helper functions, for each
-favouring type respectively.
-
-
 \begin{code}
-discount' :: Favouring -> Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-discount' Uncertainty       = discount_u
-discount' Opposite          = discount_o
-discount' BaseRateSensitive = discount_b
-\end{code}
-
-
-Next we have the three implementations of discounting. First, uncertainty favouring
-discounting:
-
-\begin{code}
-discount_u :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
+discount_u :: Binomial h h -> Binomial h a -> SLExpr h a (Binomial h a)
+discount_u (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
+  return $ Binomial b' d' u' a' undefined
   where
     b' = bb * bx
     d' = bb * dx
@@ -226,9 +220,9 @@ discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 Next, opposite belief favouring discounting:
 
 \begin{code}
-discount_o :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
+discount_o :: Binomial h h -> Binomial h a -> SLExpr h a (Binomial h a)
+discount_o (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
+  return $ Binomial b' d' u' a' undefined
   where
     b' = bb * bx + db * dx
     d' = bb * dx + db * bx
@@ -239,9 +233,9 @@ discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 And lastly, base rate sensitive discounting:
 
 \begin{code}
-discount_b :: Binomial s o -> Binomial s o -> SLExpr h o (Binomial s o)
-discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
-  return $ Binomial b' d' u' a' undefined undefined
+discount_b :: Binomial h h -> Binomial h a -> SLExpr h a (Binomial h a)
+discount_b op1@(Binomial bb db ub ab _) op2@(Binomial bx dx ux ax _) =
+  return $ Binomial b' d' u' a' undefined
   where
     b' = expectation op1 * bx
     d' = expectation op1 * dx
@@ -249,22 +243,104 @@ discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
     a' = ax
 \end{code}
 
-To finish things up, we wrap the \emph{discount'} function into the monad for
-end-user consumption:
+
 
 \begin{code}
 discount :: (ToBinomial op1, ToBinomial op2)
             => Favouring
-            ->SLExpr h o (op1 s o) -> SLExpr h o (op2 s o) -> SLExpr h o (Binomial s o)
-discount f opx opy = join $ discount' f <$>
-                     (fmap toBinomial opx) <*> (fmap toBinomial opy)
+            ->SLExpr h a (op1 h h)
+            -> SLExpr h a (op2 h a)
+            -> SLExpr h a (Binomial h a)
+discount f opx opy = do
+  opx' <- toBinomial <$> opx
+  opy' <- toBinomial <$> opy
+  case f of
+    Uncertainty       -> discount_u opx' opy'
+    Opposite          -> discount_o opx' opy'
+    BaseRateSensitive -> discount_b opx' opy'
 \end{code}
 
 
 
 \subsubsection{Reasoning Operators}
 
-TODO: Implement deduction and abduction.
+
+
+
+
+
+
+\begin{code}
+deduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
+          => SLExpr h a (op1 h a)
+          -> SLExpr h a (op2 h a)
+          -> SLExpr h a (op3 h a)
+          -> SLExpr h a (Binomial h a)
+deduce opx opyx opyx' = do
+  opx'@(Binomial bx  dx  ux  ax  _) <- toBinomial <$> opx
+  opy'@(Binomial by  dy  uy  ay  _) <- toBinomial <$> opyx
+  opy''@(Binomial by' dy' uy' ay' _) <- toBinomial <$> opyx'
+  require (ay == ay') "y's atomicity must be the same."
+  pure $ deduce' opx' opy' opy''
+
+deduce' :: Binomial h a -> Binomial h a -> Binomial h a -> Binomial h a
+deduce' opx opy opy' = Binomial byx dyx uyx ayx undefined
+  where
+    (Binomial bx dx ux ax _)     = opx
+    (Binomial by dy uy ay _)     = opy
+    (Binomial by' dy' uy' ay' _) = opy'
+
+    byx = bIy - ay * k
+    dyx = dIy - (1 - ay) * k
+    uyx = uIy + k
+    ayx = ay
+
+    bIy = bx * by + dx * by' + ux * (by * ax + by' * (1 - ax))
+    dIy = bx * dy + dx * dy' + ux * (dy * ax + dy' * (1 - ax))
+    uIy = bx * uy + dx * uy' + ux * (uy * ax + uy' * (1 - ax))
+
+    k | ((by > by') && (dy > dy')) || ((by <= by') && (dy <= dy')) = 0
+
+      | ((by > by') && (dy <= dy')) && b1 && a1 = k2a1
+      | ((by > by') && (dy <= dy')) && b1 && a2 = k2a2
+      | ((by > by') && (dy <= dy')) && b2 && a1 = k2b1
+      | ((by > by') && (dy <= dy')) && b2 && a2 = k2b2
+
+      | ((by <= by') && (dy > dy')) && b1' && a1 = k3a1
+      | ((by <= by') && (dy > dy')) && b1' && a2 = k3a2
+      | ((by <= by') && (dy > dy')) && b2' && a1 = k3b1
+      | ((by <= by') && (dy > dy')) && b2' && a2 = k3b2
+
+    a1 = (eopx <= ax)
+    a2 = (eopx > ax)
+
+    b1  = (eopy' <= (by' + ay * (1 - by' - dy)))
+    b1' = (eopy' <= (by  + ay * (1 - by  - dy')))
+    b2  = (eopy' >  (by' + ay * (1 - by' - dy)))
+    b2' = (eopy' >  (by  + ay * (1 - by  - dy')))
+
+    k2a1 = (ax * ux * (bIy - by')) / ((bx + ax * ux) * ay)
+    k2a2 = (ax * ux * (dIy - dy) * (by - by')) / ((dx + (1 - ax) * ux) * ay * (dy' - dy))
+    k2b1 = ((1 - ax) * ux * (bIy - by') * (dy' - dy)) / ((bx + ax * ux) * (1 - ay) * (by - by'))
+    k2b2 = ((1 - ax) * ux * (dIy - dy)) / ((dx + (1 - ax) * ux) * (1 - ay))
+
+    k3a1 = ((1 - ax) * ux * (dIy - dy') * (by' - by)) / ((bx + ax * ux) * ay * (dy - dy'))
+    k3a2 = ((1 - ax) * ux * (bIy - by)) / ((dx + (1 - ax) * ux) * ay)
+    k3b1 = (ax * ux * (dIy - dy')) / ((bx + ax * ux) * (1 - ay))
+    k3b2 = (ax * ux * (bIy - by) * (dy - dy')) / ((dx + (1 - ax) * ux) * (1 - ay) * (by' - by))
+
+    eopx  = expectation opx
+    eopy' = by * ax + by' * (1 - ax) + ay * (uy * ax + uy' * (1 - ax))
+\end{code}
+
+
+
+
+
+
+
+
+
 
 
 \end{document}

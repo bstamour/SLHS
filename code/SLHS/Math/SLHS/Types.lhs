@@ -16,42 +16,64 @@ import qualified Data.Map as M
 }
 
 
-
-\subsection{Core Types}
-
+\section{Core Types}
 
 
 
+
+\subsection{Frames of Discernment}
+
+
+\begin{code}
+newtype Frame a = Frame (S.Set a)
+type Subframe = Frame
+
+data BinaryFrame a = BinaryFrame a a
+type PartitionedFrame a = BinaryFrame (Subframe a)
+
+class FrameType f
+
+instance FrameType (Frame a)
+instance FrameType (BinaryFrame a)
+\end{code}
+
+
+
+
+
+\subsection{Belief and Base Rate Vectors}
 
 
 
 
 \begin{code}
-type Frame a = S.Set a
-type Subframe a = Frame a
+type BeliefVector a = M.Map a Rational
+type BaseRateVector a = M.Map a Rational
 \end{code}
+
+
+
+
+\subsection{Belief Holders}
 
 
 \begin{code}
-newtype Holder a = Holder a
+data Holder a = Holder a
+              | Discount (Holder a) (Holder a)
+              | Consensus (Holder a) (Holder a)
 \end{code}
 
 
 
-\begin{code}
-data BeliefVector a = BV a
-\end{code}
+
+
+
+\subsection{Subjective Logic Values}
+
 
 
 \begin{code}
 data SLVal a = SLVal a | Err String
-
-err :: String -> SLVal a
-err = Err
-
-require :: Bool -> String -> SLVal ()
-require True _ = pure ()
-require False e = err e
 
 instance Monad SLVal where
   return = SLVal
@@ -63,21 +85,40 @@ instance Applicative SLVal where
   (<*>) = ap
 
 instance Functor SLVal where
-  fmap f ma = pure f <*> ma
+  fmap = liftA
 \end{code}
 
 
 \begin{code}
-data SLState h a =
-  SLState { slsFrames     :: [Frame a]
-          , slsBeliefVecs :: M.Map h (BeliefVector a)
-          }
+err :: String -> SLVal a
+err = Err
+\end{code}
+
+\begin{code}
+require :: Bool -> String -> SLExpr h a (SLVal ())
+require True _ = pure $ pure ()
+require False e = pure $ err e
+\end{code}
+
+
+
+
+\subsection{Subjective Logic Expressions}
+
+
+
+\begin{code}
+data SLState h a = SLState { slsFrames     :: [Frame a]
+                           , slsBeliefVecs :: M.Map h (BeliefVector a)
+                           }
 \end{code}
 
 
 
 \begin{code}
-data SLExpr h a t = SLExpr { runSLExpr :: SLState h a -> (SLState h a, SLVal t) }
+data SLExpr h a t =
+  SLExpr { runSLExpr :: SLState h a -> (SLState h a, SLVal t)
+         }
 
 instance Monad (SLExpr h a) where
   return x = SLExpr $ \st -> (st, SLVal x)
@@ -91,7 +132,7 @@ instance Applicative (SLExpr h a) where
   (<*>) = ap
 
 instance Functor (SLExpr h a) where
-  fmap f ma = pure f <*> ma
+  fmap = liftA
 \end{code}
 
 
