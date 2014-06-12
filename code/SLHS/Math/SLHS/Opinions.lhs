@@ -90,7 +90,16 @@ data Hyper h a = Hyper { hBelief      :: BeliefVector (Subframe a)
 
 class ToHyper op where
   toHyper :: op h a -> Hyper h a
+
+instance ToHyper Hyper where
+  toHyper = id
 \end{code}
+
+
+
+
+
+
 
 
 \subsection{The Opinion Type Class}

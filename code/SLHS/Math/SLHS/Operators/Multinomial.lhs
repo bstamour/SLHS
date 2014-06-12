@@ -23,4 +23,13 @@ m_multiply' = undefined
 \end{code}
 
 
+
+
+\subsubsection{Multinomial Fusion}
+
+
+% Note: yA = 0, yB = 1, if you follow through with the limits.
+
+
+
 \end{document}

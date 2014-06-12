@@ -25,8 +25,15 @@ import qualified Data.Map as M
 
 
 \begin{code}
-newtype Frame a = Frame (S.Set a)
+newtype Frame a = Frame (S.Set a) deriving (Eq, Ord)
 type Subframe = Frame
+
+
+fEmpty :: Frame a
+fEmpty = Frame (S.empty)
+
+fUnion :: Ord a => Frame a -> Frame a -> Frame a
+fUnion (Frame s1) (Frame s2) = Frame (s1 `S.union` s2)
 
 data BinaryFrame a = BinaryFrame a a
 type PartitionedFrame a = BinaryFrame (Subframe a)
