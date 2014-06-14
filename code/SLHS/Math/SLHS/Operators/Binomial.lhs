@@ -53,14 +53,13 @@ opx +! opy = do opx' <- toBinomial <$> opx
 \begin{code}
 add' :: Binomial h (Subframe a) -> Binomial h (Subframe a) -> Binomial h (Subframe a)
 add' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = bx + by
-      d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
-      u' = (ax * ux + ay * uy) / (ax + ay)
-      a' = ax + ay
-  in Binomial b' d' u' a' undefined
+  Binomial b' d' u' a' undefined
+  where
+    b' = bx + by
+    d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
+    u' = (ax * ux + ay * uy) / (ax + ay)
+    a' = ax + ay
 \end{code}
-
-
 
 
 Binomial subtraction is the inverse operation of addition. It is equivalent to
@@ -80,11 +79,12 @@ opx -! opy = do opx' <- toBinomial <$> opx
 
 \begin{code}
 subtract' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = bx - by
-      d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
-      u' = (ax * ux - ay * uy) / (ax - ay)
-      a' = ax - ay
-  in Binomial b' d' u' a' undefined
+  Binomial b' d' u' a' undefined
+  where
+    b' = bx - by
+    d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
+    u' = (ax * ux - ay * uy) / (ax - ay)
+    a' = ax - ay
 \end{code}
 
 
@@ -101,15 +101,15 @@ opx *! opy = do opx' <- toBinomial <$> opx
                 opy' <- toBinomial <$> opy
                 pure $ times' opx' opy'
 
-
 times' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
-           / (1 - ax * ay)
-      d' = dx + dy - dx * dy
-      u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
-           / (1 - ax * ay)
-      a' = ax * ay
-  in Binomial b' d' u' a' undefined
+  Binomial b' d' u' a' undefined
+  where
+    b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
+         / (1 - ax * ay)
+    d' = dx + dy - dx * dy
+    u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
+         / (1 - ax * ay)
+    a' = ax * ay
 \end{code}
 
 
@@ -125,17 +125,15 @@ opx ~*! opy = do opx' <- toBinomial <$> opx
                  opy' <- toBinomial <$> opy
                  pure $ cotimes' opx' opy'
 
-
-
-
 cotimes' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = bx + by - bx * by
-      d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
-           / (ax + ay - ax * ay)
-      u' = ux * uy + (ay * dx * uy + ax * ux * dy)
-           / (ax + ay - ax * ay)
-      a' = ax + ay - ax * ay
-  in Binomial b' d' u' a' undefined
+  Binomial b' d' u' a' undefined
+  where
+    b' = bx + by - bx * by
+    d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
+         / (ax + ay - ax * ay)
+    u' = ux * uy + (ay * dx * uy + ax * ux * dy)
+         / (ax + ay - ax * ay)
+    a' = ax + ay - ax * ay
 \end{code}
 
 
@@ -151,16 +149,15 @@ opx /! opy = do opx' <- toBinomial <$> opx
                 opy' <- toBinomial <$> opy
                 pure $ divide' opx' opy'
 
-
-
 divide' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
-           - ax * (1 - dx) / ((ay - ax) * (1 - dy))
-      d' = (dx - dy) / (1 - dy)
-      u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
-           - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
-      a' = ax / ay
-  in Binomial b' d' u' a' undefined
+  Binomial b' d' u' a' undefined
+  where
+    b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
+         - ax * (1 - dx) / ((ay - ax) * (1 - dy))
+    d' = (dx - dy) / (1 - dy)
+    u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
+         - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
+    a' = ax / ay
 \end{code}
 
 
@@ -176,18 +173,17 @@ opx ~/! opy = do opx' <- toBinomial <$> opx
                  opy' <- toBinomial <$> opy
                  pure $ codivide' opx' opy'
 
-
-
 codivide' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
-  let b' = (bx - by) / (1 - by)
-      d' = ((1 - ay) * (dx + (1 - ax) * ux)
+  Binomial b' d' u' a' undefined
+  where
+    b' = (bx - by) / (1 - by)
+    d' = ((1 - ay) * (dx + (1 - ax) * ux)
+          / ((ax - ay) * (dy + (1 - ay) * uy)))
+         - (1 - ax) * (1 - bx) / ((ax - ay) * (1 - by))
+    u' = ((1 - ay) * (1 - bx) / ((ax - ay) * (1 - by)))
+         - ((1 - ay) * (dx + (1 - ax) * ux)
             / ((ax - ay) * (dy + (1 - ay) * uy)))
-           - (1 - ax) * (1 - bx) / ((ax - ay) * (1 - by))
-      u' = ((1 - ay) * (1 - bx) / ((ax - ay) * (1 - by)))
-           - ((1 - ay) * (dx + (1 - ax) * ux)
-              / ((ax - ay) * (dy + (1 - ay) * uy)))
-      a' = (ax - ay) / (1 - ay)
-  in Binomial b' d' u' a' undefined
+    a' = (ax - ay) / (1 - ay)
 \end{code}
 
 
@@ -210,7 +206,6 @@ sensitive discounting}.
 
 We begin by constructing a simple algebraic data type to represent each of the three
 kinds of discounting.
-
 
 
 
@@ -377,8 +372,6 @@ abduce opx opxyT opxyF ay = do
   opxyF' <- toBinomial <$> opxyF
   ay'    <- ay
   abduce' opx' opxyT' opxyF' ay'
-
-
 
 abduce' :: Binomial h a
            -> Binomial h a
