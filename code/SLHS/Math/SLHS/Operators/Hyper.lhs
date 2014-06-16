@@ -73,8 +73,6 @@ constraint' (Hyper bA uA aA _) (Hyper bB uB aB _) = Hyper bAB uAB aAB undefined
 
     keys  = nub (M.keys bA ++ M.keys bB)
     keys' = nub (M.keys aA ++ M.keys aB)
-
-    lookup' m x = fromMaybe 0 (M.lookup x m)
 \end{code}
 
 

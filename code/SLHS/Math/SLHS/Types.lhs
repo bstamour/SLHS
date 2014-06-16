@@ -8,8 +8,10 @@
 \begin{code}
 module Math.SLHS.Types where
 
+import Data.Maybe
 import Control.Applicative
 import Control.Monad (ap)
+
 import qualified Data.Set as S
 import qualified Data.Map as M
 \end{code}
@@ -56,6 +58,13 @@ instance FrameType (BinaryFrame a)
 \begin{code}
 type BeliefVector a = M.Map a Rational
 type BaseRateVector a = M.Map a Rational
+
+
+lookup' m x = fromMaybe 0 (M.lookup x m)
+
+
+
+
 \end{code}
 
 
