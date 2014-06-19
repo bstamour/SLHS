@@ -13,19 +13,22 @@ expressions of Subjective Logic. It can be embedded into any existing Haskell
 project, and, through Haskell's \emph{Foreign Function Interface}, can be utilized
 by other programming languages, most notably $C$ and $C++$.
 
-The following sections are \emph{literate Haskell}, meaning that the same
-\LaTeX source used to generate this thesis document can be utilized as a standalone
-Haskell module.
+%The following sections are \emph{literate Haskell}, meaning that the same
+%\LaTeX source used to generate this thesis document can be utilized as a standalone
+%Haskell module.
+
+
 
 %\subfile{./SLHS/Core.lhs}
 %\subfile{./SLHS/Base.lhs}
 
 
-\subfile{./SLHS/Types.lhs}
 
+
+
+\subfile{./SLHS/Types.lhs}
 \subfile{./SLHS/Opinions.lhs}
 
-%\subfile{./SLHS/Operators.lhs}
 
 
 
@@ -35,14 +38,19 @@ In this section we will discuss the implementation details of the Subjective Log
 operators that are provided by SLHS. The following notation is used for the operators:
 
 \begin{itemize}
-  \item We denote any binary operators with a trailing exclamation mark $!$ in order to
+  \item We denote binary operators with a trailing exclamation mark $!$ in order to
     avoid conflicting with Haskell's mathematical operators. For example, binomial addition
-    is denoted as $+!$
+    is denoted as $+!$.
   \item We use tildas as a prefix to denote $co-$ operations. For example, the binomial
-    co-multiplication operator is denoted as $\sim *!$
+    co-multiplication operator is denoted as $\sim *!$.
   \item All n-ary operators, where $n > 2$ are denoted as simple functions, instead of
     symbolic operators.
 \end{itemize}
+
+Furthermore, every operator is presented in it's most general form. For example, instead of
+presenting two operators for \emph{averaging fusion} (one for multinomial opinions, and another
+for hyper opinions) we implement only the version for hyper opinions.
+
 
 
 

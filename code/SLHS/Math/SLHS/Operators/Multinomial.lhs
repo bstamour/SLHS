@@ -24,94 +24,58 @@ import qualified Data.Map as M
 \subsubsection{Multinomial Multiplication}
 
 
+% TODO: Implement me. Make sure the types are correct.
+
 \begin{code}
-m_multiply' :: Multinomial s o -> Multinomial s o -> SLExpr h o (Multinomial s o)
-m_multiply' = undefined
+times' :: Multinomial h a -> Multinomial h a -> Multinomial h a
+times' = undefined
 \end{code}
 
 
 
 
-\subsubsection{Cumulative Fusion}
-
-
-% Note: yA = 0, yB = 1, if you follow through with the limits.
-
-
-TODO: The base rate vectors should be the same.
-
-TODO: The frames must be the same as well.
+\subsubsection{Multinomial Unfusion}
 
 
 \begin{code}
-cFuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
-         => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Multinomial h a)
-cFuse opa opb = do opa' <- toMultinomial <$> opa
-                   opb' <- toMultinomial <$> opb
-                   pure $ cFuse' opa' opb'
+cUnfuse' :: Multinomial h a -> Multinomial h a -> Multinomial h a
+cUnfuse' opC opb = undefined -- Compute opa
+\end{code}
+
+
+
+
+
+\subsubsection{Multinomial Fission}
+
+
+\begin{code}
+cSplit :: ToMultinomial op => Rational -> SLExpr h a (op h a)
+          -> SLExpr h a (Multinomial h a , Multinomial h a)
+cSplit phi op = cSplit' <$> (pure phi) <*> (toMultinomial <$> op)
 \end{code}
 
 
 \begin{code}
-cFuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
-cFuse' (Multinomial ba ua aa _) (Multinomial bb ub ab _)
-  | ua /= 0 || ub /= 0 = Multinomial b' u' a' undefined
-  | otherwise          = Multinomial b'' u'' a'' undefined
+cSplit' :: Rational -> Multinomial h a -> (Multinomial h a, Multinomial h a)
+cSplit' phi (Multinomial b u a _) = (op1, op2)
   where
-    b' = M.fromList . map (\k -> (k, bFunc k)) $ keys
-    u' = ua * ub / (ua + ub - ua * ub)
-    a' = aa
+    op1 = Multinomial b1 u1 a undefined
+    op2 = Multinomial b2 u2 a undefined
 
-    b'' = M.fromList . map (\k -> (k, bB k)) $ keys
-    u'' = 0
-    a'' = aa
+    b1 = M.map (\x -> phi * x / norm phi) b
+    u1 = u / norm phi
 
-    bFunc x = (bA x * ub + bB x * ua) / (ua + ub - ua * ub)
+    b2 = M.map (\x -> (1 - phi) * x / norm (1 - phi)) b
+    u2 = u / norm (1 - phi)
 
-    keys  = nub (M.keys ba ++ M.keys bb)
-
-    bA = lookup' ba
-    bB = lookup' bb
-\end{code}
-
-
-\subsubsection{Averaging Fusion}
-
-
-
-\begin{code}
-aFuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
-         => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Multinomial h a)
-aFuse opa opb = do opa' <- toMultinomial <$> opa
-                   opb' <- toMultinomial <$> opb
-                   pure $ aFuse' opa' opb'
+    norm p = u + p * M.fold (+) 0 b
 \end{code}
 
 
 
-\begin{code}
-aFuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
-aFuse' (Multinomial ba ua aa _) (Multinomial bb ub ab _)
-  | ua /= 0 || ub /= 0 = Multinomial b' u' a' undefined
-  | otherwise          = Multinomial b'' u'' a'' undefined
-  where
-    b' = M.fromList . map (\k -> (k, bFunc k)) $ keys
-    u' = 2 * ua * ub / (ua + ub)
-    a' = aa
 
-    b'' = M.fromList . map (\k -> (k, bB k)) $ keys
-    u'' = 0
-    a'' = aa
 
-    bFunc x = (bA x * ub + bB x * ua) / (ua + ub)
-
-    keys  = nub (M.keys ba ++ M.keys bb)
-
-    bA = lookup' ba
-    bB = lookup' bb
-\end{code}
 
 
 \end{document}
