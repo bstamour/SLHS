@@ -77,5 +77,40 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
 
 
 
+% Multinomial deduction.
+
+
+\begin{code}
+
+-- A set of conditional opinions for input to deduction and
+-- abduction operators.
+
+data ConditionalOpinionSet h a b =
+  CondSet { coFrame    :: Frame a   -- Y
+          , coGiven    :: Frame b   -- given X
+--          , coOpinions :: [(b, Multinomial h a)]
+            , coOpinions :: M.Map b (Multinomial h a)
+          }
+
+deduce' :: Multinomial h a
+           -> ConditionalOpinionSet h a b
+           -> Multinomial h a
+deduce' opx ops = Multinomial b' u' a' undefined
+  where
+    b' = undefined
+    u' = undefined
+    a' = undefined
+
+    ey y = sum factors
+      where
+        factors = M.fold (\x ->
+
+    ops' = coOpinions ops
+
+\end{code}
+
+
+
+
 
 \end{document}

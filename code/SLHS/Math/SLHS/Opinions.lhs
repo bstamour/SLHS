@@ -10,6 +10,8 @@
 \begin{code}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE FlexibleInstances #-}
 
 module Math.SLHS.Opinions where
 
@@ -106,23 +108,34 @@ instance ToHyper Hyper where
 
 
 \begin{code}
-class Opinion op where
-  type FrameOf op :: * -> *
-  expectation     :: op h a -> Rational
-  frame           :: Ord a => op h a -> (FrameOf op) a
+class Opinion op h a where
+  type FrameOf op h a :: * -> *
+  type ExpectationType op h a :: *
 
-instance Opinion Binomial where
-  type FrameOf Binomial = BinaryFrame
+  expectation :: op h a -> ExpectationType op h a
+  frame       :: Ord a => op h a -> (FrameOf op h a) a
+
+
+instance Opinion Binomial h a where
+  type FrameOf Binomial h a = BinaryFrame
+  type ExpectationType Binomial h a = Rational
+
   expectation (Binomial b d u a _) = b + a * u
   frame (Binomial _ _ _ _ (MetaData _ frm)) = frm
 
-instance Opinion Multinomial where
-  type FrameOf Multinomial = Frame
+
+instance Opinion Multinomial h a where
+  type FrameOf Multinomial h a = Frame
+  type ExpectationType Multinomial h a = Vector a
+
   expectation _ = undefined
   frame _       = undefined
 
-instance Opinion Hyper where
-  type FrameOf Hyper = Frame
+
+instance Opinion Hyper h a where
+  type FrameOf Hyper h a = Frame
+  type ExpectationType Hyper h a = Vector a
+
   expectation _ = undefined
   frame _       = undefined
 \end{code}

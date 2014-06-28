@@ -56,8 +56,12 @@ instance FrameType (BinaryFrame a)
 
 
 \begin{code}
-type BeliefVector a = M.Map a Rational
-type BaseRateVector a = M.Map a Rational
+
+type Vector a = M.Map a Rational
+
+
+type BeliefVector a = Vector a
+type BaseRateVector a = Vector a
 
 
 lookup' m x = fromMaybe 0 (M.lookup x m)
@@ -109,6 +113,8 @@ instance Functor SLVal where
 err :: String -> SLVal a
 err = Err
 \end{code}
+
+
 
 \begin{code}
 require :: Bool -> String -> SLExpr h a (SLVal ())
