@@ -10,10 +10,13 @@ module Math.SLHS.Operators.Hyper where
 import Math.SLHS.Types
 import Math.SLHS.Opinions
 
+import qualified Math.SLHS.Vector as V
+
 import Control.Monad (liftM2, join)
 import Control.Applicative
 import Data.Maybe
 import Data.List
+
 import qualified Data.Map as M
 \end{code}
 }
@@ -49,20 +52,20 @@ cFuse' (Hyper ba ua aa _) (Hyper bb ub ab _)
   | ua /= 0 || ub /= 0 = Hyper b' u' a' undefined
   | otherwise          = Hyper b'' u'' a'' undefined
   where
-    b' = M.fromList . map (\k -> (k, bFunc k)) $ keys
+    b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = ua * ub / (ua + ub - ua * ub)
     a' = aa
 
-    b'' = M.fromList . map (\k -> (k, bB k)) $ keys
+    b'' = V.fromList . map (\k -> (k, bB k)) $ keys
     u'' = 0
     a'' = aa
 
     bFunc x = (bA x * ub + bB x * ua) / (ua + ub - ua * ub)
 
-    keys  = nub (M.keys ba ++ M.keys bb)
+    keys  = nub (V.focals ba ++ V.focals bb)
 
-    bA = lookup' ba
-    bB = lookup' bb
+    bA = V.value ba
+    bB = V.value bb
 \end{code}
 
 
@@ -89,20 +92,20 @@ aFuse' (Hyper ba ua aa _) (Hyper bb ub ab _)
   | ua /= 0 || ub /= 0 = Hyper b' u' a' undefined
   | otherwise          = Hyper b'' u'' a'' undefined
   where
-    b' = M.fromList . map (\k -> (k, bFunc k)) $ keys
+    b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = 2 * ua * ub / (ua + ub)
     a' = aa
 
-    b'' = M.fromList . map (\k -> (k, bB k)) $ keys
+    b'' = V.fromList . map (\k -> (k, bB k)) $ keys
     u'' = 0
     a'' = aa
 
     bFunc x = (bA x * ub + bB x * ua) / (ua + ub)
 
-    keys  = nub (M.keys ba ++ M.keys bb)
+    keys  = nub (V.focals ba ++ V.focals bb)
 
-    bA = lookup' ba
-    bB = lookup' bb
+    bA = V.value ba
+    bB = V.value bb
 \end{code}
 
 
@@ -127,19 +130,19 @@ constraint op1 op2 = constraint' <$> (fmap toHyper op1) <*> (fmap toHyper op2)
 constraint' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
 constraint' (Hyper bA uA aA _) (Hyper bB uB aB _) = Hyper bAB uAB aAB undefined
   where
-    bAB = M.fromList . map (\k -> (k, harmony k / (1 - conflict))) $ keys
+    bAB = V.fromList . map (\k -> (k, harmony k / (1 - conflict))) $ keys
     uAB = (uA * uB) / (1 - conflict)
-    aAB = M.fromList $ map (\k -> (k, f k)) keys'
+    aAB = V.fromList $ map (\k -> (k, f k)) keys'
       where
         f x = (axA * (1 - uA) + axB * (1 - uB)) / (2 - uA - uB)
           where
-            axA = lookup' aA x
-            axB = lookup' aB x
+            axA = V.value aA x
+            axB = V.value aB x
 
     harmony x = bxA * uB + bxB * uA + rest
       where
-        bxA     = lookup' bA x
-        bxB     = lookup' bB x
+        bxA     = V.value bA x
+        bxB     = V.value bB x
         rest    = sum . map combine $ matches
         matches = [(y, z) | y <- keys, z <- keys, fUnion y z == x]
 
@@ -147,10 +150,10 @@ constraint' (Hyper bA uA aA _) (Hyper bB uB aB _) = Hyper bAB uAB aAB undefined
       where
         matches = [(y, z) | y <- keys, z <- keys, fUnion y z == fEmpty]
 
-    combine (y, z) = lookup' bA y + lookup' bB z
+    combine (y, z) = V.value bA y + V.value bB z
 
-    keys  = nub (M.keys bA ++ M.keys bB)
-    keys' = nub (M.keys aA ++ M.keys aB)
+    keys  = nub (V.focals bA ++ V.focals bB)
+    keys' = nub (V.focals aA ++ V.focals aB)
 \end{code}
 
 

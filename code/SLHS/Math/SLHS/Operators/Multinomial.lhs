@@ -5,15 +5,21 @@
 
 \ignore{
 \begin{code}
-module Math.SLHS.Operators.Multinomial where
+module Math.SLHS.Operators.Multinomial (cSplit) where
 
 import Math.SLHS.Opinions
 import Math.SLHS.Types
 
+import qualified Math.SLHS.Vector as V
+
 import Data.Maybe
 import Data.List
 import Control.Applicative
+
 import qualified Data.Map as M
+
+
+
 \end{code}
 }
 
@@ -63,13 +69,13 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
     op1 = Multinomial b1 u1 a undefined
     op2 = Multinomial b2 u2 a undefined
 
-    b1 = M.map (\x -> phi * x / norm phi) b
+    b1 = V.map (\x -> phi * x / norm phi) b
     u1 = u / norm phi
 
-    b2 = M.map (\x -> (1 - phi) * x / norm (1 - phi)) b
+    b2 = V.map (\x -> (1 - phi) * x / norm (1 - phi)) b
     u2 = u / norm (1 - phi)
 
-    norm p = u + p * M.fold (+) 0 b
+    norm p = u + p * V.fold (+) 0 b
 \end{code}
 
 
@@ -92,6 +98,7 @@ data ConditionalOpinionSet h a b =
             , coOpinions :: M.Map b (Multinomial h a)
           }
 
+{-
 deduce' :: Multinomial h a
            -> ConditionalOpinionSet h a b
            -> Multinomial h a
@@ -106,6 +113,9 @@ deduce' opx ops = Multinomial b' u' a' undefined
         factors = M.fold (\x ->
 
     ops' = coOpinions ops
+-}
+
+
 
 \end{code}
 

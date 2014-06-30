@@ -16,6 +16,8 @@
 module Math.SLHS.Opinions where
 
 import Math.SLHS.Types
+import Math.SLHS.Vector
+
 import qualified Data.Set as S
 \end{code}
 }

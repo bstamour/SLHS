@@ -12,6 +12,8 @@ import Data.Maybe
 import Control.Applicative
 import Control.Monad (ap)
 
+import Math.SLHS.Vector
+
 import qualified Data.Set as S
 import qualified Data.Map as M
 \end{code}
@@ -56,19 +58,9 @@ instance FrameType (BinaryFrame a)
 
 
 \begin{code}
-
-type Vector a = M.Map a Rational
-
-
 type BeliefVector a = Vector a
 type BaseRateVector a = Vector a
-
-
-lookup' m x = fromMaybe 0 (M.lookup x m)
-
-
-
-
+--lookup' m x = fromMaybe 0 (M.lookup x m)
 \end{code}
 
 
