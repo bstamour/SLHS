@@ -7,7 +7,6 @@
 \begin{code}
 {-# LANGUAGE ScopedTypeVariables #-}
 
-
 module Math.SLHS.Operators.Multinomial (cSplit) where
 
 import Math.SLHS.Opinions
@@ -85,6 +84,9 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
 \subsubsection{Deduction and Abduction}
 
 
+
+
+
 \begin{code}
 deduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
           => SLExpr h a (op h a)
@@ -93,6 +95,9 @@ deduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
 deduce opx ops = do opx' <- toMultinomial <$> opx
                     pure $ deduce' opx' ops
 \end{code}
+
+
+
 
 
 
@@ -189,6 +194,67 @@ deduce' opx@(Multinomial bx ux ax _) ops = Multinomial b' u' a' undefined
     b' = V.fromList [ (y, expt' y - (V.value ay y) * u') | y <- ys ]
     u' = (apexU -) . sum . map (\x -> (apexU - uYx x) * V.value bx x) $ xs
     a' = ay
+\end{code}
+
+
+
+
+
+
+
+\begin{code}
+abduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
+          => SLExpr h a (op h a)
+          -> [(b, Multinomial h a)]
+          -> BaseRateVector b
+          -> SLExpr h a (Multinomial h b)
+abduce opx ops ay = do opx' <- toMultinomial <$> opx
+                       pure $ abduce' opx' ops ay
+\end{code}
+
+
+
+
+
+\begin{code}
+abduce' :: forall a. forall b. forall h.
+           (Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
+           => Multinomial h a
+           -> [(b, Multinomial h a)]
+           -> BaseRateVector b
+           -> Multinomial h b
+abduce' opx@(Multinomial bx ux ax _) ops ay = deduce' opx ops'
+  where
+    ops' = map multinomial xs
+
+    multinomial x = (x, Multinomial b' u' a' undefined)
+      where
+        b'  = V.fromList bs
+        u'  = uT x
+        a'  = ay
+        bs  = [ (y, f y) | y <- ys ]
+        f y = expt y x - V.value ay y * uT x
+
+    expt y x = numer / denom
+      where
+        numer = V.value ay y * V.value (expectation (findOpinion y)) x
+        denom = sum . map f $ ys
+        f y   = V.value ay y  * V.value (expectation (findOpinion y)) x
+
+    uT x = minimum [ f y | y <- ys ]
+      where
+        f y = expt y x / V.value ay y
+
+    -- TODO: Confirm this.
+    ax = mBaseRate . snd . head $ ops
+
+    xs = [minBound :: a .. maxBound :: a]
+    ys = [minBound :: b .. maxBound :: b]
+
+    -- TODO: Factor this out.
+    findOpinion y = case lookup y ops of
+      Nothing -> Multinomial (V.fromList []) 1 ax undefined
+      Just op -> op
 \end{code}
 
 
