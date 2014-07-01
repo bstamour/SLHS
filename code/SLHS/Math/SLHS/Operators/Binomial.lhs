@@ -287,11 +287,6 @@ discount f opx opy = do
 \subsubsection{Reasoning Operators}
 
 
-
-
-
-
-
 \begin{code}
 deduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
           => SLExpr h a (op1 h a)

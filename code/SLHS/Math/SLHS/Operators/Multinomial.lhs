@@ -5,6 +5,9 @@
 
 \ignore{
 \begin{code}
+{-# LANGUAGE ScopedTypeVariables #-}
+
+
 module Math.SLHS.Operators.Multinomial (cSplit) where
 
 import Math.SLHS.Opinions
@@ -17,9 +20,6 @@ import Data.List
 import Control.Applicative
 
 import qualified Data.Map as M
-
-
-
 \end{code}
 }
 
@@ -29,8 +29,6 @@ import qualified Data.Map as M
 
 \subsubsection{Multinomial Multiplication}
 
-
-% TODO: Implement me. Make sure the types are correct.
 
 \begin{code}
 times' :: Multinomial h a -> Multinomial h a -> Multinomial h a
@@ -83,40 +81,114 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
 
 
 
-% Multinomial deduction.
+
+\subsubsection{Deduction and Abduction}
 
 
 \begin{code}
+deduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
+          => SLExpr h a (op h a)
+          -> [(a, Multinomial h b)]
+          -> SLExpr h a (Multinomial h b)
+deduce opx ops = do opx' <- toMultinomial <$> opx
+                    pure $ deduce' opx' ops
+\end{code}
 
--- A set of conditional opinions for input to deduction and
--- abduction operators.
 
-data ConditionalOpinionSet h a b =
-  CondSet { coFrame    :: Frame a   -- Y
-          , coGiven    :: Frame b   -- given X
---          , coOpinions :: [(b, Multinomial h a)]
-            , coOpinions :: M.Map b (Multinomial h a)
-          }
 
-{-
-deduce' :: Multinomial h a
-           -> ConditionalOpinionSet h a b
-           -> Multinomial h a
-deduce' opx ops = Multinomial b' u' a' undefined
+\begin{code}
+deduce' :: forall a. forall b. forall h.
+           (Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
+           => Multinomial h a
+           -> [(a, Multinomial h b)]
+           -> Multinomial h b
+deduce' opx@(Multinomial bx ux ax _) ops = Multinomial b' u' a' undefined
   where
-    b' = undefined
-    u' = undefined
-    a' = undefined
+    -- Step 0:
+    -- Some helper functions.
 
-    ey y = sum factors
+    -- The expectation of y given a vacuous expectation on X.
+    expt y = sum . map f $ xs
       where
-        factors = M.fold (\x ->
+        f x = V.value ax x * V.value (expectation (findOpinion x)) y
 
-    ops' = coOpinions ops
--}
+    -- The expectation of y given X.
+    expt' y = sum . map f $ xs
+      where
+        f x = V.value (expectation opx) x * V.value (expectation (findOpinion x)) y
 
+    -- The expectation of y given the theoretical maximum uncertainty.
+    tExpt y = (1 - V.value ay y) * byxs + (V.value ay y) * (byxr + uyxr)
+      where
+        (xr', xs') = dims y
+        byxr       = V.value (mBelief xr') y
+        uyxr       = mUncertainty xr'
+        byxs       = V.value (mBelief xs') y
 
+    -- All values of frames X and Y. We need to enumerate them in their entirity.
+    xs = [minBound :: a .. maxBound :: a]
+    ys = [minBound :: b .. maxBound :: b]
 
+    -- All of the base rate vectors must be the same, so take the first one.
+    ay = mBaseRate . snd . head $ ops
+
+    -- Helper function.
+    uYx x = maybe 1 mUncertainty . lookup x $ ops
+
+    -- Helper function.
+    findOpinion x = case lookup x ops of
+      Nothing -> Multinomial (V.fromList []) 1 ay undefined
+      Just op -> op
+
+    -- Step 1:
+    -- For each y, we compute the pair (xr, xs) that yields the theoretical
+    -- maximum uncertainty.
+    dims :: b -> (Multinomial h b, Multinomial h b)
+    dims y = (xr', xs')
+      where
+        (_, xr', xs') = foldl1' minPair (dims' y)
+        minPair a@(u, _, _) b@(u', _, _) | u < u'    = a
+                                         | otherwise = b
+
+        dims' y = do xr' <- xs
+                     xs' <- xs
+                     let xr'' = findOpinion xr'
+                         xs'' = findOpinion xs'
+                         byxr = V.value (mBelief xr'') y
+                         uyxr = mUncertainty xr''
+                         byxs = V.value (mBelief xs'') y
+                         val  = 1 - byxr - uyxr + byxs
+                     return (val, xr'', xs'')
+
+    -- Step 2:
+    -- Compute the triangle apex uncertainty for each y.
+    triangleApexU y
+      | expt y <= tExpt y = (expt y - byxs) / V.value ay y
+      | otherwise         = (byxr + uyxr - expt y) / (1 - V.value ay y)
+      where
+        byxr = V.value (mBelief . fst . dims $ y) y
+        uyxr = mUncertainty . fst . dims $ y
+        byxs = V.value (mBelief . snd . dims $ y) y
+
+    -- Intermediate sub-simplex apex uncertainty.
+    intApexU = maximum [ triangleApexU y | y <- ys ]
+
+    -- Step 3:
+    -- Compute the intermediate belief components.
+    bComp y = expt y - V.value ay y * intApexU
+
+    -- Compute the adjusted apex uncertainty.
+    adjustedU y | bComp y < 0 = expt y / V.value ay y
+                | otherwise   = intApexU
+
+    -- Finally compute the sub-simplex apex uncertainty.
+    apexU = minimum [ adjustedU y | y <- ys ]
+
+    -- Step 4:
+    -- The final values we expect.
+    b' = V.fromList [ (y, expt' y - (V.value ay y) * u') | y <- ys ]
+    u' = (apexU -) . sum . map (\x -> (apexU - uYx x) * V.value bx x) $ xs
+    a' = ay
 \end{code}
 
 
