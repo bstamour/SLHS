@@ -47,9 +47,7 @@ two opinions represents the union of their respective subsets.
        => SLExpr h a (op1 h (F.Subframe a))
        -> SLExpr h a (op2 h (F.Subframe a))
        -> SLExpr h a (Binomial h (F.Subframe a))
-opx +! opy = do opx' <- toBinomial <$> opx
-                opy' <- toBinomial <$> opy
-                pure $ add' opx' opy'
+opx +! opy = pure add' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
 \end{code}
 
 
@@ -74,9 +72,7 @@ the set difference operator.
         => SLExpr h a (op1 h (F.Subframe a))
         -> SLExpr h a (op2 h (F.Subframe a))
         -> SLExpr h a (Binomial h (F.Subframe a))
-opx -! opy = do opx' <- toBinomial <$> opx
-                opy' <- toBinomial <$> opy
-                pure $ subtract' opx' opy'
+opx -! opy = pure subtract' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
 \end{code}
 
 
@@ -91,6 +87,24 @@ subtract' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 \end{code}
 
 
+
+
+\begin{code}
+negate :: ToBinomial op => SLExpr h a (op h a) -> SLExpr h a (Binomial h a)
+negate op = pure negate' <*> (toBinomial <$> op)
+\end{code}
+
+
+
+\begin{code}
+negate' :: Binomial h a -> Binomial h a
+negate' (Binomial b d u a _) = Binomial d b u (1 - a) undefined
+\end{code}
+
+
+
+
+
 Multiplication of two binomial opinions is equivalent to the logical \emph{and}
 operator.
 
@@ -100,9 +114,8 @@ operator.
         => SLExpr h a (op1 h a)
         -> SLExpr h a (op2 h a)
         -> SLExpr h a (Binomial h (F.Subframe (a, a)))
-opx *! opy = do opx' <- toBinomial <$> opx
-                opy' <- toBinomial <$> opy
-                pure $ times' opx' opy'
+opx *! opy = pure times' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
+
 
 times' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
   Binomial b' d' u' a' undefined
