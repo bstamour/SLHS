@@ -9,8 +9,11 @@ module Math.SLHS.Operators.Binomial where
 
 import Control.Monad (liftM2, join)
 import Control.Applicative
+
 import Math.SLHS.Types
 import Math.SLHS.Opinions
+
+import qualified Math.SLHS.Frame as F
 \end{code}
 }
 
@@ -41,9 +44,9 @@ two opinions represents the union of their respective subsets.
 
 \begin{code}
 (+!) :: (ToBinomial op1, ToBinomial op2)
-       => SLExpr h a (op1 h (Subframe a))
-       -> SLExpr h a (op2 h (Subframe a))
-       -> SLExpr h a (Binomial h (Subframe a))
+       => SLExpr h a (op1 h (F.Subframe a))
+       -> SLExpr h a (op2 h (F.Subframe a))
+       -> SLExpr h a (Binomial h (F.Subframe a))
 opx +! opy = do opx' <- toBinomial <$> opx
                 opy' <- toBinomial <$> opy
                 pure $ add' opx' opy'
@@ -51,7 +54,7 @@ opx +! opy = do opx' <- toBinomial <$> opx
 
 
 \begin{code}
-add' :: Binomial h (Subframe a) -> Binomial h (Subframe a) -> Binomial h (Subframe a)
+add' :: Binomial h (F.Subframe a) -> Binomial h (F.Subframe a) -> Binomial h (F.Subframe a)
 add' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
   Binomial b' d' u' a' undefined
   where
@@ -68,9 +71,9 @@ the set difference operator.
 
 \begin{code}
 (-!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (Subframe a))
-        -> SLExpr h a (op2 h (Subframe a))
-        -> SLExpr h a (Binomial h (Subframe a))
+        => SLExpr h a (op1 h (F.Subframe a))
+        -> SLExpr h a (op2 h (F.Subframe a))
+        -> SLExpr h a (Binomial h (F.Subframe a))
 opx -! opy = do opx' <- toBinomial <$> opx
                 opy' <- toBinomial <$> opy
                 pure $ subtract' opx' opy'
@@ -96,7 +99,7 @@ operator.
 (*!) :: (ToBinomial op1, ToBinomial op2)
         => SLExpr h a (op1 h a)
         -> SLExpr h a (op2 h a)
-        -> SLExpr h a (Binomial h (Subframe (a, a)))
+        -> SLExpr h a (Binomial h (F.Subframe (a, a)))
 opx *! opy = do opx' <- toBinomial <$> opx
                 opy' <- toBinomial <$> opy
                 pure $ times' opx' opy'
@@ -120,7 +123,7 @@ times' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 (~*!) :: (ToBinomial op1, ToBinomial op2)
          => SLExpr h a (op1 h a)
          -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Binomial h (Subframe (a, a)))
+         -> SLExpr h a (Binomial h (F.Subframe (a, a)))
 opx ~*! opy = do opx' <- toBinomial <$> opx
                  opy' <- toBinomial <$> opy
                  pure $ cotimes' opx' opy'
@@ -142,7 +145,7 @@ Division is the inverse of multiplication.
 
 \begin{code}
 (/!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (Subframe (a, a)))
+        => SLExpr h a (op1 h (F.Subframe (a, a)))
         -> SLExpr h a (op2 h a)
         -> SLExpr h a (Binomial h a)
 opx /! opy = do opx' <- toBinomial <$> opx
@@ -166,7 +169,7 @@ And similarily, co-division is the inverse of co-multiplication.
 
 \begin{code}
 (~/!) :: (ToBinomial op1, ToBinomial op2)
-         => SLExpr h a (op1 h (Subframe (a, a)))
+         => SLExpr h a (op1 h (F.Subframe (a, a)))
          -> SLExpr h a (op2 h a)
          -> SLExpr h a (Binomial h a)
 opx ~/! opy = do opx' <- toBinomial <$> opx
@@ -284,9 +287,13 @@ discount f opx opy = do
 
 
 
-\subsubsection{Reasoning Operators}
 
 
+
+%\subsubsection{Reasoning Operators}
+
+
+\ignore{
 \begin{code}
 deduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
           => SLExpr h a (op1 h a)
@@ -351,9 +358,10 @@ deduce' opx opy opy' = Binomial byx dyx uyx ayx undefined
     eopx  = expectation opx
     eopy' = by * ax + by' * (1 - ax) + ay * (uy * ax + uy' * (1 - ax))
 \end{code}
+}
 
 
-
+\ignore{
 \begin{code}
 abduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
           => SLExpr h a (op1 h a)
@@ -393,7 +401,7 @@ abduce' opx opxyT opxyF ay = deduce (pure opx) opyxT opyxF
     opyxT = pure opxyT
     opyxF = pure opxyF
 \end{code}
-
+}
 
 
 

@@ -39,6 +39,10 @@ times' = undefined
 
 \subsubsection{Multinomial Unfusion}
 
+Multinomial unfusion is the inverse of the fusion of subjective opinions. The reason
+why we present this operator first is that while fusion has been generalized to
+hyper opinions, unfusion so far has not.
+
 
 \begin{code}
 cUnfuse' :: Multinomial h a -> Multinomial h a -> Multinomial h a
@@ -50,6 +54,10 @@ cUnfuse' opC opb = undefined -- Compute opa
 
 
 \subsubsection{Multinomial Fission}
+
+Fission is the operation of splitting a multinomial opinion into two multinomial
+opinions based on some ratio $\phi$. We refer to this as the \emph{split} operator.
+
 
 
 \begin{code}
@@ -83,7 +91,17 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
 
 \subsubsection{Deduction and Abduction}
 
+Deduction and abduction of multinomial opinions allows for one to do conditional reasoning
+with Subjective Logic. We first introduce the operator for performing deduction, which
+we call \emph{deduce}, and then discuss the operator \emph{abduce} for performing
+abduction.
 
+Because of the nature of these operators, the frames of discernment which the opinions are
+defined over must satisfy two properties: they must be \emph{bounded}, and the must be
+\emph{enumerable}. These constraints on the type of frames allowed is expressed via the
+type classes \emph{Bounded} and \emph{Enum}. Boundedness simply means that there exists
+a least and greatest element, and enumerability insists that the frames be mappable to
+the integers.
 
 
 
@@ -200,6 +218,14 @@ deduce' opx@(Multinomial bx ux ax _) ops = Multinomial b' u' a' undefined
 
 
 
+Subjective Logic abduction is a two step procedure. Given an opinion over a
+frame X and a list of conditional opinions over X given Y, we first must invert
+the conditionals into a list of conditional opinions over Y given X, and then
+perform Subjective Logic deduction with the new list and the opinion over X.
+
+
+
+
 
 
 \begin{code}
@@ -211,9 +237,6 @@ abduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
 abduce opx ops ay = do opx' <- toMultinomial <$> opx
                        pure $ abduce' opx' ops ay
 \end{code}
-
-
-
 
 
 \begin{code}
@@ -232,7 +255,7 @@ abduce' opx@(Multinomial bx ux ax _) ops ay = deduce' opx ops'
         b'  = V.fromList bs
         u'  = uT x
         a'  = ay
-        bs  = [ (y, f y) | y <- ys ]
+        bs  = map (\y -> (y, f y)) ys
         f y = expt y x - V.value ay y * uT x
 
     expt y x = numer / denom
@@ -241,7 +264,7 @@ abduce' opx@(Multinomial bx ux ax _) ops ay = deduce' opx ops'
         denom = sum . map f $ ys
         f y   = V.value ay y  * V.value (expectation (findOpinion y)) x
 
-    uT x = minimum [ f y | y <- ys ]
+    uT x = minimum . map f $ ys
       where
         f y = expt y x / V.value ay y
 

@@ -3,7 +3,6 @@
 
 \begin{document}
 
-
 \ignore{
 \begin{code}
 module Math.SLHS.Types where
@@ -12,62 +11,23 @@ import Data.Maybe
 import Control.Applicative
 import Control.Monad (ap)
 
-import Math.SLHS.Vector
+import qualified Math.SLHS.Vector as V
+import qualified Math.SLHS.Frame as F
 
-import qualified Data.Set as S
 import qualified Data.Map as M
 \end{code}
 }
 
-
 \section{Core Types}
-
-
-
-
-\subsection{Frames of Discernment}
-
-
-\begin{code}
-newtype Frame a = Frame (S.Set a) deriving (Eq, Ord)
-type Subframe = Frame
-
-
-fEmpty :: Frame a
-fEmpty = Frame (S.empty)
-
-fUnion :: Ord a => Frame a -> Frame a -> Frame a
-fUnion (Frame s1) (Frame s2) = Frame (s1 `S.union` s2)
-
-data BinaryFrame a = BinaryFrame a a
-type PartitionedFrame a = BinaryFrame (Subframe a)
-
-class FrameType f
-
-instance FrameType (Frame a)
-instance FrameType (BinaryFrame a)
-\end{code}
-
-
-
-
 
 \subsection{Belief and Base Rate Vectors}
 
-
-
-
 \begin{code}
-type BeliefVector a = Vector a
-type BaseRateVector a = Vector a
---lookup' m x = fromMaybe 0 (M.lookup x m)
+type BeliefVector a = V.Vector a
+type BaseRateVector a = V.Vector a
 \end{code}
 
-
-
-
 \subsection{Belief Holders}
-
 
 \begin{code}
 data Holder a = Holder a
@@ -75,14 +35,7 @@ data Holder a = Holder a
               | Consensus (Holder a) (Holder a)
 \end{code}
 
-
-
-
-
-
 \subsection{Subjective Logic Values}
-
-
 
 \begin{code}
 data SLVal a = SLVal a | Err String
@@ -100,13 +53,10 @@ instance Functor SLVal where
   fmap = liftA
 \end{code}
 
-
 \begin{code}
 err :: String -> SLVal a
 err = Err
 \end{code}
-
-
 
 \begin{code}
 require :: Bool -> String -> SLExpr h a (SLVal ())
@@ -114,20 +64,13 @@ require True _ = pure $ pure ()
 require False e = pure $ err e
 \end{code}
 
-
-
-
 \subsection{Subjective Logic Expressions}
 
-
-
 \begin{code}
-data SLState h a = SLState { slsFrames     :: [Frame a]
+data SLState h a = SLState { slsFrames     :: [F.Frame a]
                            , slsBeliefVecs :: M.Map h (BeliefVector a)
                            }
 \end{code}
-
-
 
 \begin{code}
 data SLExpr h a t =

@@ -16,7 +16,8 @@
 module Math.SLHS.Opinions where
 
 import Math.SLHS.Types
-import Math.SLHS.Vector
+import qualified Math.SLHS.Vector as V
+import qualified Math.SLHS.Frame as F
 
 import qualified Data.Set as S
 \end{code}
@@ -37,19 +38,17 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              , bDisbelief   :: Rational
                              , bUncertainty :: Rational
                              , bAtomicity   :: Rational
-                             , bMetaData    :: MetaData h (BinaryFrame a)
+                             , bMetaData    :: MetaData h (F.BinaryFrame a)
                              }
 \end{code}
 
 
-and the meta-data is implemented as a \emph{generalized abstract data type}, which
-allows for the constraining of the type parameter \emph{f} to consist of only those
-types of the class \emph{FrameType}.
 
 
 \begin{code}
-data MetaData h f where
-  MetaData :: FrameType f => Maybe (Holder h) -> f -> MetaData h f
+data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
+                             , mdFrame  :: f
+                             }
 \end{code}
 
 
@@ -74,11 +73,14 @@ instance ToBinomial Binomial where
 data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
                                    , mUncertainty :: Rational
                                    , mBaseRate    :: BaseRateVector a
-                                   , mMetaData    :: MetaData h (Frame a)
+                                   , mMetaData    :: MetaData h (F.Frame a)
                                    }
 
 class ToMultinomial op where
   toMultinomial :: op h a -> Multinomial h a
+
+instance ToMultinomial Multinomial where
+  toMultinomial = id
 \end{code}
 
 
@@ -86,10 +88,10 @@ class ToMultinomial op where
 
 
 \begin{code}
-data Hyper h a = Hyper { hBelief      :: BeliefVector (Subframe a)
+data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
                        , hUncertainty :: Rational
                        , hBaseRate    :: BaseRateVector a
-                       , hMetaData    :: MetaData h (Frame a)
+                       , hMetaData    :: MetaData h (F.Frame a)
                        }
 
 class ToHyper op where
@@ -111,35 +113,32 @@ instance ToHyper Hyper where
 
 \begin{code}
 class Opinion op h a where
-  type FrameOf op h a :: * -> *
+  type FrameType op h a       :: *
   type ExpectationType op h a :: *
 
   expectation :: op h a -> ExpectationType op h a
-  frame       :: Ord a => op h a -> (FrameOf op h a) a
-
+  frame       :: op h a -> FrameType op h a
 
 instance Opinion Binomial h a where
-  type FrameOf Binomial h a = BinaryFrame
+  type FrameType Binomial h a       = F.BinaryFrame a
   type ExpectationType Binomial h a = Rational
 
   expectation (Binomial b d u a _) = b + a * u
   frame (Binomial _ _ _ _ (MetaData _ frm)) = frm
 
-
 instance Opinion Multinomial h a where
-  type FrameOf Multinomial h a = Frame
-  type ExpectationType Multinomial h a = Vector a
+  type FrameType Multinomial h a       = F.Frame a
+  type ExpectationType Multinomial h a = V.Vector a
 
   expectation _ = undefined
-  frame _       = undefined
-
+  frame (Multinomial _ _ _ (MetaData _ frm)) = frm
 
 instance Opinion Hyper h a where
-  type FrameOf Hyper h a = Frame
-  type ExpectationType Hyper h a = Vector a
+  type FrameType Hyper h a       = F.Frame a
+  type ExpectationType Hyper h a = V.Vector a
 
   expectation _ = undefined
-  frame _       = undefined
+  frame (Hyper _ _ _ (MetaData _ frm)) = frm
 \end{code}
 
 
@@ -155,8 +154,15 @@ instance Opinion Hyper h a where
 
 
 \begin{code}
-coarsen :: ToMultinomial op => op h a -> Subframe a -> Binomial h a
-coarsen = undefined
+coarsen :: (ToHyper op, Ord a) => op h a -> F.Subframe a -> Binomial h a
+coarsen op theta = Binomial b d u a undefined
+  where
+    b = sum . map snd . V.elemsWhere (`F.isSubsetOf` theta) $ belief
+    d = sum . map snd . V.elemsWhere (F.isEmpty . (`F.intersection` theta)) $ belief
+    u = 1 - b - d
+    a = sum . F.toList . F.map baseRate $ theta
+    belief = hBelief . toHyper $ op
+    baseRate x = V.value (hBaseRate . toHyper $ op) x
 \end{code}
 
 
@@ -167,8 +173,12 @@ coarsen = undefined
 
 
 \begin{code}
-hyperCoarsen :: ToHyper op => op h a -> [Subframe a] -> Multinomial h a
-hyperCoarsen = undefined
+hyperCoarsen :: ToHyper op => op h a -> [F.Subframe a] -> Multinomial h (F.Subframe a)
+hyperCoarsen op thetas = Multinomial b u a undefined
+  where
+    b = undefined
+    u = undefined
+    a = undefined
 \end{code}
 
 

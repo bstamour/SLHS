@@ -2,10 +2,6 @@
 
 \begin{document}
 
-
-
-
-
 \begin{code}
 module Math.SLHS.Vector where
 
@@ -46,6 +42,9 @@ fold f z = M.fold f z . unVec
 focals :: Vector a -> [a]
 focals = M.keys . unVec
 
+
+elemsWhere :: (a -> Bool) -> Vector a -> [(a, Rational)]
+elemsWhere p = filter (\(k, _) -> p k) . toList
 
 \end{code}
 
