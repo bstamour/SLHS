@@ -1,61 +1,62 @@
-
 \documentclass[thesis.tex]{subfiles}
 
 \begin{document}
 
+
 \chapter{SLHS: Subjective Logic in Haskell}
+
 
 \section{Overview}
 
-In this chapter we introduce our combinator library \emph{SLHS: Subjective Logic
-in Haskell}. SLHS is a monadic combinator library for constructing and evaluating
-expressions of Subjective Logic. It can be embedded into any existing Haskell
-project, and, through Haskell's \emph{Foreign Function Interface}, can be utilized
-by other programming languages, most notably $C$ and $C++$.
-
-%The following sections are \emph{literate Haskell}, meaning that the same
-%\LaTeX source used to generate this thesis document can be utilized as a standalone
-%Haskell module.
+In this chapter we introduce our combinator library \emph{SLHS:
+  Subjective Logic in Haskell}. SLHS is a monadic combinator library
+for constructing and evaluating expressions of Subjective Logic. It
+can be embedded into any existing Haskell project, and, through
+Haskell's \emph{Foreign Function Interface}, can be utilized by other
+programming languages, most notably $C$ and $C++$.
 
 
+\section{Core Components}
 
-%\subfile{./SLHS/Core.lhs}
-%\subfile{./SLHS/Base.lhs}
-
+In this section we will introduce components of the library that
+are for internal use only. These include the implementation details
+for objects such as the \emph{frame of discernment}, \emph{belief
+  vectors}, as well as the the type \emph{SLExpr}, which is a monad.
+All operators are defined to take and return objects of type
+SLExpr, and the monadic interface controls the combination of
+sub-expressions.
 
 \subfile{./SLHS/Vector.lhs}
 \subfile{./SLHS/Frame.lhs}
-
-
-
 \subfile{./SLHS/Types.lhs}
+
+
+\section{Opinions}
+
 \subfile{./SLHS/Opinions.lhs}
-
-
 
 
 \section{Operators}
 
-In this section we will discuss the implementation details of the Subjective Logic
-operators that are provided by SLHS. The following notation is used for the operators:
+In this section we will discuss the implementation details of the
+Subjective Logic operators that are provided by SLHS. The following
+notation is used for the operators:
 
 \begin{itemize}
-  \item We denote binary operators with a trailing exclamation mark $!$ in order to
-    avoid conflicting with Haskell's mathematical operators. For example, binomial addition
-    is denoted as $+!$.
-  \item We use tildas as a prefix to denote $co-$ operations. For example, the binomial
-    co-multiplication operator is denoted as $\sim *!$.
-  \item All n-ary operators, where $n > 2$ are denoted as simple functions, instead of
-    symbolic operators.
+  \item We denote binary operators with a trailing exclamation mark
+    $!$ in order to avoid conflicting with Haskell's mathematical
+    operators. For example, binomial addition is denoted as $+!$.
+  \item We use tildas as a prefix to denote $co-$ operations. For
+    example, the binomial co-multiplication operator is denoted as
+    $\sim *!$.
+  \item All n-ary operators, where $n > 2$ are denoted as simple
+    functions, instead of symbolic operators.
 \end{itemize}
 
-Furthermore, every operator is presented in it's most general form. For example, instead of
-presenting two operators for \emph{averaging fusion} (one for multinomial opinions, and another
-for hyper opinions) we implement only the version for hyper opinions.
-
-
-
-
+Furthermore, every operator is presented in it's most general
+form. For example, instead of presenting two operators for
+\emph{averaging fusion} (one for multinomial opinions, and another for
+hyper opinions) we implement only the version for hyper opinions.
 
 \subfile{./SLHS/Operators/Binomial.lhs}
 \subfile{./SLHS/Operators/Multinomial.lhs}

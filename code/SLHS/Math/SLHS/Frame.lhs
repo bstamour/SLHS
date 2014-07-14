@@ -13,6 +13,10 @@ import qualified Data.Set as S
 \end{code}
 }
 
+
+\subsection{Frames of Discernment}
+
+
 \begin{code}
 newtype Frame a = Frame (S.Set a) deriving (Eq, Ord)
 type Subframe a = Frame a
@@ -55,8 +59,6 @@ map f (Frame s) = Frame (S.map f s)
 toList :: Frame a -> [a]
 toList (Frame s) = S.toList s
 \end{code}
-
-
 
 
 \end{document}

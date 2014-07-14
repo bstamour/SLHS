@@ -3,9 +3,6 @@
 \begin{document}
 
 
-
-\section{Opinions}
-
 \ignore{
 \begin{code}
 {-# LANGUAGE GADTs #-}
@@ -27,10 +24,11 @@ import qualified Data.Set as S
 \subsection{Binomial Opinions}
 
 
-We represent binomial opnions by four rational numbers corresponding to the belief,
-disbelief, uncertainty, and base rate of the opinion, along with some additional
-meta-data: the belief holder and the frame of discernment it is defined over. In code,
-the binomial opinion looks like the following:
+We represent binomial opnions by four rational numbers corresponding
+to the belief, disbelief, uncertainty, and base rate of the opinion,
+along with some additional meta-data: the belief holder and the frame
+of discernment it is defined over. In code, the binomial opinion looks
+like the following:
 
 
 \begin{code}
@@ -52,9 +50,11 @@ data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
 \end{code}
 
 
-We also introduce a special \emph{type class} called \emph{ToBinomial} which allows
-us to define a range of types that can be converted to a binomial opinion. An example
-of such a type could be a \emph{Beta PDF}.
+We also introduce a special \emph{type class} called \emph{ToBinomial}
+which allows us to define a range of types that can be converted to a
+binomial opinion. An example of such a type could be a \emph{Beta
+PDF}. We will re-use this strategy for implementing multinomial and
+hyper opinions.
 
 
 \begin{code}
@@ -102,14 +102,14 @@ instance ToHyper Hyper where
 \end{code}
 
 
-
-
-
-
-
-
 \subsection{The Opinion Type Class}
 
+There are certain operations that are common amongst all opinions.
+One example of such operation is the \emph{probability expectation}:
+for binomials, the probability expectation is a simple scalar, whereas
+for multinomial and hyper opinions the probability expectation is a
+vector over the frame of discernment, and the reduced powerset of the
+frame, respectively.
 
 \begin{code}
 class Opinion op h a where
@@ -118,7 +118,16 @@ class Opinion op h a where
 
   expectation :: op h a -> ExpectationType op h a
   frame       :: op h a -> FrameType op h a
+\end{code}
 
+In order to accomodate a function such as probability expectation that
+returns a value of a different type depending on the type of the opinion,
+we use an \emph{indexed type family}. For each opinion type, we associate
+an "expectation type", which is the type one would obtain when querying the
+probability expectation of the opinion. The instances for each of the three
+opinion types follows.
+
+\begin{code}
 instance Opinion Binomial h a where
   type FrameType Binomial h a       = F.BinaryFrame a
   type ExpectationType Binomial h a = Rational
@@ -142,9 +151,6 @@ instance Opinion Hyper h a where
 \end{code}
 
 
-
-
-
 \subsection{Belief Coarsening}
 
 
@@ -164,8 +170,6 @@ coarsen op theta = Binomial b d u a undefined
     belief = hBelief . toHyper $ op
     baseRate x = V.value (hBaseRate . toHyper $ op) x
 \end{code}
-
-
 
 
 

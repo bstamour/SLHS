@@ -20,26 +20,26 @@ import qualified Math.SLHS.Frame as F
 
 \subsection{Binomial Operators}
 
-We begin our treatment of the Subjective Logic operators by looking at those operators
-designed to work with the simplest of objects: binomial opinions. Binomial operators are
-split into three primary sections: \emph{logical and set-theoretical operators} are those
-which have analogs to binary logical (conjunction, disjunction) or set theoretical
-(union, difference) operations, \emph{trust transitivity operators} are operators that
-deal with modelling transitive trust networks between agents, and \emph{reasoning operators}
-support deductive and abductive reasoning.
+
+We begin our treatment of the Subjective Logic operators by looking at
+those operators designed to work with the simplest of objects:
+binomial opinions. Binomial operators are split into three primary
+sections: \emph{logical and set-theoretical operators} are those which
+have analogs to binary logical (conjunction, disjunction) or set
+theoretical (union, difference) operations, \emph{trust transitivity
+operators} are operators that deal with modelling transitive trust
+networks between agents, and \emph{reasoning operators} support
+deductive and abductive reasoning.
 
 
 \subsubsection{Logical and Set-Theoretical Operators}
 
 
-We will begin with the simplest of binomial operators: those of addition and subtraction.
-Addition of two binomial opinions corresponds to the set theoretic union operator. Given
-two binomial opinions representing disjoint subsets of the same frame, the sum of the
-two opinions represents the union of their respective subsets.
-
-
-
-
+We will begin with the simplest of binomial operators: those of
+addition and subtraction.  Addition of two binomial opinions
+corresponds to the set theoretic union operator. Given two binomial
+opinions representing disjoint subsets of the same frame, the sum of
+the two opinions represents the union of their respective subsets.
 
 
 \begin{code}
@@ -64,7 +64,7 @@ add' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 
 
 Binomial subtraction is the inverse operation of addition. It is equivalent to
-the set difference operator.
+the set difference operator, and is defined as follows.
 
 
 \begin{code}
@@ -87,6 +87,10 @@ subtract' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 \end{code}
 
 
+Negation is a unary operator that inverts the belief and disbelief and
+atomicity of a binomial opinion. Given a binomial opinion $\omega_x$ over
+a frame $X = \lbrace x, \lnot x \rbrace$, the negated opinion
+$\lnot \omega_x = \omega_{\lnot x}$.
 
 
 \begin{code}
@@ -102,11 +106,9 @@ negate' (Binomial b d u a _) = Binomial d b u (1 - a) undefined
 \end{code}
 
 
+Multiplication of two binomial opinions is equivalent to the logical
+\emph{and} operator.
 
-
-
-Multiplication of two binomial opinions is equivalent to the logical \emph{and}
-operator.
 
 
 \begin{code}
@@ -203,26 +205,21 @@ codivide' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 \end{code}
 
 
-
-
-
-
-
-
 \subsubsection{Trust Transitivity Operators}
 
-In this section we implement the subjective logic operators for trust transitivity. If
-two agents A and B exist such that A has an opinion about B's recommendation of some
-proposition x, then A can generate an opinion about x by \emph{discounting} B's
-recommendation of x based on A's opinion of B.
 
-Subjective Logic offers three methods of discounting: \emph{uncertainty favouring
-discounting}, \emph{opposite belief favouring discounting}, and \emph{base rate
-sensitive discounting}.
+In this section we implement the subjective logic operators for trust
+transitivity. If two agents A and B exist such that A has an opinion
+about B's recommendation of some proposition x, then A can generate an
+opinion about x by \emph{discounting} B's recommendation of x based on
+A's opinion of B.
 
-We begin by constructing a simple algebraic data type to represent each of the three
-kinds of discounting.
+Subjective Logic offers three methods of discounting:
+\emph{uncertainty favouring discounting}, \emph{opposite belief
+favouring discounting}, and \emph{base rate sensitive discounting}.
 
+We begin by constructing a simple algebraic data type to represent
+each of the three kinds of discounting.
 
 
 \begin{code}
@@ -230,19 +227,18 @@ data Favouring = Uncertainty | Opposite | BaseRateSensitive
 \end{code}
 
 
-
-
-By doing so, we are able to expose a single discounting function to the user with the
-following signature:
+By doing so, we are able to expose a single discounting function to
+the user with the following signature:
 
 \begin{spec}
-discount :: Favouring
-  -> SLExpr a (Binomial a) -> SLExpr a (Binomial a) -> SLExpr a (Binomial a)
+discount :: Favouring -> SLExpr a (Binomial a) -> SLExpr a (Binomial a) -> SLExpr a (Binomial a)
 \end{spec}
 
-Since the arrow operator for function signatures is right associative, one can consider
-\emph{discount} to be a function mapping discount favourings to a binary function over
-binomial opinions much like the operators discussed in the previous section.
+Since the arrow operator for function signatures is right associative,
+one can consider \emph{discount} to be a function mapping discount
+favourings to a binary function over binomial opinions much like the
+operators discussed in the previous section.
+
 
 \begin{code}
 discount_u :: Binomial h h -> Binomial h a -> Binomial h a
@@ -255,7 +251,9 @@ discount_u (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
     a' = ax
 \end{code}
 
+
 Next, opposite belief favouring discounting:
+
 
 \begin{code}
 discount_o :: Binomial h h -> Binomial h a -> Binomial h a
@@ -268,7 +266,9 @@ discount_o (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
     a' = ax
 \end{code}
 
+
 And lastly, base rate sensitive discounting:
+
 
 \begin{code}
 discount_b :: Binomial h h -> Binomial h a -> Binomial h a
@@ -415,10 +415,6 @@ abduce' opx opxyT opxyF ay = deduce (pure opx) opyxT opyxF
     opyxF = pure opxyF
 \end{code}
 }
-
-
-
-
 
 
 \end{document}

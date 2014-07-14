@@ -18,14 +18,14 @@ import qualified Data.Map as M
 \end{code}
 }
 
-\section{Core Types}
 
-\subsection{Belief and Base Rate Vectors}
-
+\ignore{
 \begin{code}
 type BeliefVector a = V.Vector a
 type BaseRateVector a = V.Vector a
 \end{code}
+}
+
 
 \subsection{Belief Holders}
 
@@ -34,6 +34,7 @@ data Holder a = Holder a
               | Discount (Holder a) (Holder a)
               | Consensus (Holder a) (Holder a)
 \end{code}
+
 
 \subsection{Subjective Logic Values}
 
@@ -64,6 +65,7 @@ require True _ = pure $ pure ()
 require False e = pure $ err e
 \end{code}
 
+
 \subsection{Subjective Logic Expressions}
 
 \begin{code}
@@ -91,7 +93,6 @@ instance Applicative (SLExpr h a) where
 instance Functor (SLExpr h a) where
   fmap = liftA
 \end{code}
-
 
 
 \end{document}

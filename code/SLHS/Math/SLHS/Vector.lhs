@@ -2,13 +2,19 @@
 
 \begin{document}
 
+
+
+\subsection{Belief Vectors}
+
+
+\ignore{
 \begin{code}
 module Math.SLHS.Vector where
 
 import Data.Maybe
 import qualified Data.Map as M
 \end{code}
-
+}
 
 
 \begin{code}
