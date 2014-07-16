@@ -3,6 +3,13 @@
 \begin{document}
 
 
+
+\section{Opinions}
+
+
+
+
+
 \ignore{
 \begin{code}
 {-# LANGUAGE GADTs #-}

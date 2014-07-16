@@ -22,9 +22,7 @@ library
   other-modules: Math.SLHS.Types
                , Math.SLHS.Vector
                , Math.SLHS.Opinions
-               , Math.SLHS.Operators.Binomial
-               , Math.SLHS.Operators.Multinomial
-               , Math.SLHS.Operators.Hyper
+               , Math.SLHS.Operators
 
 
   -- other-extensions:
