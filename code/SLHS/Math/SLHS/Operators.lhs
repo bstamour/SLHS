@@ -5,6 +5,7 @@
 
 \section{Operators}
 
+
 In this section we will discuss the implementation details of the
 Subjective Logic operators that are provided by SLHS. The following
 notation is used for the operators:
@@ -126,7 +127,6 @@ negate op = pure negate' <*> (toBinomial <$> op)
 \end{code}
 
 
-
 \begin{code}
 negate' :: Binomial h a -> Binomial h a
 negate' (Binomial b d u a _) = Binomial d b u (1 - a) undefined
@@ -135,7 +135,6 @@ negate' (Binomial b d u a _) = Binomial d b u (1 - a) undefined
 
 Multiplication of two binomial opinions is equivalent to the logical
 \emph{and} operator.
-
 
 
 \begin{code}
