@@ -30,36 +30,8 @@ sub-expressions.
 \subfile{./SLHS/Frame.lhs}
 \subfile{./SLHS/Types.lhs}
 
-
-\section{Opinions}
-
 \subfile{./SLHS/Opinions.lhs}
+\subfile{./SLHS/Operators.lhs}
 
-
-\section{Operators}
-
-In this section we will discuss the implementation details of the
-Subjective Logic operators that are provided by SLHS. The following
-notation is used for the operators:
-
-\begin{itemize}
-  \item We denote binary operators with a trailing exclamation mark
-    $!$ in order to avoid conflicting with Haskell's mathematical
-    operators. For example, binomial addition is denoted as $+!$.
-  \item We use tildas as a prefix to denote $co-$ operations. For
-    example, the binomial co-multiplication operator is denoted as
-    $\sim *!$.
-  \item All n-ary operators, where $n > 2$ are denoted as simple
-    functions, instead of symbolic operators.
-\end{itemize}
-
-Furthermore, every operator is presented in it's most general
-form. For example, instead of presenting two operators for
-\emph{averaging fusion} (one for multinomial opinions, and another for
-hyper opinions) we implement only the version for hyper opinions.
-
-\subfile{./SLHS/Operators/Binomial.lhs}
-\subfile{./SLHS/Operators/Multinomial.lhs}
-\subfile{./SLHS/Operators/Hyper.lhs}
 
 \end{document}
