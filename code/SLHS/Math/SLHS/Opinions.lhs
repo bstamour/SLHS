@@ -159,7 +159,19 @@ instance Opinion Hyper h a where
 
 
 \subsection{Belief Coarsening}
+\label{sec:belief-coarsening}
 
+
+Coarsening is an operation that takes a hyper opinion and converts it into a binomial
+opinion. The inputs are an arbitrary hyper opinion and a subset of the frame of discernment
+for which the hyper opinion is defined over. Coarsening is a two-stage operation: First
+the frame of discernment is partitioned into two sets: the subset given as input, and
+everything else. These two subsets, taken together as a set, form a new binary frame
+with which the new binomial opinion will be defined over. Secondly, the belief masses
+associated with elements of the powerset of the original frame via the hyper opinion input
+are split up and assigned to the elements of the new frame. The resulting belief mass
+assignment preserves additivity, and thus the new binomial opinion is valid. The operation
+for coarsening is given below.
 
 
 \begin{code}
@@ -173,8 +185,6 @@ coarsen op theta = Binomial b d u a undefined
     belief = hBelief . toHyper $ op
     baseRate x = V.value (hBaseRate . toHyper $ op) x
 \end{code}
-
-
 
 
 \end{document}
