@@ -162,10 +162,6 @@ instance Opinion Hyper h a where
 
 
 
-\subsubsection{Multinomial to Binomial Coarsening}
-
-
-
 \begin{code}
 coarsen :: (ToHyper op, Ord a) => op h a -> F.Subframe a -> Binomial h a
 coarsen op theta = Binomial b d u a undefined
@@ -178,19 +174,6 @@ coarsen op theta = Binomial b d u a undefined
     baseRate x = V.value (hBaseRate . toHyper $ op) x
 \end{code}
 
-
-
-\subsubsection{Hypernomial to Multinomial Coarsening}
-
-
-\begin{code}
-hyperCoarsen :: ToHyper op => op h a -> [F.Subframe a] -> Multinomial h (F.Subframe a)
-hyperCoarsen op thetas = Multinomial b u a undefined
-  where
-    b = undefined
-    u = undefined
-    a = undefined
-\end{code}
 
 
 

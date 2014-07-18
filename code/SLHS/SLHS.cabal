@@ -21,8 +21,10 @@ library
 
   other-modules: Math.SLHS.Types
                , Math.SLHS.Vector
+               , Math.SLHS.Frame
                , Math.SLHS.Opinions
                , Math.SLHS.Operators
+               , Math.SLHS.Extensions
 
 
   -- other-extensions:
