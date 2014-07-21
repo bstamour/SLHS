@@ -47,6 +47,9 @@ hyperCoarsen op thetas = Multinomial b u a undefined
 \end{code}
 
 
+
+
+
 We do not claim that this is the only method that one could use to coarsen a hyper opinion
 to a multinomial opinion. We present this as simply one method that one could employ.
 

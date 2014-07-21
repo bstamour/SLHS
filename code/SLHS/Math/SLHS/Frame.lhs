@@ -78,6 +78,18 @@ isSubsetOf (Frame s1) (Frame s2) = s1 `S.isSubsetOf` s2
 
 intersection :: Ord a => Frame a -> Frame a -> Frame a
 intersection (Frame s1) (Frame s2) = Frame (s1 `S.intersection` s2)
+\end{code}
+
+
+\begin{code}
+partition :: (a -> Bool) -> Frame a -> (Frame a, Frame a)
+partition p (Frame s) = let (s1, s2) = S.partition p s
+                        in (Frame s1, Frame s2)
+
+partitionMany :: [a -> Bool] -> Frame a -> [Frame a]
+partitionMany [] frm = [frm]
+partitionMany (p:ps) frm = let (f1, f2) = partition p frm
+                           in f1 : partitionMany ps f2
 
 map :: (Ord a, Ord b) => (a -> b) -> Frame a -> Frame b
 map f (Frame s) = Frame (S.map f s)

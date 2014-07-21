@@ -16,6 +16,20 @@ can be embedded into any existing Haskell project, and, through
 Haskell's \emph{Foreign Function Interface}, can be utilized by other
 programming languages, most notably $C$ and $C++$.
 
+SLHS is designed to be simple to use: all Subjective Logic operators
+take in \emph{expressions} as input, and return expressions as output.
+An expression is simply a function, mapping some data (frames of
+discernment, belief mass assignments, configuration information) to
+some value - typically an opinion, but any value of any type, whether
+it be rational numbers, strings, or some complex user-defined type.
+It will be shown that these SL expressions, or \emph{SLExpr}s are a
+kind of \emph{monad}, and thus can be used and combined using
+pre-existing monad operators, or Haskell's convenient \emph{do-notation}
+syntactic sugar.
+
+We use the monad (and applicative and functor) operators liberally
+within the implementation of SLHS, mostly to keep the code concise.
+
 
 \section{Core Components}
 

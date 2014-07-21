@@ -233,7 +233,6 @@ codivide' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 
 \subsubsection{Trust Transitivity Operators}
 
-
 In this section we implement the subjective logic operators for trust
 transitivity. If two agents A and B exist such that A has an opinion
 about B's recommendation of some proposition x, then A can generate an
@@ -265,7 +264,6 @@ one can consider \emph{discount} to be a function mapping discount
 favourings to a binary function over binomial opinions much like the
 operators discussed in the previous section.
 
-
 \begin{code}
 discount_u :: Binomial h h -> Binomial h a -> Binomial h a
 discount_u (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
@@ -279,7 +277,6 @@ discount_u (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
 
 
 Next, opposite belief favouring discounting:
-
 
 \begin{code}
 discount_o :: Binomial h h -> Binomial h a -> Binomial h a
@@ -295,7 +292,6 @@ discount_o (Binomial bb db ub ab _) (Binomial bx dx ux ax _) =
 
 And lastly, base rate sensitive discounting:
 
-
 \begin{code}
 discount_b :: Binomial h h -> Binomial h a -> Binomial h a
 discount_b op1@(Binomial bb db ub ab _) op2@(Binomial bx dx ux ax _) =
@@ -306,8 +302,6 @@ discount_b op1@(Binomial bb db ub ab _) op2@(Binomial bx dx ux ax _) =
     u' = 1 - expectation op1 * (bx + dx)
     a' = ax
 \end{code}
-
-
 
 \begin{code}
 discount :: (ToBinomial op1, ToBinomial op2)
@@ -447,16 +441,26 @@ abduce' opx opxyT opxyF ay = deduce (pure opx) opyxT opyxF
 }
 
 
-
-
-
-
-
 \subsection{Multinomial and Hyper Operators}
 
 
 \subsubsection{Multinomial Multiplication}
 
+The multiplication of two multinomial opinions is a separate operator
+than the product operator defined over binomial opinions. Whereas the
+binomial product operator is equivalent to the logical \emph{and}
+operator, multinomial multiplication constructs an opinion over a new
+frame which is the cartesian product of the frames of the input opinions.
+In order to avoid naming conflicts, we have chosen to name the binomial
+operator with the symbol $*!$, and we use the name \emph{times} to
+denote the multinomial operator.
+
+\begin{code}
+times :: (ToMultinomial op1, ToMultinomial op2)
+         => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
+         -> SLExpr h a (Multinomial h (a, a))
+times = undefined
+\end{code}
 
 \begin{code}
 m_times' :: Multinomial h a -> Multinomial h a -> Multinomial h a
@@ -464,12 +468,14 @@ m_times' = undefined
 \end{code}
 
 
-
-
-
-
 \subsubsection{Fusion, Unfusion, and Fission}
 
+Hyper opinions can be fused together using two different operators:
+\emph{cumulative fusion} and \emph{averaging fusion}. Each operator
+should be used under different circumstances depending on the meaning
+of the fused opinions.
+
+We first introduce the cumulative fusion operator:
 
 \begin{code}
 cFuse :: (ToHyper op1, ToHyper op2, Ord a)
@@ -478,7 +484,6 @@ cFuse opa opb = do opa' <- toHyper <$> opa
                    opb' <- toHyper <$> opb
                    pure $ cFuse' opa' opb'
 \end{code}
-
 
 \begin{code}
 cFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
@@ -502,6 +507,7 @@ cFuse' (Hyper ba ua aa _) (Hyper bb ub ab _)
     bB = V.value bb
 \end{code}
 
+And secondly, the averaging fusion operator:
 
 \begin{code}
 aFuse :: (ToHyper op1, ToHyper op2, Ord a)
@@ -510,8 +516,6 @@ aFuse opa opb = do opa' <- toHyper <$> opa
                    opb' <- toHyper <$> opb
                    pure $ aFuse' opa' opb'
 \end{code}
-
-
 
 \begin{code}
 aFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
@@ -535,8 +539,11 @@ aFuse' (Hyper ba ua aa _) (Hyper bb ub ab _)
     bB = V.value bb
 \end{code}
 
-
-
+Cumulative \emph{unfusion} is defined for multinomial opinions. It has
+yet to be generalized to hyper opinions. Given an opinion that represents
+the result of cumulatively fusing together two opinions, and one of the
+two original opinions, it is possible to extract the other original
+opinion.
 
 \begin{code}
 cUnfuse' :: Multinomial h a -> Multinomial h a -> Multinomial h a
@@ -546,8 +553,8 @@ cUnfuse' opC opb = undefined -- Compute opa
 
 Fission is the operation of splitting a multinomial opinion into two
 multinomial opinions based on some ratio $\phi$. We refer to this as
-the \emph{split} operator.
-
+the \emph{split} operator. Like unfusion, fission has not yet been
+generalized to hyper opinions.
 
 \begin{code}
 cSplit :: ToMultinomial op => Rational -> SLExpr h a (op h a)
@@ -573,9 +580,6 @@ cSplit' phi (Multinomial b u a _) = (op1, op2)
 \end{code}
 
 
-
-
-
 \subsubsection{Deduction and Abduction}
 
 Deduction and abduction of multinomial opinions allows for one to do
@@ -591,26 +595,9 @@ classes \emph{Bounded} and \emph{Enum}. Boundedness simply means that
 there exists a least and greatest element, and enumerability insists
 that the frames be mappable to the integers.
 
-We will begin by introducing deduction. Since deduction is a fairly
-complicated procedure in comparrison to the previously defined operators
-we take advantage of \emph{local functions}: functions that are defined
-only within the scope of other functions. As a simple example, consider
-the following implementation of the \emph{factorial} function which is
-\emph{tail-recursive}. Languages that support certain optimizations
-can eliminate all tail-recursive function calls and thus generate faster
-programs.
-
-\begin{spec}
-factorial :: Integer -> Integer
-factorial n = work 1 n
-  where
-    work accum cur | cur == 0  = accum
-                   | otherwise = work (accum * cur) (cur - 1)
-\end{spec}
-
-In the above function, the \emph{work} function is local to the
-outer function, and thus is hidden from other functions. And now we
-present the \emph{deduction} operator.
+We will begin by introducing deduction. Subjective Logic deduction is
+a fairly complex operation, and so we have split the implementation
+into steps, following it's description (cite).
 
 
 \begin{code}
@@ -665,8 +652,8 @@ The expectation of y given the theoretical maximum uncertainty.
 All values of frames X and Y. We need to enumerate them in their entirity.
 
 \begin{code}
-    xs = [minBound :: a .. maxBound :: a]
-    ys = [minBound :: b .. maxBound :: b]
+    xs = [minBound .. maxBound] :: [a]
+    ys = [minBound .. maxBound] :: [b]
 \end{code}
 
 All of the base rate vectors must be the same, so take the first one.
@@ -723,7 +710,7 @@ Step 2: Compute the triangle apex uncertainty for each y.
 Intermediate sub-simplex apex uncertainty.
 
 \begin{code}
-    intApexU = maximum [ triangleApexU y | y <- ys ]
+    intApexU = maximum . map triangleApexU $ ys
 \end{code}
 
 Step 3: Compute the intermediate belief components.
@@ -742,7 +729,7 @@ Compute the adjusted apex uncertainty.
 Finally compute the sub-simplex apex uncertainty.
 
 \begin{code}
-    apexU = minimum [ adjustedU y | y <- ys ]
+    apexU = minimum . map adjustedU $ ys
 \end{code}
 
 Step 4: The final values we expect.
@@ -758,7 +745,9 @@ Subjective Logic abduction is a two step procedure. Given an opinion
 over a frame X and a list of conditional opinions over X given Y, we
 first must invert the conditionals into a list of conditional opinions
 over Y given X, and then perform Subjective Logic deduction with the
-new list and the opinion over X.
+new list and the opinion over X. Failure to invert the conditional
+opinions when performing abductive reasoning results in one falling
+victim to the \emph{prosecutor's fallacy}.
 
 
 \begin{code}
@@ -818,8 +807,8 @@ TODO: Confirm this.
 \end{code}
 
 \begin{code}
-    xs = [minBound :: a .. maxBound :: a]
-    ys = [minBound :: b .. maxBound :: b]
+    xs = [minBound .. maxBound] :: [a]
+    ys = [minBound .. maxBound] :: [b]
 \end{code}
 
 \begin{code}
@@ -830,18 +819,13 @@ TODO: Confirm this.
 \end{code}
 
 
-
-
-
-
-
-
-
-
-
-
-
 \subsubsection{Belief Constraining}
+
+The final operator we will discuss is the \emph{belief constraint}
+operator. This operator takes as input two objects that are convertible
+to hyper opinions and returns a hyper opinion as output. This function
+is equivalent in meaning to Dempster's rule of combination from
+\emph{Dempster Shafer Theory}.
 
 
 \begin{code}

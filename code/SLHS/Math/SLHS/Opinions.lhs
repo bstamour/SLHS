@@ -162,28 +162,52 @@ instance Opinion Hyper h a where
 \label{sec:belief-coarsening}
 
 
-Coarsening is an operation that takes a hyper opinion and converts it into a binomial
-opinion. The inputs are an arbitrary hyper opinion and a subset of the frame of discernment
-for which the hyper opinion is defined over. Coarsening is a two-stage operation: First
-the frame of discernment is partitioned into two sets: the subset given as input, and
-everything else. These two subsets, taken together as a set, form a new binary frame
-with which the new binomial opinion will be defined over. Secondly, the belief masses
-associated with elements of the powerset of the original frame via the hyper opinion input
-are split up and assigned to the elements of the new frame. The resulting belief mass
-assignment preserves additivity, and thus the new binomial opinion is valid. The operation
-for coarsening is given below.
+Coarsening is an operation that takes a hyper opinion and converts it
+into a binomial opinion. The inputs are an arbitrary hyper opinion and
+a subset of the frame of discernment for which the hyper opinion is
+defined over. Coarsening is a two-stage operation: First the frame of
+discernment is partitioned into two sets: the subset given as input,
+and everything else. These two subsets, taken together as a set, form
+a new binary frame with which the new binomial opinion will be defined
+over. Secondly, the belief masses associated with elements of the
+powerset of the original frame via the hyper opinion input are split
+up and assigned to the elements of the new frame. The resulting belief
+mass assignment preserves additivity, and thus the new binomial
+opinion is valid. The operation for coarsening is given below.
 
 
 \begin{code}
 coarsen :: (ToHyper op, Ord a) => op h a -> F.Subframe a -> Binomial h a
 coarsen op theta = Binomial b d u a undefined
   where
-    b = sum . map snd . V.elemsWhere (`F.isSubsetOf` theta) $ belief
-    d = sum . map snd . V.elemsWhere (F.isEmpty . (`F.intersection` theta)) $ belief
+    b = sumSnd . V.elemsWhere subset         $ belief
+    d = sumSnd . V.elemsWhere emptyIntersect $ belief
     u = 1 - b - d
-    a = sum . F.toList . F.map baseRate $ theta
-    belief = hBelief . toHyper $ op
-    baseRate x = V.value (hBaseRate . toHyper $ op) x
+    a = sum . F.toList . F.map baseRate      $ theta
+
+    belief   = hBelief . toHyper $ op
+    baseRate = V.value (hBaseRate . toHyper $ op)
+
+    sumSnd         = sum . map snd
+    subset         = (`F.isSubsetOf` theta)
+    emptyIntersect = F.isEmpty . (`F.intersection` theta)
+
+\end{code}
+
+
+As a convenience, we also offer a function to coarsen a hyper opinion,
+not by an explicitly given subframe, but by those elements of the frame
+that satisfy a given predicate. As an example, consider a frame of
+discernment consisting of the natural numbers. Using the following
+function, one can coarsen the frame into the binary frame
+$\lbrace \mbox{evens}, \lnot \mbox{evens} \rbrace$.
+
+
+\begin{code}
+coarsenBy :: (ToHyper op, Ord a) => op h a -> (a -> Bool) -> Binomial h a
+coarsenBy op pred = coarsen op theta
+  where
+    (theta, _) = F.partition pred . frame . toHyper $ op
 \end{code}
 
 
