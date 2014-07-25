@@ -60,10 +60,18 @@ err = Err
 \end{code}
 
 \begin{code}
-require :: Bool -> String -> SLExpr h a (SLVal ())
-require True _ = pure $ pure ()
-require False e = pure $ err e
+--require :: Bool -> String -> SLExpr h a (SLVal ())
+--require True _ = pure $ pure ()
+--require False e = pure $ err e
+
+
+require :: SLExpr h a Bool -> String -> SLExpr h a (SLVal ())
+require sbool e = do b <- sbool
+                     case b of
+                       True -> pure $ pure ()
+                       False -> pure $ err e
 \end{code}
+
 
 
 \subsection{Subjective Logic Expressions}

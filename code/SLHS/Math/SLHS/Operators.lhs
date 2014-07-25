@@ -455,16 +455,53 @@ In order to avoid naming conflicts, we have chosen to name the binomial
 operator with the symbol $*!$, and we use the name \emph{times} to
 denote the multinomial operator.
 
-\begin{code}
-times :: (ToMultinomial op1, ToMultinomial op2)
-         => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Multinomial h (a, a))
-times = undefined
-\end{code}
 
 \begin{code}
-m_times' :: Multinomial h a -> Multinomial h a -> Multinomial h a
-m_times' = undefined
+times :: (ToMultinomial op1, ToMultinomial op2, Ord b, Ord c)
+         => SLExpr h a (op1 h b) -> SLExpr h a (op2 h c)
+         -> SLExpr h a (Multinomial h (b, c))
+times opx opy = do opx' <- toMultinomial <$> opx
+                   opy' <- toMultinomial <$> opy
+                   return $ m_times' opx' opy'
+\end{code}
+
+
+
+\begin{code}
+m_times' :: (Ord a, Ord b) => Multinomial h a -> Multinomial h b -> Multinomial h (a, b)
+m_times' (Multinomial bx ux ax _) (Multinomial by uy ay _) =
+  Multinomial b' u' a' undefined
+  where
+    b' = V.fromList bxy
+    u' = uxy
+    a' = V.fromList axy
+
+    bxy = [ ((x, y), f x y) | x <- xKeys, y <- yKeys ]
+      where
+        f x y = expect x y - V.value ax x * V.value ay y * uxy
+
+    uxy = minimum [ uxy' x y | x <- xKeys, y <- yKeys ]
+
+    axy = [ ((x, y), f x y) | x <- xKeys, y <- yKeys ]
+      where
+        f x y = V.value ax x * V.value ay y
+
+    uxy' x y = uIxy * expect x y /
+               (bIxy x y + V.value ax x * V.value ay y * uIxy)
+
+    uIxy = uRxy + uCxy + uFxy
+      where
+        uRxy = 1 - ux * sum [ V.value by y | y <- yKeys ]
+        uCxy = 1 - uy * sum [ V.value bx x | x <- xKeys ]
+        uFxy = ux * uy
+
+    bIxy x y = V.value bx x * V.value by y
+
+    expect x y = (V.value bx x + V.value ax x * ux) *
+                 (V.value by y + V.value ay y * uy)
+
+    xKeys = nub $ V.focals bx ++ V.focals ax
+    yKeys = nub $ V.focals by ++ V.focals ay
 \end{code}
 
 

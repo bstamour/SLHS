@@ -16,6 +16,7 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Math.SLHS.Opinions where
 
@@ -142,12 +143,18 @@ instance Opinion Binomial h a where
   expectation (Binomial b d u a _) = b + a * u
   frame (Binomial _ _ _ _ (MetaData _ frm)) = frm
 
+--deriving instance Eq (FrameType Binomial h a)
+
+
+
 instance Opinion Multinomial h a where
   type FrameType Multinomial h a       = F.Frame a
   type ExpectationType Multinomial h a = V.Vector a
 
   expectation _ = undefined
   frame (Multinomial _ _ _ (MetaData _ frm)) = frm
+
+
 
 instance Opinion Hyper h a where
   type FrameType Hyper h a       = F.Frame a
@@ -208,6 +215,20 @@ coarsenBy :: (ToHyper op, Ord a) => op h a -> (a -> Bool) -> Binomial h a
 coarsenBy op pred = coarsen op theta
   where
     (theta, _) = F.partition pred . frame . toHyper $ op
+\end{code}
+
+
+
+
+\begin{code}
+{-
+sameFrame :: (Opinion op h a)
+             => SLExpr h a (op h a) -> SLExpr h a (op h a)
+             -> SLExpr h a Bool
+sameFrame op1 op2 = do frm1 <- fmap frame op1
+                       frm2 <- fmap frame op2
+                       return (frm1 == frm2)
+-}
 \end{code}
 
 
