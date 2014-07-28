@@ -500,6 +500,7 @@ m_times' (Multinomial bx ux ax _) (Multinomial by uy ay _) =
     expect x y = (V.value bx x + V.value ax x * ux) *
                  (V.value by y + V.value ay y * uy)
 
+    -- Be careful with these. Think this through...
     xKeys = nub $ V.focals bx ++ V.focals ax
     yKeys = nub $ V.focals by ++ V.focals ay
 \end{code}
@@ -583,10 +584,59 @@ two original opinions, it is possible to extract the other original
 opinion.
 
 \begin{code}
-cUnfuse' :: Multinomial h a -> Multinomial h a -> Multinomial h a
-cUnfuse' opC opb = undefined -- Compute opa
+cUnfuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
+           => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
+           -> SLExpr h a (Multinomial h a)
+cUnfuse opc opb = do opc' <- toMultinomial <$> opc
+                     opb' <- toMultinomial <$> opb
+                     pure $ cUnfuse' opc' opb'
 \end{code}
 
+\begin{code}
+cUnfuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
+cUnfuse' (Multinomial bc uc ac _) (Multinomial bb ub ab _)
+  | uc /= 0 || ub /= 0 = Multinomial ba ua aa undefined
+  | otherwise          = Multinomial ba' ua' aa' undefined
+  where
+    ba = V.mapWithKey belief bc
+    ua = ub * uc / (ub - uc + ub * uc)
+    aa = ac
+
+    ba' = bb
+    ua' = 0
+    aa' = ac
+
+    belief x b = (b * ub - V.value bb x  * uc) / (ub - uc + ub * uc)
+\end{code}
+
+Likewise, averaging unfusion is the inverse operation to averaging fusion.
+
+
+\begin{code}
+aUnfuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
+           => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
+           -> SLExpr h a (Multinomial h a)
+aUnfuse opc opb = do opc' <- toMultinomial <$> opc
+                     opb' <- toMultinomial <$> opb
+                     pure $ aUnfuse' opc' opb'
+\end{code}
+
+\begin{code}
+aUnfuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
+aUnfuse' (Multinomial bc uc ac _) (Multinomial bb ub ab _)
+  | uc /= 0 || ub /= 0 = Multinomial ba ua aa undefined
+  | otherwise          = Multinomial ba' ua' aa' undefined
+  where
+    ba = V.mapWithKey belief bc
+    ua = ub * uc / (2 * ub - uc)
+    aa = ac
+
+    ba' = bb
+    ua' = 0
+    aa' = ac
+
+    belief x b = (2 * b * ub - V.value bb x * uc) / (2 * ub - uc)
+\end{code}
 
 Fission is the operation of splitting a multinomial opinion into two
 multinomial opinions based on some ratio $\phi$. We refer to this as

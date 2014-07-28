@@ -54,6 +54,9 @@ value v x = fromMaybe 0 . M.lookup x $ unVec v
 map :: (Rational -> Rational) -> Vector a -> Vector a
 map f = Vector . M.map f . unVec
 
+mapWithKey :: (a -> Rational -> Rational) -> Vector a -> Vector a
+mapWithKey f = Vector . M.mapWithKey f . unVec
+
 fold :: (Rational -> b -> b) -> b -> Vector a -> b
 fold f z = M.fold f z . unVec
 
