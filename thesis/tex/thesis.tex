@@ -1,8 +1,9 @@
 \documentclass{book}
 
 \usepackage{subfiles}
-
+\usepackage[nottoc,numbib]{tocbibind}
 \usepackage{listings}
+
 \lstloadlanguages{Haskell}
 
 
@@ -56,11 +57,24 @@
 
 \tableofcontents
 
+\listoffigures
+
+\listoftables
+
 \subfile{chapter1}
 \subfile{chapter2}
 \subfile{chapter3}
 \subfile{chapter4}
 \subfile{chapter5}
 \subfile{chapter6}
+
+
+
+
+\nocite{*} % Just for now...
+\bibliography{bibliography}
+\bibliographystyle{plain}
+
+
 
 \end{document}

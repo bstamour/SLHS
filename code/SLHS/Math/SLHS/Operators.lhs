@@ -231,6 +231,19 @@ codivide' (Binomial bx dx ux ax _) (Binomial by dy uy ay _) =
 \end{code}
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 \subsubsection{Trust Transitivity Operators}
 
 In this section we implement the subjective logic operators for trust
@@ -439,6 +452,32 @@ abduce' opx opxyT opxyF ay = deduce (pure opx) opyxT opyxF
 -}
 \end{code}
 }
+
+
+The binomial operators are summarized in table \ref{tbl:binomial-operators}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{| l | l | l |}
+  \hline
+  Name & SL & SLHS \\
+  \hline
+  Addition          & $\omega_{X \cup Y} = \omega_X + \omega_Y$       & $opx +! opy$  \\
+  Subtraction       & $\omega_{X \setminus Y} = \omega_X - \omega_Y$  & $opx -! opy$  \\
+  Negation          & $\omega_{X \setminus Y} = \omega_X - \omega_Y$  & $opx -! opy$  \\
+  Multiplication    & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx *! opy$  \\
+  Co-multiplication & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx ~*! opy$ \\
+  Division          & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx /! opy$  \\
+  Co-division       & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx ~/! opy$ \\
+  \hline
+\end{tabular}
+\end{center}
+
+\caption{Summary of binomial operators}
+\label{tbl:binomial-operators}
+\end{table}
+
+
 
 
 \subsection{Multinomial and Hyper Operators}

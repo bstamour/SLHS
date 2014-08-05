@@ -6,11 +6,24 @@
 \label{chap:background-information}
 
 
+\section{Decision Support Systems}
 
-\section{Uncertain Reasoning}
 
 
-\section{Dempster Shafer Theory}
+
+\section{Artificial Reasoning}
+
+\subsection{Certain Reasoning}
+
+\subsection{Uncertain Reasoning}
+
+
+
+
+\section{The Dempster Shafer Theory of Evidence}
+
+
+
 
 
 
@@ -33,19 +46,102 @@
 
 % Make this quick.
 
-\section{Pure Functional Programming}
+\section{Functional Programming in Haskell}
 
 \subsection{Introduction}
 
-\subsection{Functional Programming}
+\emph{Haskell} is a strongly typed, non-strict, pure functional
+programming language \cite{hudak1992report} which was initially
+developed to be a common language for researchers interested in
+non-strict, pure functional programming languages
+\cite{hudak2007history}.
+By \emph{non-strict}, we mean that Haskell
+evaluates expressions in a \emph{call-by-need} manner: expressions are
+only evaluated if and when they are required [cite]. Haskell is a
+\emph{functional programming language}, where the meaning of
+\emph{functional} is the style of programs as described by John Backus
+in his Turing award lecture: \emph{Can Programming Be Liberated from
+  the von Neumann Style?}\cite{backus1978can}.  Lastly, Haskell is
+\emph{pure} in the sense that all functions are functions in the
+mathematical sense: they depend only on their inputs to produce their
+outputs. Haskell does not support the use of global variables when
+writing programs.
 
-\subsection{Purity}
+In this section we will briefly describe the syntax of Haskell in
+order to give the reader enough familiarity to understand the code
+listings of chapter \ref{chap:sl-in-haskell}. This section is by no
+means exhaustive in its treatment of Haskell. For readers who wish to
+learn Haskell in more depth, we suggest the book \emph{Real World
+  Haskell}.
+
+
+
+\subsection{Functions}
+
+Functions in Haskell are written simply as equations:
+
+\begin{spec}
+increment n = n + 1
+\end{spec}
+
+The left hand side of the equation denotes the name of the function as well as the names of the
+functions formal parameters. Multiple parameters are separated by white space. For example:
+
+\begin{spec}
+plus m n = m + n
+\end{spec}
+
+Function application again uses white space. For example, to call the function \emph{plus} as we have
+defined it above, one would write
+
+\begin{spec}
+plus 4 5
+\end{spec}
+
+Functions in Haskell take their arguments one at a time, which allows for them to be \emph{curried}, or
+partially applied. For example, the function \emph{increment} that we introduced previously can in fact
+be written more simply in terms of our function \emph{plus} like so:
+
+\begin{spec}
+increment = plus 1
+\end{spec}
+
+Since Haskell supports basic arithmetic operators, we can in fact rewrite the above two functions as
+
+\begin{spec}
+plus = (+)
+increment = (+ 1)
+\end{spec}
+
+All binary operators in Haskell can be converted into regular functions by surrounding them in brackets,
+and the definition of \emph{increment} above is an example of a \emph{slice}. Inversely, any binary function
+can be used as an infix operator by surrounding the function name in back-quotes. For example, it is
+common to see the Haskell function \emph{elem}, which returns TRUE if an element is contained in a list, and
+FALSE otherwise, used as an infix operator. The following program
+
+\begin{spec}
+3 `elem` [1, 2, 3, 4, 5]
+\end{spec}
+
+will return the result TRUE.
+
+\subsection{Lists}
+
 
 \subsection{Types}
 
-\subsubsection{Type Classes}
+\subsection{Type Classes}
+
+\subsection{Functors}
+
+\subsection{Applicative Functors}
 
 \subsection{Monads}
+
+\subsection{Combinators}
+
+
+
 
 
 
