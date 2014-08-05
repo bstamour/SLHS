@@ -6,8 +6,10 @@
 
 \section{Opinions}
 
-
-
+In this section we will discuss the implementation of the most important
+objects in SLHS from the user's standpoint: Subjective opinions. We start by
+implementing binomial opinions, and then we present multinomial and hyper
+opinions.
 
 
 \ignore{
@@ -31,13 +33,11 @@ import qualified Data.Set as S
 
 \subsection{Binomial Opinions}
 
-
 We represent binomial opnions by four rational numbers corresponding
 to the belief, disbelief, uncertainty, and base rate of the opinion,
 along with some additional meta-data: the belief holder and the frame
 of discernment it is defined over. In code, the binomial opinion looks
 like the following:
-
 
 \begin{code}
 data Binomial h a = Binomial { bBelief      :: Rational
@@ -48,8 +48,13 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              }
 \end{code}
 
+Here we use Haskell's \emph{record syntax} to define the data constructor.
+Haskell automatically creates the top-level functions \emph{bBelief},
+\emph{bDisbelief}, \emph{bUncertainty}, \emph{bAtomicity}, and
+\emph{bMetaData} that provide access to the "members" of the record.
 
-
+The meta-data associated with the opinion is also defined using the record
+syntax:
 
 \begin{code}
 data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
@@ -57,13 +62,11 @@ data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
                              }
 \end{code}
 
-
 We also introduce a special \emph{type class} called \emph{ToBinomial}
 which allows us to define a range of types that can be converted to a
 binomial opinion. An example of such a type could be a \emph{Beta
 PDF}. We will re-use this strategy for implementing multinomial and
 hyper opinions.
-
 
 \begin{code}
 class ToBinomial op where
@@ -72,6 +75,14 @@ class ToBinomial op where
 instance ToBinomial Binomial where
   toBinomial = id
 \end{code}
+
+
+
+
+
+
+
+
 
 
 \subsection{Multinomial Opinions}

@@ -3,6 +3,7 @@
 \usepackage{subfiles}
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{listings}
+\usepackage{setspace}
 
 \lstloadlanguages{Haskell}
 
@@ -12,7 +13,7 @@
       \csname lst@SetFirstLabel\endcsname}
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
-      basicstyle=\small\ttfamily,
+      basicstyle={\small\ttfamily\singlespacing},
       flexiblecolumns=false,
       basewidth={0.5em,0.45em},
       literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
@@ -24,12 +25,13 @@
                {>>}{{>>}}2 {>>=}{{>>=}}2
                {|}{{$\mid$}}1
     }
+
 \lstnewenvironment{spec}
     {\lstset{}%
       \csname lst@SetFirstLabel\endcsname}
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
-      basicstyle=\small\ttfamily,
+      basicstyle={\small\ttfamily\singlespacing},
       flexiblecolumns=false,
       basewidth={0.5em,0.45em},
       literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
@@ -43,6 +45,7 @@
     }
 
 
+\doublespacing
 
 
 \long\def\ignore#1{}

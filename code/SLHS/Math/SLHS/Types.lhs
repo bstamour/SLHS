@@ -38,10 +38,22 @@ data Holder a = Holder a
 
 \subsection{Subjective Logic Values}
 
+Values in SLHS are represented by a sum type:
 
 \begin{code}
 data SLVal a = SLVal a | Err String
+\end{code}
 
+Objects of type \emph{SLVal a} either contain a value of type \emph{a}, by virtue of the
+\emph{SLVal} data constructor, or an error message, via the \emph{Err} data constructor. By
+wrapping values in this intermediate type, we thus allow all operators in SLHS to return
+either a value on success, or a detailed error message upon failure. This allows us to
+report issues with Subjective Logic expressions that can only be detected at run-time.
+
+Objects of type \emph{SLVal a} are also monads. The required type class instances for monad,
+applicative, and functor are presented below:
+
+\begin{code}
 instance Monad SLVal where
   return = SLVal
   SLVal x >>= f = f x
@@ -54,6 +66,11 @@ instance Applicative SLVal where
 instance Functor SLVal where
   fmap = liftA
 \end{code}
+
+Furthermore, we provide a simple helper function for reporting errors. Since all functions
+in Haskell must start with a lower case letter, we provide \emph{err}, just for syntactic
+uniformity. Programs that use \emph{err} can also freely use the \emph{Err} data constructor
+without any loss in functionality.
 
 \begin{code}
 err :: String -> SLVal a
