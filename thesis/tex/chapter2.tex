@@ -2,18 +2,14 @@
 
 \begin{document}
 
-\chapter{Background Information and Motivation}
+\chapter{Background Information}
 \label{chap:background-information}
 
-In this chapter we will briefly touch on the motivation behind this body of research,
-as well as the relevant background information required to fully understand the more
-technical details in later chapters. We will first discuss \emph{decision-support systems},
-which is the motivating area of research for our ...
-
-
-
-
-
+In this chapter we will give a brief introduction to the relevant background material pertaining
+to this thesis. We will begin with a discussion of \emph{decision support systems}, followed by
+an overview of \emph{artificial reasoning}. Next we will discuss \emph{Dempster-Shafer Theory}, and
+how certain flaws have lead to the development of \emph{Subjective Logic}. We will then conclude with
+a brief overview of the \emph{Haskell} programming language.
 
 
 
@@ -35,15 +31,11 @@ In his 2002 book, \emph{Decision support systems: concepts and resources for man
 taxonomy:
 
 \begin{itemize}
-  \item Communication-driven systems: systems that allow for more than one person to work on a
-    shared task.
-  \item Document-driven systems: systems that allow for the storage, retrieval and manipulation
-    of unstructured data documents.
+  \item Communication-driven systems: systems that allow for more than one person to work on a shared task.
+  \item Document-driven systems: systems that allow for the storage, retrieval and manipulation of unstructured data documents.
   \item Data-driven systems: systems that facilitate the manipulation of internal company data.
-  \item Model-driven systems: systems that allow for access and modification of various models:
-    whether they are financial, simulation, statistical, or other.
-  \item Knowledge-driven systems: systems that contain problem solving expertise for the task at
-    hand, typically encoded as facts and rules.
+  \item Model-driven systems: systems that allow for access and modification of various models: whether they are financial, simulation, statistical, or other.
+  \item Knowledge-driven systems: systems that contain problem solving expertise for the task at hand, typically encoded as facts and rules.
 \end{itemize}
 
 It is in the latter, \emph{knowledge-driven systems}, that this thesis is mostly concerned with: systems
@@ -80,16 +72,22 @@ decision-maker with his or her task.
 Subjective Logic is a newly emergent probabilistic logic calculus that supports reasoning
 under uncertainty \cite{josang2001logic}.
 
+The central object of Subjective Logic is the \emph{Subjective Opinion}, which is represented
+as a tuple:
 
+$$
+\omega_X = \langle b_X, u_X, a_X \rangle
+$$
 
+where $X$ is a frame of discernment. $b_X$ is a vector of belief mass. Each element of $X$ is
+assigned (possibly zero) mass. $u_X$ is a scalar representing the amount of uncertainty.
+Lastly $a_X$ is a vector of a-priori belief mass, assigned to the elements of $X$. Each component
+of $b_X$ and $a_X$ must be between 0 and 1, and while $a_X$ is additive ($\sum_{x \in X} a_X(x) = 1$),
+$b_X$ is allowed to be sub-additive, where $u_X = 1 - \sum_{x \in X} b_X(x)$.
+Opinions can either be \emph{uncertain}, where $u_X > 0$, or \emph{dogmatic}, when $u_X = 0$.
 
-
-
-
-
-
-
-
+In the following sections we will describe the three kinds of opinions in Subjective Logic, starting
+with the most simple objects: binomial opinions.
 
 
 

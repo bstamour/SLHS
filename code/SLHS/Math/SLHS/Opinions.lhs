@@ -87,14 +87,27 @@ instance ToBinomial Binomial where
 
 \subsection{Multinomial Opinions}
 
+Multinomials are represented as records containing a \emph{BeliefVector} to represent the
+amount of belief assigned to each element of the frame, a scalar rational number to
+store the uncertainty mass, a \emph{BaseRateVector} which assigns each element in the frame
+to a base rate, and a meta-data object.
+
 
 \begin{code}
-data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
-                                   , mUncertainty :: Rational
-                                   , mBaseRate    :: BaseRateVector a
-                                   , mMetaData    :: MetaData h (F.Frame a)
-                                   }
+data Multinomial h a =
+  Multinomial { mBelief      :: BeliefVector a
+              , mUncertainty :: Rational
+              , mBaseRate    :: BaseRateVector a
+              , mMetaData    :: MetaData h (F.Frame a)
+              }
+\end{code}
 
+Just as in the case of binomials, we introduce a type class to represent types that can be
+converted to multinomials. We provide the instance for multinomial opinions (the identity
+function) as well as an instance for binomial opinions, since binomial opinions are a
+special case of multinomial opinions.
+
+\begin{code}
 class ToMultinomial op where
   toMultinomial :: op h a -> Multinomial h a
 

@@ -29,6 +29,17 @@ type BaseRateVector a = V.Vector a
 
 \subsection{Belief Holders}
 
+Subjective Logic opinions may include an optional belief holder. Belief holders play an
+important role for operators such as \emph{transitive discounting}, where an agent's opinion
+of an event is computed through said agent's opinion of a secondary agent, who holds an
+opinion of the event in question. Other operators that utilize this meta-data are the various
+belief fusion operators that are designed to merge opinions of events collected either from
+different sensors (different belief holders), or from the same sensor but across different
+periods of time.
+
+We represent belief holders as a recursive data type in order to be able to capture complex
+yet "imaginary" belief holders such as "the consensus of agents A, B and C."
+
 \begin{code}
 data Holder a = Holder a
               | Discount (Holder a) (Holder a)
