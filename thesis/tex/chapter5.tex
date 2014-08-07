@@ -23,6 +23,18 @@ will eventually terminate.
 
 
 
+\begin{theorem}
+  For every equation $e$ that is representible in SLSH, $e$ terminates.
+\end{theorem}
+
+\begin{proof}
+  By induction on the length of $e$.
+\end{proof}
+
+
+
+
+
 
 \section{Analysis of Complexity}
 
@@ -32,6 +44,45 @@ output will be analyzed with respect to the cardinality of the frames of discern
 associated with each input opinion. With this in mind, we will not analyze the
 binomial operators, as binomial opinions always have a fixed cardinality, and thus
 an analysis based on frames of varying size would be meaningless.
+
+
+
+
+
+\begin{theorem}
+  Hypernomial abduction has time complexity $O (n log n)$.
+\end{theorem}
+
+\begin{proof}
+  Immediate.
+\end{proof}
+
+
+\begin{theorem}
+  Multinomial fission has time complexity $O (n log n)$.
+\end{theorem}
+
+\begin{proof}
+  Immediate.
+\end{proof}
+
+
+\begin{theorem}
+  Multinomial multiplication has time complexity $O (m \times n)$.
+\end{theorem}
+
+\begin{proof}
+  Immediate.
+\end{proof}
+
+
+
+
+
+
+
+\section{Leveraging the Type System}
+
 
 
 

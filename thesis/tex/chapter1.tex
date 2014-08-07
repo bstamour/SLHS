@@ -6,7 +6,7 @@
 
 
 
-\section{Reasoning Under Uncertainty}
+\section{Motivation}
 
 Imagine two sensors designed to measure two very different properties of some
 small, furry animals - say guinea pigs. One sensor measures the sex of the baby guinea
@@ -90,25 +90,41 @@ Logic available for application developers. Furthermore, there does not
 yet appear to be any formal analysis of the computational complexity of
 the operators provided.
 
-
-\section{Previous Work on This Problem}
-
 Josang has provided an implementation of some Subjective Logic operators.
 However the implementation is incomplete as it does not support computing
 with general subjective opinions.
 
-To the best of our knowledge, there does not yet exist any formal complexity
-analysis of the operators of Subjective Logic.
+
+
 
 
 \section{Our Proposed Solution}
 
-In order to combat this scarcity, we propose to develop an implementation
-of Subjective Logic using the Haskell programming language. Haskell is
-a pure functional programming language that is lazily evaluated by default.
-Haskell has gained popularity as an academic research language, but is also
-seeing some uptake in industry. Alongside our implementation, we propose to
-perform a complexity analysis on each and every operator provided.
+To combat this scarcity, we propose to develop a library of Subjective Logic
+operators using the \emph{Haskell} programming language. We propose to represent
+expressions of Subjective Logic as functions from an initial world state to some
+numeric output, and the operators of Subjective Logic as higher order functions.
+Therefore simple expressions of Subjective Logic can be combined to form larger
+more complex equations.
+
+In order to assist us in combining together these equations, we will use monads,
+in particular a \emph{state monad}. Monads are ubiquitous in Haskell, and are
+general enough to represent stateful computations \cite{launchbury1994lazy},
+input/output \cite{peyton1993imperative},
+and formal \cite{hutton1998monadic, leijen2001parsec} and natural language
+\cite{hafiz2010lazy} parsers.
+
+In order to evaluate our library for correctness, we propose to test them against
+example calculations provided by Josang in the literature. Furthermore we propose
+to prove that our set of operators terminates for all possible input equations.
+Lastly, we propose to perform a complexity analysis on a sample of the operators.
+
+We hope that our library will be found useful by the research community, and that
+it will spur the development of Subjective Logic-based reasoning applications.
+
+
+
+
 
 
 \section{Organization of this Document}

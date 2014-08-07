@@ -5,12 +5,74 @@
 \chapter{Thesis Statement}
 \label{chap:thesis-statement}
 
+In this chapter we will describe our research motivations, and then present our thesis hypothesis and
+research objectives. Lastly we will outline the methodology that we will utilize in order to
+achieve our goals.
+
+
 
 \section{Research Motivation}
+
+As mentioned previously, there does not yet exist a comprehensive library of Subjective
+Logic operators that can be used for application development and experimentation. There
+exists a partial implementation by Josang [cite], but at the time of this writing, to our
+knowledge no other implementation exists.
+
+We expect that such a library of operators should be efficient, type-safe, and compositional.
+The library should be efficient in such a way that values are only computed as needed. The
+library should be type-safe in order to catch invalid Subjective Logic equations as early as
+possible. By leveraging a strong type system, the library should be able to catch many errors
+at the time of compilation. Finally, the library should be compositional in a sense that
+arbitrarily complicated Subjective Logic equations should be able to be constructed from a
+small set of functions and operators.
+
+
+
+
 
 
 
 \section{Thesis Hypothesis}
+
+Given our motivation, our hypothesis for this thesis is: Using monads and strong typing, it is
+possible to construct a general purpose Subjective Logic library that is type-safe, efficient,
+and compositional.
+
+
+
+
+\section{Objectives}
+
+The objectives of our research are the following:
+
+\begin{itemize}
+  \item Develop a monadic combinator library of Subjective Logic operators.
+  \item Analyze the type safety of our library.
+  \item Prove that our set of operators terminates for all Subjective Logic equations.
+  \item Analyze the complexity of a selection of the operators.
+\end{itemize}
+
+
+
+\section{Methodology}
+
+In order to complete the objectives of our research, we will do the following:
+
+\begin{itemize}
+  \item We will develop the library using the Haskell programming language due to it's strong type
+system and excellent support for monadic programming.
+  \item We will discuss how haskell's strong type system allows for our library to reject certain
+classes of ill-formed Subjective Logic equations.
+  \item We will utilize structural induction on the length of the input equation to prove that
+our operators terminate.
+  \item We will analyze the time complexity of the operators based on the amount of elements in the
+frame of discernment that have non-zero belief mass assigned to them.
+\end{itemize}
+
+In the following chapter we will discuss the implementation of \emph{SLHS}: Subjective Logic in Haskell.
+Then, in chapter \ref{chap:results-and-analysis} we will provide proofs of termination, complexity
+analysis, and discuss how Haskell's strong type system allows our library to reject some ill-formed
+Subjective Logic equations.
 
 
 
