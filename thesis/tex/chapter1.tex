@@ -5,16 +5,85 @@
 \chapter{Introduction}
 
 
+
+\section{Reasoning Under Uncertainty}
+
+Imagine two sensors designed to measure two very different properties of some
+small, furry animals - say guinea pigs. One sensor measures the sex of the baby guinea
+pig, while the other attempts (poorly) to detect the specific breed of the guinea pig.
+For simplicity, assume that guinea pigs fall into one of the breeds specified in table
+\ref{tbl:guinea-pig-breeds}. Assume guinea pigs have an even probability of being born
+male or female. Once the data has been collected, the guinea pig farm manager wishes to compute the
+liklihood of each sex/breed pairing. However the manager must take into account the
+uncertainty corresponding to mixed-breed guiea pigs.
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{| l | l |}
+      \hline
+      Name of Breed & \% of Total \\
+      \hline
+      Silky         & 25\%        \\
+      American      & 40\%        \\
+      Peruvian      & 25\%        \\
+      Mixed         & 10\%        \\
+      \hline
+    \end{tabular}
+  \end{center}
+
+  \caption{Imaginary distribution of guinea pig breeds}
+  \label{tbl:guinea-pig-breeds}
+\end{table}
+
+Now imagine a family doctor, investigating the symptoms of one of her patients. The patient
+shows symptoms that could point to a myriad of actual causes. The doctor begins with three
+potential hypotheses that could explain the symptops, and must abduce the correct explanation.
+
+Lastly, suppose you and two of your friends with to see a movie. There are three movies currently
+playing in your local theatre: Star Wars - The Empire Strikes First (M1), Cassablanca 2 (M2), and
+A Slug's Life (M3). Each of you has a preference for each of the three movies, as depicted in
+table \ref{tbl:movies}. Is it possible for the three of you to come to a reasonable decision for
+which movie to see?
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{ r|c|c|c| }
+      \multicolumn{1}{r}{}
+      &  \multicolumn{1}{c}{M1}
+      &  \multicolumn{1}{c}{M2}
+      &  \multicolumn{1}{c}{M3} \\
+      \cline{2-4}
+      You & 0.5 & 0.3 & 0.1 \\
+      \cline{2-4}
+      Bill & 0.2 & 0.6 & 0.2 \\
+      \cline{2-4}
+      Ted  & 0.7 & 0.0 & 0.0 \\
+      \cline{2-4}
+    \end{tabular}
+  \end{center}
+
+  \caption{Movie Preferences}
+  \label{tbl:movies}
+\end{table}
+
+The above scenarios all share a common theme: they involve reasoning about uncertain or incomplete
+data. Any system designed to aide end users in reasoning in many real-world scenarios must take
+uncertainty into account. One particular form of probabilistic logic, Subjective Logic, offers a
+variety of operators for many different scenarios. And because Subjective Logic has been
+constructed to directly deal with the problem of uncertainty, it has been put to use in
+many domains [cite some examples here].
+
+
 \section{The Problem Addressed}
 
-Subjective Logic is a form of probabilistic logic that is currently
+Subjective Logic is a relatively new form of probabilistic logic that is currently
 under active development. The novelty of Subjective Logic is that it
 directly handles uncertainty, and each and every operator for manipulating
 Subjective opinions takes this uncertainty into account. The result is a
 flexible calculus of opinions that can be used to model many kinds of
 situations that require reasoning under uncertainty.
 
-As Subjective Logic is still in its infancy, the operators, opinions, and
+However, as Subjective Logic is still in its infancy, the operators, opinions, and
 even in some cases nomenclature, are in a flux. The result of this is that
 there is, to the best of our knowledge, no implementation of Subjective
 Logic available for application developers. Furthermore, there does not

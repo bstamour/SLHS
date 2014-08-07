@@ -9,7 +9,10 @@ In this chapter we will give a brief introduction to the relevant background mat
 to this thesis. We will begin with a discussion of \emph{decision support systems}, followed by
 an overview of \emph{artificial reasoning}. Next we will discuss \emph{Dempster-Shafer Theory}, and
 how certain flaws have lead to the development of \emph{Subjective Logic}. We will then conclude with
-a brief overview of the \emph{Haskell} programming language.
+a brief overview of the \emph{Haskell} programming language, as it is the language used for the program
+examples throughout this thesis.
+
+
 
 
 
@@ -133,8 +136,6 @@ means exhaustive in its treatment of Haskell. For readers who wish to
 learn Haskell in more depth, we suggest the book \emph{Real World
   Haskell}.
 
-
-
 \subsection{Functions}
 
 Functions in Haskell are written simply as equations:
@@ -186,8 +187,28 @@ will return the result TRUE.
 
 \subsection{Lists}
 
+Lists of elements are a fundamental data structure in Haskell. They are created by enclosing elements of
+the same type in square brackets, like so:
+
+\begin{spec}
+names = [``John'', ``Paul'', ``George'', ``Ringo'']
+\end{spec}
+
+Items can be queried for membership by using the \emph{elem} function. Executing the program
+
+\begin{spec}
+``Jerry'' `elem` names
+\end{spec}
+
+will result in the value \emph{False}. Other useful operations on lists include: \emph{length}, which computes
+the length of the list; \emph{nub}, which removes duplicate elements from a list; and the $++$ operator, which
+concatenates two lists together.
+
 
 \subsection{Types}
+
+Every expression in Haskell must have a \emph{type}.
+
 
 \subsection{Type Classes}
 

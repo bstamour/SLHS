@@ -1,12 +1,12 @@
-\documentclass{book}
+\documentclass[oneside]{book}
 
+\usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
 \usepackage{subfiles}
 \usepackage[nottoc,numbib]{tocbibind}
 \usepackage{listings}
 \usepackage{setspace}
 
 \lstloadlanguages{Haskell}
-
 
 \lstnewenvironment{code}
     {\lstset{}%
@@ -44,10 +44,7 @@
                {|}{{$\mid$}}1
     }
 
-
 \doublespacing
-
-
 \long\def\ignore#1{}
 
 \title{A Purely Functional Subjective Logic Combinator Library}
@@ -57,12 +54,19 @@
 \begin{document}
 
 \maketitle
+\clearpage
+
+\pagenumbering{roman}
+\setcounter{page}{2}
 
 \tableofcontents
 
-\listoffigures
+%\listoffigures
 
 \listoftables
+\clearpage
+
+\pagenumbering{arabic}
 
 \subfile{chapter1}
 \subfile{chapter2}
@@ -71,13 +75,17 @@
 \subfile{chapter5}
 \subfile{chapter6}
 
-
-
-
 \nocite{*} % Just for now...
 \bibliography{bibliography}
 \bibliographystyle{plain}
 
+\chapter*{Vita Auctoris}
+\addcontentsline{toc}{chapter}{Vita Auctoris}
 
+Bryan St. Amour was born and raised in Windsor, Ontario, Canada, and graduated from F.J. Brennan
+Catholic High School in 2005. Bryan completed his undergraduate degree in Computer Science from
+the University of Windsor in 2010, and expects to complete his Master's degree in Computer Science
+from the same institute in Fall 2014. He currently resides in Tecumseh, Ontario with his wife
+Chelsey St. Amour, and their four guinea pigs: Squeakers, Beauty, Scarlet, and Pumpkin.
 
 \end{document}
