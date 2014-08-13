@@ -5,12 +5,65 @@
 \chapter{Conclusion}
 \label{chap:conclusion}
 
+In this chapter we will present our concluding remarks, as well as discuss possible avenues for
+future improvements to the SLHS library.
+
+
+
+
+
+
+\section{Conclusion}
+
+
+
+
 
 \section{Future Work}
+
+In this section we will discuss areas for future experimentation or improvement to SLHS.
+
 
 \subsection{Modifications to the Vector Representation}
 
 % Maybe using a sorted vector instead of a red black tree will be faster
 % on real hardware.
+
+
+
+
+\subsection{Implementing Memoization}
+
+We have shown how some of the operators of Subjective Logic scale with respect
+to the cardinalities of the frames of discernment involved. As we deal with
+larger and larger frames, computing the results of the individual operators
+will become more and more time consuming. If a single sub-expression appears
+many times throughout a more complex subjective logic expression, it would be
+beneficial to re-use a previously computed value. Instead, currently we would waste
+valuable time recomputing the output for the same expression over and over.
+
+One technique to avoid this costly recomputation is \emph{memoization} [cite].
+At every operator invocation, we compute the value and store it in a table. If at
+any time we require the same expression to be computed, we first look answer up in
+the table. In a sense we would use additional memory in order to save time.
+
+
+
+\subsection{Exploiting Parallelization}
+
+Many operators of Subjective Logic appear to be easily parallelizable,
+as the new opinions are computed by combining together the belief
+masses of individual elements of the reduced powerset without
+depending on any other elements. Therefore, attempting to introduce
+parallelism to the implementations of the operators should be as easy
+as modifying the underlying \emph{SLExpr} monad to utilize one of the
+many Haskell libraries for parallel and concurrent computing
+[cite]. Then the operators can be rewritten to compute their results
+in parallel without any modification to the external interface to the
+library. While we did not address the issue of parallelism in this
+thesis, it appears, at least to the authors, to be a useful area of
+future research.
+
+
 
 \end{document}

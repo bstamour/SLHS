@@ -8,9 +8,10 @@
 In this chapter we will give a brief introduction to the relevant background material pertaining
 to this thesis. We will begin with a discussion of \emph{decision support systems}, followed by
 an overview of \emph{artificial reasoning}. Next we will discuss \emph{Dempster-Shafer Theory}, and
-how certain flaws have lead to the development of \emph{Subjective Logic}. We will then conclude with
+then \emph{Subjective Logic}. We will then conclude with
 a brief overview of the \emph{Haskell} programming language, as it is the language used for the program
 examples throughout this thesis.
+
 
 
 
@@ -34,25 +35,23 @@ In his 2002 book, \emph{Decision support systems: concepts and resources for man
 taxonomy:
 
 \begin{itemize}
-  \item Communication-driven systems: systems that allow for more than one person to work on a shared task.
-  \item Document-driven systems: systems that allow for the storage, retrieval and manipulation of unstructured data documents.
-  \item Data-driven systems: systems that facilitate the manipulation of internal company data.
-  \item Model-driven systems: systems that allow for access and modification of various models: whether they are financial, simulation, statistical, or other.
-  \item Knowledge-driven systems: systems that contain problem solving expertise for the task at hand, typically encoded as facts and rules.
+  \item Communication-driven systems: systems that allow for more than
+    one person to work on a shared task.
+  \item Document-driven systems: systems that allow for the storage,
+    retrieval and manipulation of unstructured data documents.
+  \item Data-driven systems: systems that facilitate the manipulation
+    of internal company data.
+  \item Model-driven systems: systems that allow for access and
+    modification of various models: whether they are financial,
+    simulation, statistical, or other.
+  \item Knowledge-driven systems: systems that contain problem solving
+    expertise for the task at hand, typically encoded as facts and
+    rules.
 \end{itemize}
 
 It is in the latter, \emph{knowledge-driven systems}, that this thesis is mostly concerned with: systems
 that are required to reason with (possibly incomplete) domain knowledge in order to assist the human
 decision-maker with his or her task.
-
-
-
-
-
-\section{Artificial Reasoning}
-
-
-
 
 
 
@@ -70,47 +69,76 @@ decision-maker with his or her task.
 
 \section{Subjective Logic}
 
-\subsection{Introduction}
-
 Subjective Logic is a newly emergent probabilistic logic calculus that supports reasoning
 under uncertainty \cite{josang2001logic}.
 
-The central object of Subjective Logic is the \emph{Subjective Opinion}, which is represented
-as a tuple:
-
-$$
-\omega_X = \langle b_X, u_X, a_X \rangle
-$$
-
-where $X$ is a frame of discernment. $b_X$ is a vector of belief mass. Each element of $X$ is
-assigned (possibly zero) mass. $u_X$ is a scalar representing the amount of uncertainty.
-Lastly $a_X$ is a vector of a-priori belief mass, assigned to the elements of $X$. Each component
-of $b_X$ and $a_X$ must be between 0 and 1, and while $a_X$ is additive ($\sum_{x \in X} a_X(x) = 1$),
-$b_X$ is allowed to be sub-additive, where $u_X = 1 - \sum_{x \in X} b_X(x)$.
-Opinions can either be \emph{uncertain}, where $u_X > 0$, or \emph{dogmatic}, when $u_X = 0$.
-
-In the following sections we will describe the three kinds of opinions in Subjective Logic, starting
-with the most simple objects: binomial opinions.
-
-
-
-\subsection{Binomial Opinions}
-
-\subsection{Multinomial Opinions}
-
-\subsection{Hyper Opinions}
-
-\subsection{Operators}
 
 
 
 
 
-% Make this quick.
+
+\subsection{Subjective Opinions}
+
+The primary building blocks of Subjective Logic are
+objects called \emph{subjective opinions}. Given a frame of discernment $\Theta$, a subjective
+opinion over $\Theta$ is a 3-tuple consisting of the following elements:
+
+\begin{itemize}
+  \item A \emph{belief vector}, $b_\Theta$, of assigned belief mass that spans the \emph{reduced power set}
+    of $\Theta$. The reduced power set is defined as $R \left(\Theta\right) = 2^\Theta \setminus \lbrace \Theta, \emptyset \rbrace$.
+  \item A scalar, $u_\Theta$, that represents the unassigned belief mass.
+    $u_\Theta + \sum_{x \in R\left(\Theta\right)} b_\Theta\left(x\right) = 1$.
+  \item A vector of a-priori belief, $a_\Theta$, that spans the frame $\Theta$.
+\end{itemize}
+
+such that the following conditions hold:
+
+\begin{enumerate}
+  \item $\forall x \in R\left(\Theta\right), b_\Theta\left(x\right) \in \lbrack 0, 1\rbrack$
+  \item $\forall x \in \Theta, a_\Theta\left(x\right) \in \lbrack 0, 1\rbrack$
+  \item $u_\Theta \in \lbrack 0, 1\rbrack$
+  \item $u_\Theta + \sum_{x \in R\left(\Theta\right)} b_\Theta\left(x\right) = 1$
+  \item $\sum_{x \in \Theta} a_\Theta\left(x\right) = 1$
+\end{enumerate}
+
+Opinions are written as $\omega^A_\Theta = \langle b^A_\Theta, u^A_\Theta, a^A_\Theta \rangle$, where
+$A$ is the (optional) agent who holds that particular belief.
+
+Elements of $R\left(\Theta\right)$ such that $b_\Theta\left(x\right) > 0$ are called \emph{focal elements}.
+Subjective opinions where the focal elements are all singleton sets - that is, every focal element is
+simply an element of $\Theta$ - are refered to as \emph{multinomial opinions}. Multinomial opinions
+defined over frames of cardinality 2 are refered to as \emph{binomial opinions}. The most general of
+opinions, subjective opinions, are also refered to as \emph{hyper opinions}. Lastly, opinions can either
+be \emph{dogmatic}, when $u_\Theta$ is zero, or \emph{uncertain} otherwise.
+
+Binomial opinions have a special notation that is used to emphasize the binary nature of the frame of
+discernment. Given a frame $\Theta = \lbrace x, \lnot x \rbrace$, the binomial opinion of $x$ is written
+as $\omega_x = \langle b_x, d_x, u_x, a_x \rangle$, where
+
+\begin{itemize}
+  \item $b_x$ is the belief of event $x$ being true.
+  \item $d_x$ is the belief of event $x$ being false.
+  \item $u_x$ is the uncertainty of whether $x$ is true or false.
+  \item $a_x$ is the belief of $x$ being true prior to the collection of evidence.
+\end{itemize}
+
+
+
+\subsection{Subjective Logic Operators}
+
+
+
+
+
+
+
+
+
+
+
 
 \section{Functional Programming in Haskell}
-
-\subsection{Introduction}
 
 \emph{Haskell} is a strongly typed, non-strict, pure functional
 programming language \cite{hudak1992report} which was initially
@@ -136,96 +164,82 @@ means exhaustive in its treatment of Haskell. For readers who wish to
 learn Haskell in more depth, we suggest the book \emph{Real World
   Haskell}.
 
-\subsection{Functions}
-
-Functions in Haskell are written simply as equations:
-
-\begin{spec}
-increment n = n + 1
-\end{spec}
-
-The left hand side of the equation denotes the name of the function as well as the names of the
-functions formal parameters. Multiple parameters are separated by white space. For example:
+Functions in Haskell are written as equations, with parameters separated
+by white space. For example, the function to compute factorials can be
+written as
 
 \begin{spec}
-plus m n = m + n
+factorial 0 = 1
+factorial n = n * factorial (n - 1)
 \end{spec}
 
-Function application again uses white space. For example, to call the function \emph{plus} as we have
-defined it above, one would write
+All expressions in Haskell have \emph{types}. For example, the type of the literal
+5 is \emph{Int}. Syntactically this is expressed as \emph{5 :: Int}. The function
+\emph{factorial} above has the type \emph{factorial :: Int $\rightarrow$ Int}.
+
+Lists in Haskell are enclosed in square braces, and their elements must be of all
+the same type. As an example, the following is a valid list:
 
 \begin{spec}
-plus 4 5
+names :: [String]
+names = [''John'', ''Paul'', ''George'', ''Ringo'']
 \end{spec}
 
-Functions in Haskell take their arguments one at a time, which allows for them to be \emph{curried}, or
-partially applied. For example, the function \emph{increment} that we introduced previously can in fact
-be written more simply in terms of our function \emph{plus} like so:
+whereas the following is invalid:
 
 \begin{spec}
-increment = plus 1
+things = [5, ''seven'', 2/3]
 \end{spec}
 
-Since Haskell supports basic arithmetic operators, we can in fact rewrite the above two functions as
+Types in Haskell can be organized into \emph{Type Classes}, where each type in a
+type class must have certain required operations defined over it. For example, consider
+the following class:
 
 \begin{spec}
-plus = (+)
-increment = (+ 1)
+class Monoid n where
+    id  :: n
+    (<>) :: n -> n -> n
 \end{spec}
 
-All binary operators in Haskell can be converted into regular functions by surrounding them in brackets,
-and the definition of \emph{increment} above is an example of a \emph{slice}. Inversely, any binary function
-can be used as an infix operator by surrounding the function name in back-quotes. For example, it is
-common to see the Haskell function \emph{elem}, which returns TRUE if an element is contained in a list, and
-FALSE otherwise, used as an infix operator. The following program
+which states that a type $n$ satisfies the properties of being a \emph{Monoid} if there exists
+a element $id$ of type $n$, and there exists an operator for combining elements of type $n$.
+Unfortunately the additional requirement of associativity cannot be expressed in Haskell.
+Instances of the Monoid class can then be defined for individual types:
 
 \begin{spec}
-3 `elem` [1, 2, 3, 4, 5]
+instance Monoid Int where
+    id = 0
+    x <> y = x + y
 \end{spec}
 
-will return the result TRUE.
-
-\subsection{Lists}
-
-Lists of elements are a fundamental data structure in Haskell. They are created by enclosing elements of
-the same type in square brackets, like so:
+One type class in particular gets special attention in Haskell. Types that are instances of
+class \emph{Monad} are very popular in functional programming, and Haskell in particular. Monads
+are mathematical objects from \emph{category theory} that are prevalent throughout Haskell. Most
+importantly, Haskell uses monads to model imperative state [cite], which allows Haskell to read
+input from the user, and send output to the computer screen, while remaining a pure functional
+language. Types that are instances of \emph{Monad} require two operations to be present:
 
 \begin{spec}
-names = [``John'', ``Paul'', ``George'', ``Ringo'']
+class Monad m where
+    return :: a -> m a
+    (>>=)  :: m a -> (a -> m b) -> m b
 \end{spec}
 
-Items can be queried for membership by using the \emph{elem} function. Executing the program
-
-\begin{spec}
-``Jerry'' `elem` names
-\end{spec}
-
-will result in the value \emph{False}. Other useful operations on lists include: \emph{length}, which computes
-the length of the list; \emph{nub}, which removes duplicate elements from a list; and the $++$ operator, which
-concatenates two lists together.
-
-
-\subsection{Types}
-
-Every expression in Haskell must have a \emph{type}.
-
-
-\subsection{Type Classes}
-
-\subsection{Functors}
-
-\subsection{Applicative Functors}
-
-\subsection{Monads}
-
-\subsection{Combinators}
+The first function, \emph{return}, injects an object of type $a$ into an object of type $m a$, where
+$m$ is some monad. The second operator takes in an object of type $m a$ on the left hand side, and
+a function $f$ from $a$ to $m b$ on the right hand side, and returns an object of type $m b$.
+Informally, the operator unwraps the object of type $a$ from the object of type $m a$, and then applies
+the function to it to obtain a result.
 
 
 
 
+\section{Summary}
 
-
-
+In this chapter we briefly discussed the key ideas of decision support systems, followed by a brief
+introduction to Dempster-Shafer theory. We then introduced Subjective Logic and presented a brief
+overview of the Haskell programming language. In the next chapter we will present our
+research motivation, our thesis hypothesis, our research objectives, and our methodology.
 
 
 

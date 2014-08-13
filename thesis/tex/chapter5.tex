@@ -14,21 +14,100 @@ finally demonstrate the power of SLHS by showcasing some example applications.
 
 
 
-\section{Proofs of Termination}
+\section{Proof of Termination}
 
-In this section we will prove termination of our combinators and operators. That is,
-for each Subjective Logic expression of finite size, we will prove that our combinators
-will eventually terminate.
+In this section we will perform a termination analysis of the \emph{run} function. The
+run function takes in a subjective logic expression and an initial state, and returns
+either the computed value or an error message. We will prove that run terminates for
+subjective logic expressions of arbitrary length.
+
+Our strategy for proving termination is as follows: we utilize a function $|\cdot|$ that
+maps each subjective logic expression $e$ to the number of sub-expresssions contained in
+$e$, including $e$ itself. As \emph{run} recursively computes the values of the
+sub-expressions, we will show that the value of $|e|$ decreases at each step, concluding
+when $|e|$ is 1, and \emph{run} simply returns the final value. Therefore we can conclude
+that \emph{run} terminates because the set of ordinals is \emph{well-founded}, that is there
+cannot exist infinitely descending chains.
+
+\begin{lemma}
+  The \emph{return} function introduces a new sub-expression.
+\end{lemma}
+
+\begin{proof}
+  The function \emph{return} in Haskell has the following signature:
+
+  \begin{spec}
+    return :: Monad m => a -> m a
+  \end{spec}
+
+  That is, for any monad m, for every object $x$ of type $a$, \emph{return x} constructs
+  an object of type \emph{m a}. Since \emph{SLExpr} is a monad, \emph{return} constructs
+  a new subjective logic expression containing a single value. We will use this result to
+  assist us in showing that the \emph{run} function's measure decreases at every step.
+\end{proof}
+
+
 
 
 
 
 \begin{theorem}
-  For every equation $e$ that is representible in SLSH, $e$ terminates.
+  For every subjective logic expression $e = e_1 \cdot e_2 \cdot \dots \cdot e_k$, where $\cdot$
+  can be any binary subjective logic operator, the computation \emph{run e} terminates.
 \end{theorem}
 
 \begin{proof}
-  By induction on the length of $e$.
+  By induction on the length of $e$. If we can show that
+  $|run\,e_1 \cdot \dots \cdot e_k| < |e_1 \cdot \dots \cdot e_k \cdot e_k|$ for all $k \geq 0$, then
+  \emph{run} terminates.
+
+  Base Case $e = e_1$: In this case, $|e| = 1$, and since \emph{run} simply applies the initial
+  state to the function contained within $e$ without adding any new objects of type \emph{SLExpr},
+  in other words $|run\,e| = 0$, \emph{run e} terminates.
+
+  Inductive Hypothesis: Assume \emph{run} terminates for the expression $e = e_1 \cdot e_2 \cdot \dots \cdot e_k$.
+  Given the expression $e' = e \cdot e_{k+1}$, we must prove that $|run\,e'| < |e'|$.
+
+  Inductive Proof: Since we are adding exactly one new sub-expression to $e$ to form $e'$,
+  $|e'| = |e| + 1$. Now, all binary operators of SLHS essentially have the same form:
+
+  \begin{spec}
+    op e1 e2 = e1 >>= \e -> e2 >>= \e' -> return (combine e e')
+  \end{spec}
+
+  That is, we unpack each expression and then combine them together in some meaningful way to produce
+  a new value of type \emph{SLExpr}. Let us analyze the first monadic bind operator.
+
+  \begin{spec}
+    e1 >>= \e -> e2 >>= \e' -> return (combine e e')
+  \end{spec}
+
+  first calls \emph{run} on $e1$, then passes the result of that computation to the lambda function
+
+  \begin{spec}
+    \e -> e2 >>= \e' -> return (combine e e')
+  \end{spec}
+
+  and calls \emph{run} on the result. Inside the nested lambda expression, the second monadic bind operator
+  calls \emph{run} on $e2$, passing the result into the lambda expression
+
+  \begin{spec}
+    \e' -> return (combine e e')
+  \end{spec}
+
+  and then invoking \emph{run} on \emph{that} result. The innermost invocation of \emph{run} makes a call
+  to \emph{return}, thus inserting a new object of type \emph{SLExpr}. Combined together with the two
+  invocations of \emph{run} on the input expressions, we have
+
+  \begin{equation*}
+  \begin{split}
+    |run\,e \cdot e_{k + 1}|& = |run\,e| + |run\,e_{k+1}| + |return\,x| \\
+                     & = |run\,e| + 0 + 1 \\
+                     & < |e| + 1 \\
+                     & = |e \cdot e_{k+1}|
+  \end{split}
+  \end{equation*}
+
 \end{proof}
 
 
@@ -38,41 +117,74 @@ will eventually terminate.
 
 \section{Analysis of Complexity}
 
-In this section we will analyze the computational complexity of the Subjective Logic
-operators that are available in SLHS. The time taken for each operator to compute its
-output will be analyzed with respect to the cardinality of the frames of discernment
-associated with each input opinion. With this in mind, we will not analyze the
-binomial operators, as binomial opinions always have a fixed cardinality, and thus
-an analysis based on frames of varying size would be meaningless.
+In this section we will analyze the time complexity of a few of the SLHS operators. We will initially
+analyze the complexity of belief constraining to demonstrate how computationally expensive it is to
+work with hyper opinions, which are defined over the reduced powerset of the frame of discernment.
+Next we will analyze the complexity of belief fission, an operator defined over multinomial opinions.
+Lastly, we will analyze the complexity of multinomial multiplication.
+
+We do not claim that the implementations of the operators are optimal. In fact, our implementations
+are very sensitive to our choice of data structure for representing belief assignments: the red-black
+tree. Iterating through the entire belief mass assignment takes $O (n)$ time, but finding an individual
+element takes $O (\log n)$ time. Alternative representations may possibly be more efficient, and we leave
+that for future work.
+
+
+\begin{theorem}
+  Belief constraining has time complexity $O ((2^n - 2)^3 \log (2^n - 2))$,
+  where $n$ is the cardinality of the frame of discernment.
+\end{theorem}
+
+\begin{proof}
+  Since belief constraining is defined over hyper opinions, let $m = 2^n - 2$ be the cardinality
+  of the reduced powerset of the frame. Computing the \emph{conflict} requires finding all elements of
+  the powerset that share overlap and adding together their assigned belief masses. This operation
+  takes $O (m^2)$ time for the iteration, and $O (\log m)$ for looking up the belief masses. Therefore
+  conflict takes $O (m^2 \log m)$ time.
+
+  Computing the new belief mass requires computing the \emph{Harmony} for every element of the powerset.
+  Computing the harmony takes $O (m^2)$ time per element, resulting in a time complexity of $O (m^3 \log m)$
+  for computing the new belief mass.
+
+  Computing the uncertainty requires computing the conflict, which we have already computed as a part of
+  the new belief mass.
+
+  Atomicity requires iterating over the entire reduced powerset, and thus requires $O (m \log m)$ time.
+
+  Therefore the total time complexity for belief constraining is
+  $O (m^3 \log m + m^2 \log m + m \log m) = O (m^3 \log m) = O ((2^n - 2)^3 \log (2^n - 2))$.
+\end{proof}
+
 
 
 
 
 
 \begin{theorem}
-  Hypernomial abduction has time complexity $O (n log n)$.
+  Multinomial fission has time complexity $O (n)$, where $n$ is the cardinality of the frame of discernment.
 \end{theorem}
 
 \begin{proof}
-  Immediate.
+  Computing the normalizing constant takes $O (n)$ time. Since computing the new beliefs and uncertainties
+  requires iterating over each element of the frame of discernment, each takes $O (n)$ time. Therefore, the
+  time complexity for fission is $O (n)$.
 \end{proof}
+
+
+
+
 
 
 \begin{theorem}
-  Multinomial fission has time complexity $O (n log n)$.
+  Multinomial multiplication has time complexity $O (m \log m \times n \log n)$.
 \end{theorem}
 
 \begin{proof}
-  Immediate.
-\end{proof}
-
-
-\begin{theorem}
-  Multinomial multiplication has time complexity $O (m \times n)$.
-\end{theorem}
-
-\begin{proof}
-  Immediate.
+  The \emph{expect x y} function takes $O (\log m + \log n)$ time, since it needs to perform
+  lookups on each frame. Computing the uncertainty takes $O (m \log m \times n \log n)$ time,
+  computing the new atomicity takes $O (m \log m \times n \log n)$ time, and computing the new
+  belief also takes $O (m \log m \times n \log n)$ time. Therefore the entire time complexity is
+  $O (m \log m \times n \log n)$.
 \end{proof}
 
 
@@ -81,15 +193,48 @@ an analysis based on frames of varying size would be meaningless.
 
 
 
-\section{Leveraging the Type System}
+\section{Use of Haskell's Type System}
+
+In this section we will discuss how SLHS leverages Haskell's type system to catch many errors
+at compile time, instead of at run time. With SLHS we have taken the motto of \emph{catch what we
+can at compile time, report what we must at run time}. There are certain properties of well-formed
+Subjective Logic expressions that can only be caught at run time, such as
+
+\begin{itemize}
+  \item the inputs to the binomial addition operator are subsets of the same frame
+    of discernment.
+  \item the inputs to the transitive discounting operator have different belief
+    owners.
+  \item the subset relation required for binomial subtraction is satisfied.
+\end{itemize}
+
+For other issues however, such as restricting addition to work on binomial opinions only, we can
+leverage Haskell's strong typing to stop those invalid expressions from even compiling.
+
+Consider the type signature for the binomial addition operator:
+
+\begin{spec}
+(+!) :: (ToBinomial op1, ToBinomial op2)
+       => SLExpr h a (op1 h (F.Subframe a))
+       -> SLExpr h a (op2 h (F.Subframe a))
+       -> SLExpr h a (Binomial h (F.Subframe a))
+\end{spec}
+
+What this tells us is that addition takes in two parameters, \emph{op1} and \emph{op2}, each wrapped in
+the \emph{SLExpr} monad. These two opinion types must be convertible to binomials, as they must belong to
+the type class \emph{ToBinomial}. Secondly, since opinion types are parameterized over the type of elements
+contained within the associated frame of discernment, we enforce that those elements are themselves
+\emph{subframes}. We can ensure that addition only happens between types convertible to binomial opinions
+and whose frames of discernment are themselves frames. We cannot check at compile time whether the two
+frames are paritions of the same underlying frame, but we can still catch quite a bit of obvious mistakes.
 
 
 
 
+\section{Example Computations}
 
-\section{Example Applications}
-
-
+In this section we will demonstrate the use of SLHS on a selection of examples provided in the
+Subjective Logic literature.
 
 
 

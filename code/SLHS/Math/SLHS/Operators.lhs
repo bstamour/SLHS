@@ -539,7 +539,6 @@ m_times' (Multinomial bx ux ax _) (Multinomial by uy ay _) =
     expect x y = (V.value bx x + V.value ax x * ux) *
                  (V.value by y + V.value ay y * uy)
 
-    -- Be careful with these. Think this through...
     xKeys = nub $ V.focals bx ++ V.focals ax
     yKeys = nub $ V.focals by ++ V.focals ay
 \end{code}
