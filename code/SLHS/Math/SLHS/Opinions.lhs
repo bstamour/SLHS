@@ -27,6 +27,7 @@ import qualified Math.SLHS.Vector as V
 import qualified Math.SLHS.Frame as F
 
 import qualified Data.Set as S
+import Control.Monad
 \end{code}
 }
 
@@ -44,7 +45,7 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              , bDisbelief   :: Rational
                              , bUncertainty :: Rational
                              , bAtomicity   :: Rational
-                             , bMetaData    :: MetaData h (F.BinaryFrame a)
+                             , bMetaData    :: MetaData h a
                              }
 \end{code}
 
@@ -58,7 +59,7 @@ syntax:
 
 \begin{code}
 data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
-                             , mdFrame  :: f
+                             , mdFrame  :: F.Frame f
                              }
 \end{code}
 
@@ -94,12 +95,11 @@ to a base rate, and a meta-data object.
 
 
 \begin{code}
-data Multinomial h a =
-  Multinomial { mBelief      :: BeliefVector a
-              , mUncertainty :: Rational
-              , mBaseRate    :: BaseRateVector a
-              , mMetaData    :: MetaData h (F.Frame a)
-              }
+data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
+                                   , mUncertainty :: Rational
+                                   , mBaseRate    :: BaseRateVector a
+                                   , mMetaData    :: MetaData h a
+                                   }
 \end{code}
 
 Just as in the case of binomials, we introduce a type class to represent types that can be
@@ -113,6 +113,9 @@ class ToMultinomial op where
 
 instance ToMultinomial Multinomial where
   toMultinomial = id
+
+instance ToMultinomial Binomial where
+  toMultinomial = undefined
 \end{code}
 
 
@@ -123,7 +126,7 @@ instance ToMultinomial Multinomial where
 data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
                        , hUncertainty :: Rational
                        , hBaseRate    :: BaseRateVector a
-                       , hMetaData    :: MetaData h (F.Frame a)
+                       , hMetaData    :: MetaData h a
                        }
 
 class ToHyper op where
@@ -131,6 +134,9 @@ class ToHyper op where
 
 instance ToHyper Hyper where
   toHyper = id
+
+instance ToHyper Binomial where
+  toHyper = undefined
 \end{code}
 
 
@@ -145,11 +151,9 @@ frame, respectively.
 
 \begin{code}
 class Opinion op h a where
-  type FrameType op h a       :: *
   type ExpectationType op h a :: *
-
   expectation :: op h a -> ExpectationType op h a
-  frame       :: op h a -> FrameType op h a
+  getFrame       :: op h a -> F.Frame a
 \end{code}
 
 In order to accomodate a function such as probability expectation that
@@ -161,37 +165,50 @@ opinion types follows.
 
 \begin{code}
 instance Opinion Binomial h a where
-  type FrameType Binomial h a       = F.BinaryFrame a
   type ExpectationType Binomial h a = Rational
 
   expectation (Binomial b d u a _) = b + a * u
-  frame (Binomial _ _ _ _ (MetaData _ frm)) = frm
-
---deriving instance Eq (FrameType Binomial h a)
-
-
+  getFrame (Binomial _ _ _ _ (MetaData _ frm)) = frm
 
 instance Opinion Multinomial h a where
-  type FrameType Multinomial h a       = F.Frame a
   type ExpectationType Multinomial h a = V.Vector a
 
   expectation _ = undefined
-  frame (Multinomial _ _ _ (MetaData _ frm)) = frm
-
-
+  getFrame (Multinomial _ _ _ (MetaData _ frm)) = frm
 
 instance Opinion Hyper h a where
-  type FrameType Hyper h a       = F.Frame a
   type ExpectationType Hyper h a = V.Vector a
 
   expectation _ = undefined
-  frame (Hyper _ _ _ (MetaData _ frm)) = frm
+  getFrame (Hyper _ _ _ (MetaData _ frm)) = frm
 \end{code}
+
+
+\subsection{Accessing Opinions}
+
+\begin{code}
+getBinomial :: h -> Int -> SLExpr h a (Binomial h a)
+getBinomial = undefined
+\end{code}
+
+\begin{code}
+getMultinomial :: h -> Int -> SLExpr h a (Multinomial h a)
+getMultinomial = undefined
+\end{code}
+
+\begin{code}
+getHyper :: h -> Int -> SLExpr h a (Multinomial h a)
+getHyper = undefined
+\end{code}
+
+
+
+
+
 
 
 \subsection{Belief Coarsening}
 \label{sec:belief-coarsening}
-
 
 Coarsening is an operation that takes a hyper opinion and converts it
 into a binomial opinion. The inputs are an arbitrary hyper opinion and
@@ -206,25 +223,25 @@ up and assigned to the elements of the new frame. The resulting belief
 mass assignment preserves additivity, and thus the new binomial
 opinion is valid. The operation for coarsening is given below.
 
-
 \begin{code}
-coarsen :: (ToHyper op, Ord a) => op h a -> F.Subframe a -> Binomial h a
-coarsen op theta = Binomial b d u a undefined
+coarsen :: (ToHyper op, Ord a) => SLExpr h a (op h a)
+           -> F.Subframe a -> SLExpr h a (Binomial h (F.Subframe a))
+coarsen op theta = liftM2 coarsen' op (return theta)
   where
-    b = sumSnd . V.elemsWhere subset         $ belief
-    d = sumSnd . V.elemsWhere emptyIntersect $ belief
-    u = 1 - b - d
-    a = sum . F.toList . F.map baseRate      $ theta
+    coarsen' op theta = Binomial b d u a undefined
+      where
+        b = sumSnd . V.elemsWhere subset         $ belief
+        d = sumSnd . V.elemsWhere emptyIntersect $ belief
+        u = 1 - b - d
+        a = sum . F.toList . F.map baseRate      $ theta
 
-    belief   = hBelief . toHyper $ op
-    baseRate = V.value (hBaseRate . toHyper $ op)
+        belief   = hBelief . toHyper $ op
+        baseRate = V.value (hBaseRate . toHyper $ op)
 
-    sumSnd         = sum . map snd
-    subset         = (`F.isSubsetOf` theta)
-    emptyIntersect = F.isEmpty . (`F.intersection` theta)
-
+        sumSnd         = sum . map snd
+        subset         = (`F.isSubsetOf` theta)
+        emptyIntersect = F.isEmpty . (`F.intersection` theta)
 \end{code}
-
 
 As a convenience, we also offer a function to coarsen a hyper opinion,
 not by an explicitly given subframe, but by those elements of the frame
@@ -233,27 +250,17 @@ discernment consisting of the natural numbers. Using the following
 function, one can coarsen the frame into the binary frame
 $\lbrace \mbox{evens}, \lnot \mbox{evens} \rbrace$.
 
-
 \begin{code}
-coarsenBy :: (ToHyper op, Ord a) => op h a -> (a -> Bool) -> Binomial h a
-coarsenBy op pred = coarsen op theta
-  where
-    (theta, _) = F.partition pred . frame . toHyper $ op
+coarsenBy :: (ToHyper op, Ord a) => SLExpr h a (op h a)
+             -> (a -> Bool) -> SLExpr h a (Binomial h (F.Frame a))
+coarsenBy op pred = op >>= \op' ->
+  let (theta, _) = F.partition pred . getFrame . toHyper $ op'
+  in  coarsen op theta
 \end{code}
 
 
 
 
-\begin{code}
-{-
-sameFrame :: (Opinion op h a)
-             => SLExpr h a (op h a) -> SLExpr h a (op h a)
-             -> SLExpr h a Bool
-sameFrame op1 op2 = do frm1 <- fmap frame op1
-                       frm2 <- fmap frame op2
-                       return (frm1 == frm2)
--}
-\end{code}
 
 
 \end{document}

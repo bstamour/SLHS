@@ -97,7 +97,7 @@ Expressions in Subjective Logic are represented as functions from some input
 state to some output, such as an opinion, or a rational number.
 
 \begin{code}
-newtype SLExpr h a t = SLExpr (SLState h a -> (SLState h a, SLVal t))
+newtype SLExpr h a t = SLExpr (SLState h a -> SLVal (SLState h a, t))
 \end{code}
 
 The \emph{SLExpr} type is parameterized over three types:
@@ -126,18 +126,28 @@ discernment and the belief mass assignments over those frames for each belief
 holder.
 
 \begin{code}
-data SLState h a = SLState
-                   { slsFrames     :: [F.Frame a]
-                   , slsBeliefVecs :: M.Map h (BeliefVector a)
-                   }
+data SLState h a = SLState { slsFrames     :: [F.Frame a]
+                           , slsBeliefVecs :: M.Map (Holder h) (BeliefVector a)
+                           }
 \end{code}
+
+\begin{code}
+makeState :: Ord a => [h] -> [[a]] -> [(h, BeliefVector a)] -> SLVal (SLState h a)
+makeState holders frames belVecs = return $ SLState frames' belVecs'
+  where
+    frames'  = map F.fromList frames
+    belVecs' = undefined
+\end{code}
+
+
+
 
 Finally, we provide a function \emph{run} that takes as input a Subjective Logic
 expression and an initial state, and returns the updated state along with the value
 computed by the expression.
 
 \begin{code}
-run :: SLExpr h a t -> SLState h a -> (SLState h a, SLVal t)
+run :: SLExpr h a t -> SLState h a -> SLVal (SLState h a, t)
 run (SLExpr f) st = f st
 \end{code}
 
@@ -150,11 +160,13 @@ applicative, or functorial style.
 
 \begin{code}
 instance Monad (SLExpr h a) where
-  return x = SLExpr $ \st -> (st, SLVal x)
-  ma >>= f = SLExpr $ \st -> let (st', a) = run ma st
-                             in case a of
-                               Err e   -> (st', Err e)
-                               SLVal x -> run (f x) st'
+  return x = SLExpr $ \st -> return (st, x)
+
+  ma >>= f = SLExpr $ \st -> case (run ma st) of
+    Err e          -> Err e
+    SLVal (st', a) -> let mb = f a in case run mb st' of
+      Err e   -> Err e
+      SLVal r -> SLVal r
 
 instance Applicative (SLExpr h a) where
   pure = return
@@ -163,6 +175,8 @@ instance Applicative (SLExpr h a) where
 instance Functor (SLExpr h a) where
   fmap = liftA
 \end{code}
+
+
 
 
 \end{document}

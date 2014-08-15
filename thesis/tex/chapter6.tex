@@ -6,14 +6,32 @@
 \label{chap:conclusion}
 
 In this chapter we will present our concluding remarks, as well as discuss possible avenues for
-future improvements to the SLHS library.
-
-
-
+future improvements to the SLHS library. We will start with our concluding remarks, and then
+present areas for future work.
 
 
 
 \section{Conclusion}
+
+In this thesis we have presented \emph{SLHS: Subjective Logic in Haskell}, a library of
+combinators for constructing and evaluating expressions in Subjective Logic. Subjective Logic
+is still in its infancy, and thus the landscape of available tools for working with it is
+very scarce. SLHS was designed to combat this scarcity by providing a simple workbench of
+tools for programmers and researchers. Alongside the library itself, we have presented a
+termination analysis and have shown that the \emph{run} function - the function that evaluates
+the Subjective Logic expressions - terminates for expressions of arbitrary length. Also we have
+analyzed the complexity of a handful of the operators in order to show how they behave as the
+frames of discernment grow in size.
+
+Most importantly, we have shown that through the use of monads in the Haskell programming language,
+and strong typing, it is indeed possible to construct a Subjective Logic library that is type-safe,
+efficient, and compositional. We use the type system to catch errors before they are even run,
+we have shown the operators to be efficient, and through the nature of the state monad that underlies
+the implementation, our library is compositional.
+
+In the next section we will provide details for future work on SLHS.
+
+
 
 
 
@@ -26,8 +44,23 @@ In this section we will discuss areas for future experimentation or improvement 
 
 \subsection{Modifications to the Vector Representation}
 
-% Maybe using a sorted vector instead of a red black tree will be faster
-% on real hardware.
+In our implementation of SLHS we chose to represent belief vectors as red-black trees in
+order to avoid storing the entire frame of discernment in memory: elements of the frame
+that have zero belief mass assigned to them are simply not stored in the tree. While this
+representation has some nice theoretical properties, such as the ability to map functions
+across the vector in $O (n)$ time, and the ability to determine whether an element is or is
+not a focal element in $O (\log n)$ time, we believe that improvements in the actual runtime
+of the library may be achieved by switching to using a contiguous array.
+
+
+
+
+
+
+
+
+
+
 
 
 

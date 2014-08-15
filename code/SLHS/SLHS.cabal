@@ -18,13 +18,12 @@ cabal-version:       >=1.10
 
 library
   exposed-modules: Math.SLHS
-
-  other-modules: Math.SLHS.Types
-               , Math.SLHS.Vector
-               , Math.SLHS.Frame
-               , Math.SLHS.Opinions
-               , Math.SLHS.Operators
-               , Math.SLHS.Extensions
+                 , Math.SLHS.Types
+                 , Math.SLHS.Vector
+                 , Math.SLHS.Frame
+                 , Math.SLHS.Opinions
+                 , Math.SLHS.Operators
+                 , Math.SLHS.Extensions
 
 
   -- other-extensions:

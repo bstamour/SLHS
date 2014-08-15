@@ -57,6 +57,54 @@ decision-maker with his or her task.
 
 \section{The Dempster Shafer Theory of Evidence}
 
+Dempster-Shafer Theory is a mathematical theory of evidence that allows for the combination of
+evidence from different sources to arrive at a level of belief \cite{shafer1976mathematical}.
+
+Let $X$ be a \emph{frame of discernment},
+a set of mutually atomic entities. A \emph{basic belief assignment} over X is a function $m$ from the
+powerset of X to $[0, 1]$. A basic belief assignment assigns \emph{belief mass} to subsets of the frame
+of discernment. Basic belief assignments are additive: $\sum_{x \in 2^X} m(x) = 1$,
+and no mass is assigned to the empty set: $m(\emptyset) = 0$.
+
+Given a subset A of the frame of discernment X and a basic belief assignment $m$, the precise probability
+of A can be bounded above and below by its \emph{belief} and its \emph{plausibility}:
+
+\begin{itemize}
+  \item $bel(A) = \sum_{B \subseteq A} m(B)$
+  \item $pl(A) = 1 - bel(\overline{A})$
+\end{itemize}
+
+Given two basic belief assignments $m_1$ and $m_2$ representing two pieces of evidence related to the
+same frame of discernment $X$, we can combine them together using \emph{Dempster's Rule of Combination}. The
+\emph{joint mass} of $m_1$ and $m_2$, denoted as $m_{1,2}$, is calculated via the following equation:
+
+\begin{equation*}
+  \begin{split}
+    m_{1,2}\left(\emptyset\right) & = 0 \\
+    m_{1,2}\left(A\right)         & = \left( m_1 \otimes m_2\right) = \frac{1}{1 - K} \sum_{B \cap C = A \neq \emptyset} m_1(B) m_2(C)
+  \end{split}
+\end{equation*}
+
+where $K$, the amount of conflict between $m_1$ and $m_2$, is $\sum_{B \cap C = \emptyset} m_1(B) m_2(C)$. While
+fairly straight forward to calculate, it has been shown by Zadeh \cite{zadeh1979validity, zadeh1986simple}
+that Dempster's Rule generates counter-intiutive results when there is a high degree of
+conflict between the two belief masses, and Josang and Pope claimed that Dempster's Rule actually
+represents a method of preference combination while serving as an approximation for other forms of belief
+combination \cite{josang2012dempster}. Subjective Logic, which we will introduce next, contains several
+operators for combining beliefs together \cite{josang2012interpretation, josang2010cumulative, josang2009fission, josang2009cumulative},
+and thus offers more tools to the user than Dempster-Shafer theory.
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -70,7 +118,9 @@ decision-maker with his or her task.
 \section{Subjective Logic}
 
 Subjective Logic is a newly emergent probabilistic logic calculus that supports reasoning
-under uncertainty \cite{josang2001logic}.
+under uncertainty \cite{josang2001logic}. In this section we will briefly introduce the
+core objects of Subjective Logic: subjective opinions, as well as some of the operators that
+allow for the construction of complex expressions.
 
 
 
@@ -110,7 +160,27 @@ Subjective opinions where the focal elements are all singleton sets - that is, e
 simply an element of $\Theta$ - are refered to as \emph{multinomial opinions}. Multinomial opinions
 defined over frames of cardinality 2 are refered to as \emph{binomial opinions}. The most general of
 opinions, subjective opinions, are also refered to as \emph{hyper opinions}. Lastly, opinions can either
-be \emph{dogmatic}, when $u_\Theta$ is zero, or \emph{uncertain} otherwise.
+be \emph{dogmatic}, when $u_\Theta$ is zero, or \emph{uncertain} otherwise. The six classes of subjective
+opinions are summarized in table \ref{tbl:sl-opinions}.
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{ r|c|c|c| }
+      \multicolumn{1}{r}{}
+      &  \multicolumn{1}{c}{$|\Theta| = 2$}
+      &  \multicolumn{1}{c}{$|\Theta| > 2$}
+      &  \multicolumn{1}{c}{$|R(\Theta)| = 2^{|\Theta|} - 2$} \\
+      \cline{2-4}
+      $u > 0$ & Uncertain Binomial & Uncertain Multinomial & Uncertain Hyper \\
+      \cline{2-4}
+      $u = 0$ & Dogmatic Binomial & Dogmatic Multinomial & Dogmatic Hyper \\
+      \cline{2-4}
+    \end{tabular}
+  \end{center}
+
+  \caption{Subjective Logic Opinions}
+  \label{tbl:sl-opinions}
+\end{table}
 
 Binomial opinions have a special notation that is used to emphasize the binary nature of the frame of
 discernment. Given a frame $\Theta = \lbrace x, \lnot x \rbrace$, the binomial opinion of $x$ is written
@@ -123,11 +193,36 @@ as $\omega_x = \langle b_x, d_x, u_x, a_x \rangle$, where
   \item $a_x$ is the belief of $x$ being true prior to the collection of evidence.
 \end{itemize}
 
+Opinions in Subjective Logic can be mapped to and from probability distributions from Probability
+Theory. Binomial opinions correspond to \emph{beta distributions}, multinomial opinions correspond
+to \emph{dirichlet distributions}, and hyper opinions correspond to \emph{hyper-dirichlet distributions}.
+
+
+
 
 
 \subsection{Subjective Logic Operators}
 
+Subjective Logic includes a wealth of operators for working with all kinds of opinions. It includes
+the traditional binary logic operators such as \emph{and}, \emph{or}, and \emph{not}, which are
+designed to incorporate uncertainty, as well as the set-theoretic operators \emph{union} and
+\emph{set-difference}. In the case of absolute belief ($b_x = 1$) or disbelief ($d_x =1$), these
+binomial operators behave the same as they would in traditional logic.
 
+Subjective logic also includes operators for working with multinomial opinions, such as
+cumulative and averaging \emph{fusion} and \emph{unfusion}. These operators allow for combining
+multinomial opinions from different sources. Subjective Logic also includes operators for performing
+transitive trust analysis, where an agent A has an opinion of agent B, and agent B has an opinion of
+the event X. Agent A, through its opinion of agent B, can derive an opinion of event X by using one
+of several \emph{discounting} operators. Subjective Logic also includes an operator for
+\emph{belief constraining}, which can be used when multiple agents need to reach a consensus opinion.
+This operator is in fact equivalent in meaning to Dempster's rule of combination \cite{josang2012dempster}.
+
+Lastly, Subjective Logic also includes operators for performing uncertain reasoning. It includes
+\emph{deduction} and \emph{abduction} operators for subjective opinions, thereby allowing Subjective
+Logic to be used for intelligence analysis \cite{pope2005analysis},
+bayesian network analysis \cite{josang2008conditional}, and other actions that
+require reasoning when uncertainty is present.
 
 
 
@@ -230,6 +325,8 @@ $m$ is some monad. The second operator takes in an object of type $m a$ on the l
 a function $f$ from $a$ to $m b$ on the right hand side, and returns an object of type $m b$.
 Informally, the operator unwraps the object of type $a$ from the object of type $m a$, and then applies
 the function to it to obtain a result.
+
+
 
 
 

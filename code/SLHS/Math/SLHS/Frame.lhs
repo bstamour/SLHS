@@ -96,6 +96,9 @@ map f (Frame s) = Frame (S.map f s)
 
 toList :: Frame a -> [a]
 toList (Frame s) = S.toList s
+
+fromList :: Ord a => [a] -> Frame a
+fromList xs = Frame $ S.fromList xs
 \end{code}
 
 
