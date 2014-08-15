@@ -135,6 +135,9 @@ class ToHyper op where
 instance ToHyper Hyper where
   toHyper = id
 
+instance ToHyper Multinomial where
+  toHyper = undefined
+
 instance ToHyper Binomial where
   toHyper = undefined
 \end{code}

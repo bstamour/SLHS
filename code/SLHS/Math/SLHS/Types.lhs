@@ -23,6 +23,17 @@ import qualified Data.Map as M
 \begin{code}
 type BeliefVector a = V.Vector a
 type BaseRateVector a = V.Vector a
+
+makeBeliefVector :: h -> [(a, Rational)]
+                    -> M.Map h (BeliefVector (F.Subframe a))
+makeBeliefVector = undefined
+
+makeBeliefVectorH :: h -> [([a], Rational)]
+                     -> M.Map h (BeliefVector (F.Subframe a))
+makeBeliefVectorH = undefined
+
+makeBaseRateVector :: h -> [(a, Rational)] -> M.Map h (BaseRateVector a)
+makeBaseRateVector = undefined
 \end{code}
 }
 
@@ -126,17 +137,26 @@ discernment and the belief mass assignments over those frames for each belief
 holder.
 
 \begin{code}
-data SLState h a = SLState { slsFrames     :: [F.Frame a]
-                           , slsBeliefVecs :: M.Map (Holder h) (BeliefVector a)
-                           }
+data SLState h a =
+  SLState
+  { slsFrames     :: [F.Frame a]
+  , slsBeliefVecs :: M.Map (F.Frame a) (M.Map (Holder h)
+                                        (BeliefVector (F.Subframe a)))
+  , slsBaseRateVecs :: M.Map (F.Frame a) (M.Map (Holder h)
+                                          (BaseRateVector a))
+  }
 \end{code}
 
 \begin{code}
-makeState :: Ord a => [h] -> [[a]] -> [(h, BeliefVector a)] -> SLVal (SLState h a)
-makeState holders frames belVecs = return $ SLState frames' belVecs'
+makeState :: Ord a => [h] -> [[a]]
+             -> [([a], [M.Map h (BeliefVector (F.Subframe a))])]
+             -> [([a], [M.Map h (BaseRateVector a)])]
+             -> SLVal (SLState h a)
+makeState holders frames belVecs aVecs = return $ SLState frames' belVecs' aVecs'
   where
     frames'  = map F.fromList frames
     belVecs' = undefined
+    aVecs'   = undefined
 \end{code}
 
 
