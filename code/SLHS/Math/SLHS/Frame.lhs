@@ -26,7 +26,7 @@ performance reasons, or for portability.
 We first introduce a new type representing a frame of discernment:
 
 \begin{code}
-newtype Frame a = Frame (S.Set a) deriving (Eq, Ord)
+newtype Frame a = Frame (S.Set a) deriving (Eq, Ord, Show)
 \end{code}
 
 By declaring this type using Haskell's \emph{newtype} keyword, we are
@@ -91,6 +91,9 @@ partitionMany [] frm = [frm]
 partitionMany (p:ps) frm = let (f1, f2) = partition p frm
                            in f1 : partitionMany ps f2
 
+size :: Frame a -> Int
+size (Frame s) = S.size s
+
 map :: (Ord a, Ord b) => (a -> b) -> Frame a -> Frame b
 map f (Frame s) = Frame (S.map f s)
 
@@ -99,6 +102,9 @@ toList (Frame s) = S.toList s
 
 fromList :: Ord a => [a] -> Frame a
 fromList xs = Frame $ S.fromList xs
+
+member :: Ord a => a -> Frame a -> Bool
+member x (Frame s) = x `S.member` s
 \end{code}
 
 

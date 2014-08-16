@@ -31,7 +31,7 @@ import qualified Data.Map as M
 We start with the definition of the Vector type.
 
 \begin{code}
-newtype Vector a = Vector { unVec :: M.Map a Rational }
+newtype Vector a = Vector { unVec :: M.Map a Rational } deriving Show
 \end{code}
 
 Next we introduce some functions for converting belief vectors

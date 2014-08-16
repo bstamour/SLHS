@@ -55,6 +55,7 @@ yet "imaginary" belief holders such as "the consensus of agents A, B and C."
 data Holder a = Holder a
               | Discount (Holder a) (Holder a)
               | Consensus (Holder a) (Holder a)
+              deriving (Eq, Ord, Show)
 \end{code}
 
 
@@ -63,7 +64,7 @@ data Holder a = Holder a
 Values in SLHS are represented by a sum type:
 
 \begin{code}
-data SLVal a = SLVal a | Err String
+data SLVal a = SLVal a | Err String deriving Show
 \end{code}
 
 Objects of type \emph{SLVal a} either contain a value of type \emph{a}, by virtue of the
@@ -94,10 +95,6 @@ in Haskell must start with a lower case letter, we provide \emph{err}, just for 
 uniformity. Programs that use \emph{err} can also freely use the \emph{Err} data constructor
 without any loss in functionality.
 
-\begin{code}
-err :: String -> SLVal a
-err = Err
-\end{code}
 
 
 
@@ -144,20 +141,45 @@ data SLState h a =
                                         (BeliefVector (F.Subframe a)))
   , slsBaseRateVecs :: M.Map (F.Frame a) (M.Map (Holder h)
                                           (BaseRateVector a))
-  }
+  } deriving (Show)
 \end{code}
 
+
+
+
+
+\ignore{
 \begin{code}
 makeState :: Ord a => [h] -> [[a]]
-             -> [([a], [M.Map h (BeliefVector (F.Subframe a))])]
-             -> [([a], [M.Map h (BaseRateVector a)])]
+             -> [([a], [(h, [([a], Rational)])])]
+             -> [([a], [(h, [(a, Rational)])])]
              -> SLVal (SLState h a)
 makeState holders frames belVecs aVecs = return $ SLState frames' belVecs' aVecs'
   where
     frames'  = map F.fromList frames
+
     belVecs' = undefined
-    aVecs'   = undefined
+
+    aVecs'   = M.empty
+
+
 \end{code}
+}
+
+
+
+
+
+
+
+
+\ignore{
+\begin{code}
+getState :: SLExpr h a (SLState h a)
+getState = SLExpr $ \s -> return (s, s)
+\end{code}
+}
+
 
 
 
@@ -196,6 +218,14 @@ instance Functor (SLExpr h a) where
   fmap = liftA
 \end{code}
 
+
+
+
+
+\begin{code}
+err :: String -> SLExpr h a t
+err e = SLExpr $ \_ -> Err e
+\end{code}
 
 
 

@@ -27,6 +27,7 @@ import qualified Math.SLHS.Vector as V
 import qualified Math.SLHS.Frame as F
 
 import qualified Data.Set as S
+import qualified Data.Map as M
 import Control.Monad
 \end{code}
 }
@@ -41,27 +42,32 @@ of discernment it is defined over. In code, the binomial opinion looks
 like the following:
 
 \begin{code}
+
 data Binomial h a = Binomial { bBelief      :: Rational
                              , bDisbelief   :: Rational
                              , bUncertainty :: Rational
                              , bAtomicity   :: Rational
-                             , bMetaData    :: MetaData h a
-                             }
+                             , bHolder      :: Holder h
+                             , bFrame       :: F.Frame a
+                             } deriving Show
 \end{code}
+
+\ignore{
+\begin{code}
+data Partition h a = Partition { pBelief      :: Rational
+                               , pDisbelief   :: Rational
+                               , pUncertainty :: Rational
+                               , pAtomicity   :: Rational
+                               , pHolder      :: Holder h
+                               , pFrame       :: (F.Subframe a, F.Subframe a)
+                               } deriving Show
+\end{code}
+}
 
 Here we use Haskell's \emph{record syntax} to define the data constructor.
 Haskell automatically creates the top-level functions \emph{bBelief},
 \emph{bDisbelief}, \emph{bUncertainty}, \emph{bAtomicity}, and
 \emph{bMetaData} that provide access to the "members" of the record.
-
-The meta-data associated with the opinion is also defined using the record
-syntax:
-
-\begin{code}
-data MetaData h f = MetaData { mdHolder :: Maybe (Holder h)
-                             , mdFrame  :: F.Frame f
-                             }
-\end{code}
 
 We also introduce a special \emph{type class} called \emph{ToBinomial}
 which allows us to define a range of types that can be converted to a
@@ -75,6 +81,7 @@ class ToBinomial op where
 
 instance ToBinomial Binomial where
   toBinomial = id
+
 \end{code}
 
 
@@ -98,8 +105,9 @@ to a base rate, and a meta-data object.
 data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
                                    , mUncertainty :: Rational
                                    , mBaseRate    :: BaseRateVector a
-                                   , mMetaData    :: MetaData h a
-                                   }
+                                   , mHolder      :: Holder h
+                                   , mFrame       :: F.Frame a
+                                   } deriving Show
 \end{code}
 
 Just as in the case of binomials, we introduce a type class to represent types that can be
@@ -121,13 +129,13 @@ instance ToMultinomial Binomial where
 
 \subsection{Hyper Opinions}
 
-
 \begin{code}
 data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
                        , hUncertainty :: Rational
                        , hBaseRate    :: BaseRateVector a
-                       , hMetaData    :: MetaData h a
-                       }
+                       , hHolder      :: Holder h
+                       , hFrame       :: F.Frame a
+                       } deriving Show
 
 class ToHyper op where
   toHyper :: op h a -> Hyper h a
@@ -156,7 +164,7 @@ frame, respectively.
 class Opinion op h a where
   type ExpectationType op h a :: *
   expectation :: op h a -> ExpectationType op h a
-  getFrame       :: op h a -> F.Frame a
+  getFrame    :: op h a -> F.Frame a
 \end{code}
 
 In order to accomodate a function such as probability expectation that
@@ -167,43 +175,94 @@ probability expectation of the opinion. The instances for each of the three
 opinion types follows.
 
 \begin{code}
-instance Opinion Binomial h a where
-  type ExpectationType Binomial h a = Rational
+instance Ord a => Opinion Binomial h a where
+  type ExpectationType Binomial h a    = Rational
+  expectation (Binomial b d u a _ _)   = b + a * u
+  getFrame (Binomial _ _ _ _ _ frm) = frm
+\end{code}
 
-  expectation (Binomial b d u a _) = b + a * u
-  getFrame (Binomial _ _ _ _ (MetaData _ frm)) = frm
 
+
+
+\ignore{
+\begin{code}
+instance Ord a => Opinion Partition h a where
+  type ExpectationType Partition h a    = Rational
+  expectation (Partition b d u a _ _)   = b + a * u
+  getFrame (Partition _ _ _ _ _ (x, y)) = x `F.union` x
+\end{code}
+}
+
+
+
+
+\begin{code}
 instance Opinion Multinomial h a where
   type ExpectationType Multinomial h a = V.Vector a
-
-  expectation _ = undefined
-  getFrame (Multinomial _ _ _ (MetaData _ frm)) = frm
+  expectation _                      = undefined
+  getFrame (Multinomial _ _ _ _ frm) = frm
 
 instance Opinion Hyper h a where
   type ExpectationType Hyper h a = V.Vector a
-
-  expectation _ = undefined
-  getFrame (Hyper _ _ _ (MetaData _ frm)) = frm
+  expectation _                = undefined
+  getFrame (Hyper _ _ _ _ frm) = frm
 \end{code}
 
 
-\subsection{Accessing Opinions}
 
+
+\ignore{
 \begin{code}
-getBinomial :: h -> Int -> SLExpr h a (Binomial h a)
-getBinomial = undefined
-\end{code}
+getBinomial :: (Ord h, Ord a) => h -> Int -> a -> SLExpr h a (Binomial h a)
+getBinomial holder f x = do
+  m <- getMultinomial holder f
+  case maybeToBinomial x m of
+    Nothing -> err "getBinomial: not a binomial opinion"
+    Just b  -> return b
 
-\begin{code}
-getMultinomial :: h -> Int -> SLExpr h a (Multinomial h a)
-getMultinomial = undefined
-\end{code}
+getMultinomial :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Multinomial h a)
+getMultinomial holder f = do
+  h <- getHyper holder f
+  case maybeToMultinomial h of
+    Nothing -> err "getMultinomial: not a multinomial opinion"
+    Just m  -> return m
 
-\begin{code}
-getHyper :: h -> Int -> SLExpr h a (Multinomial h a)
-getHyper = undefined
-\end{code}
+getHyper :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Hyper h a)
+getHyper holder idx = do
+  frames <- liftM slsFrames getState
+  vecs   <- liftM slsBeliefVecs getState
+  rates  <- liftM slsBaseRateVecs getState
+  if idx > length frames
+    then err "getHyper: index out of range"
+    else do let frm = frames !! idx
+            case M.lookup frm vecs of
+              Nothing -> err "getHyper: no mass assignments for that frame"
+              Just m  -> do
+                case M.lookup (Holder holder) m of
+                  Nothing -> err "getHyper: no mass assignment for that holder"
+                  Just m' -> do
+                    return $ Hyper m' 0 (V.fromList []) (Holder holder) frm
 
+maybeToMultinomial :: Ord a => Hyper h a -> Maybe (Multinomial h a)
+maybeToMultinomial (Hyper b u a h f) =
+  let fs = V.focals b
+  in if all (\f -> F.size f == 1) fs
+     then let bv = V.toList b
+              bv' = map (\(a, r) -> ((F.toList a) !! 0, r)) bv
+          in Just $ Multinomial (V.fromList bv') u a h f
+     else Nothing
+
+maybeToBinomial :: Ord a => a -> Multinomial h a -> Maybe (Binomial h a)
+maybeToBinomial x (Multinomial b u a h f) = do
+  guard (F.size f == 2)
+  guard (x `F.member` f)
+  let b' = V.value b x
+  let d' = snd . head . V.elemsWhere (/= x) $ b
+  let u' = 1 - b' - d'
+  let a' = V.value a x
+  return $ Binomial b' d' u' a' h f
+\end{code}
+}
 
 
 
@@ -231,7 +290,7 @@ coarsen :: (ToHyper op, Ord a) => SLExpr h a (op h a)
            -> F.Subframe a -> SLExpr h a (Binomial h (F.Subframe a))
 coarsen op theta = liftM2 coarsen' op (return theta)
   where
-    coarsen' op theta = Binomial b d u a undefined
+    coarsen' op theta = Binomial b d u a undefined undefined
       where
         b = sumSnd . V.elemsWhere subset         $ belief
         d = sumSnd . V.elemsWhere emptyIntersect $ belief

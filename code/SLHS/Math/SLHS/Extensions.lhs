@@ -39,7 +39,7 @@ multinomial opinions defined over frames of cardinality $N \geq 2$.
 
 \begin{code}
 hyperCoarsen :: ToHyper op => op h a -> [F.Subframe a] -> Multinomial h (F.Subframe a)
-hyperCoarsen op thetas = Multinomial b u a undefined
+hyperCoarsen op thetas = Multinomial b u a undefined undefined
   where
     b = undefined
     u = undefined
