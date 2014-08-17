@@ -161,8 +161,6 @@ makeState holders frames belVecs aVecs = return $ SLState frames' belVecs' aVecs
     belVecs' = undefined
 
     aVecs'   = M.empty
-
-
 \end{code}
 }
 
@@ -177,6 +175,16 @@ makeState holders frames belVecs aVecs = return $ SLState frames' belVecs' aVecs
 \begin{code}
 getState :: SLExpr h a (SLState h a)
 getState = SLExpr $ \s -> return (s, s)
+\end{code}
+}
+
+
+
+\ignore{
+\begin{code}
+require :: Bool -> String -> SLExpr h a ()
+require True _  = return ()
+require False e = err e
 \end{code}
 }
 

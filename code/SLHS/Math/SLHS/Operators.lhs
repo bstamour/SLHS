@@ -36,7 +36,7 @@ and \emph{ToHyper} type classes.
 
 module Math.SLHS.Operators where
 
-import Control.Monad (liftM2, join)
+import Control.Monad
 import Control.Applicative
 import Data.List
 
@@ -63,18 +63,22 @@ and trust.
 
 \subsubsection{Logical and Set-Theoretical Operators}
 
-We will begin with the simplest of binomial operators: those of
-addition and subtraction.  Addition of two binomial opinions
-corresponds to the set theoretic union operator. Given two binomial
-opinions representing disjoint subsets of the same frame, the sum of
-the two opinions represents the union of their respective subsets.
+The logical and set-theoretical binomial operators are those that have
+equivalent operators in logic and set theory. We will start with binomial addition.
+Addition of binomial opinions, denoted as $\omega_{x \cup y} = \omega_x + \omega_y$,
+is defined when $x$ and $y$ are disjoint subsets of the same frame of discernment
+\cite{mcanally2004addition}. Binomial addition is implemented as follows:
 
 \begin{code}
-(+!) :: (ToBinomial op1, ToBinomial op2)
+(+!) :: (ToBinomial op1, ToBinomial op2, Eq h)
        => SLExpr h a (op1 h (F.Subframe a))
        -> SLExpr h a (op2 h (F.Subframe a))
        -> SLExpr h a (Binomial h (F.Subframe a))
-opx +! opy = pure add' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
+opx +! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  return $ add' opx' opy'
 \end{code}
 
 \begin{code}
@@ -88,18 +92,32 @@ add' (Binomial bx dx ux ax mx _) (Binomial by dy uy ay _ _) =
     a' = ax + ay
 \end{code}
 
-Binomial subtraction is the inverse operation of addition. It is equivalent to
-the set difference operator, and is defined as follows.
+Here we see a pattern that we will re-use for all operator implementations. We start
+with a function whose inputs are of type \emph{SLExpr h a t}, where $t$ is some
+type. Within that function, we unwrap the values from the \emph{SLExpr} monad, verify
+that some requirements are met, and then send those values to a worker function that
+does the actual computation. We then wrap the result back into the \emph{SLExpr}
+monad via the \emph{return} function.
+
+Binomial subtraction is the inverse operation of addition. In set theory it is
+equivalent to the set difference operator \cite{mcanally2004addition}. Given
+two opinions $\omega_x$ and $\omega_y$ where $x \cap y = y$, the difference,
+$\omega_{x \setminus y}$ is calculated as follows:
 
 \begin{code}
-(-!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (F.Subframe a))
-        -> SLExpr h a (op2 h (F.Subframe a))
-        -> SLExpr h a (Binomial h (F.Subframe a))
-opx -! opy = pure subtract' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
+(-!) :: (ToBinomial op1, ToBinomial op2, Eq h)
+        => SLExpr h a (op1 h (F.Subframe b))
+        -> SLExpr h a (op2 h (F.Subframe b))
+        -> SLExpr h a (Binomial h (F.Subframe b))
+opx -! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  return $ subtract' opx' opy'
 \end{code}
 
 \begin{code}
+subtract' :: Binomial h (F.Subframe a) -> Binomial h (F.Subframe a) -> Binomial h (F.Subframe a)
 subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   Binomial b' d' u' a' undefined undefined
   where
@@ -110,13 +128,16 @@ subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
 \end{code}
 
 Negation is a unary operator that switches the belief and disbelief and
-inverts the atomicity of a binomial opinion. Given a binomial opinion $\omega_x$ over
+inverts the atomicity of a binomial opinion \cite{josang2001logic}.
+Given a binomial opinion $\omega_x$ over
 a frame $X = \lbrace x, \lnot x \rbrace$, the negated opinion
-$\lnot \omega_x = \omega_{\lnot x}$.
+$\omega_{\overline{x}} = \omega_{\lnot x}$.
 
 \begin{code}
-negate :: ToBinomial op => SLExpr h a (op h a) -> SLExpr h a (Binomial h a)
-negate op = pure negate' <*> (toBinomial <$> op)
+negate :: ToBinomial op => SLExpr h a (op h b) -> SLExpr h a (Binomial h b)
+negate op = do
+  op' <- liftM toBinomial op
+  return $ negate' op'
 \end{code}
 
 \begin{code}
@@ -125,14 +146,21 @@ negate' (Binomial b d u a _ _) = Binomial d b u (1 - a) undefined undefined
 \end{code}
 
 Multiplication of two binomial opinions is equivalent to the logical
-\emph{and} operator.
+\emph{and} operator \cite{josang2005multiplication}. Given two opinions
+$\omega_x$ and $\omega_y$ over distinct binary frames $x$ and $y$, the
+product of the opinions, $\omega_{x \land y}$, represents the conjunction
+of the two opinions.
 
 \begin{code}
-(*!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h a)
-        -> SLExpr h a (op2 h a)
-        -> SLExpr h a (Binomial h (F.Subframe (a, a)))
-opx *! opy = pure b_times' <*> (toBinomial <$> opx) <*> (toBinomial <$> opy)
+(*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
+        => SLExpr h a (op1 h b)
+        -> SLExpr h a (op2 h c)
+        -> SLExpr h a (Binomial h (F.Subframe (b, c)))
+opx *! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  return $ b_times' opx' opy'
 
 b_times' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   Binomial b' d' u' a' undefined undefined
@@ -145,16 +173,29 @@ b_times' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     a' = ax * ay
 \end{code}
 
-Binomial co-multiplication is equivalent to the logical \emph{or} operator.
+The resulting frame of discernment is a coarsened frame from the
+cartesian product of $\lbrace x, \lnot x\rbrace$ and
+$\lbrace y, \lnot y\rbrace$, where the element whose belief mass is
+designated the role of "belief" for binomial opinions is
+$\lbrace (x, y)\rbrace$, and the element whose belief mass is given
+the role of "disbelief" is $\lbrace (x, \lnot y), (\lnot x, y), (\lnot x, \lnot y)\rbrace$.
+
+Binomial co-multiplication is equivalent to the logical \emph{or} operator
+\cite{josang2005multiplication}. Given two opinions, again on distinct binary
+frames, $\omega_x$ and $\omega_y$, the disjunctive binomial opinion
+$\omega_{x \lor y} = \omega_x \sqcup \omega_y$ is computed by the following
+function:
 
 \begin{code}
-(~*!) :: (ToBinomial op1, ToBinomial op2)
-         => SLExpr h a (op1 h a)
-         -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Binomial h (F.Subframe (a, a)))
-opx ~*! opy = do opx' <- toBinomial <$> opx
-                 opy' <- toBinomial <$> opy
-                 pure $ cotimes' opx' opy'
+(~*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
+         => SLExpr h a (op1 h b)
+         -> SLExpr h a (op2 h c)
+         -> SLExpr h a (Binomial h (F.Subframe (b, c)))
+opx ~*! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  return $ cotimes' opx' opy'
 
 cotimes' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   Binomial b' d' u' a' undefined undefined
@@ -167,16 +208,52 @@ cotimes' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     a' = ax + ay - ax * ay
 \end{code}
 
-Binomial division is the inverse of binomial multiplication.
+Binomial multiplication and co-multiplication are duals to one another
+and satisfy De-Morgan's law:
+$\omega_{x \land y} = \omega_{\overline{\overline{x} \lor \overline{y}}}$
+and $\omega_{x \lor y} = \omega_{\overline{\overline{x} \land \overline{y}}}$,
+but they do not distribute over one another \cite{josang2005multiplication}.
+Furthermore, Josang and McAnally claim that binomial multiplication and
+co-multiplication produce good approximations of the analytically correct
+products and co-products of Beta probability density functions
+\cite{josang2005multiplication}. Therefore, if one were to construct a
+\emph{Beta} data type in Haskell representing a beta PDF and create an instance
+of the \emph{ToBinomial} type class for it, one could use the above operators
+to generate good approximations to the products and co-products of beta PDFs
+with minimal effort.
+
+We next discuss binomial division and co-division, which are the inverses
+of binomial multiplication and co-multiplication. The binomial division
+of an opinion $\omega_x$ by another opinion $\omega_y$ is denoted as
+$\omega_{x \overline{\land} y} = \omega_x / \omega_y$
+\cite{josang2005multiplication}, and is computed as follows:
 
 \begin{code}
 (/!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (F.Subframe (a, a)))
-        -> SLExpr h a (op2 h a)
-        -> SLExpr h a (Binomial h a)
-opx /! opy = do opx' <- toBinomial <$> opx
-                opy' <- toBinomial <$> opy
-                pure $ divide' opx' opy'
+        => SLExpr h a (op1 h (F.Subframe (b, c)))
+        -> SLExpr h a (op2 h b)
+        -> SLExpr h a (Binomial h c)
+opx /! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (lessBaseRate opx' opy') "ax must be less than ay"
+  require (greaterDisbelief opx' opy') "dx must be greater than or equal to dy"
+  require (bxConstraint opx' opy') "Division requirement not satisfied"
+  require (uxConstraint opx' opy') "Division requirement not satisfied"
+  return $ divide' opx' opy'
+  where
+    lessBaseRate x y     = bAtomicity x < bAtomicity y
+    greaterDisbelief x y = bDisbelief x >= bDisbelief y
+
+    bxConstraint x y = bx >= (ax * (1 - ay) * (1 - dx) * by) / ((1 - ax) * ay * (1 - dy))
+      where
+        (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
+        (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
+
+    uxConstraint x y = ux >= ((1 - ay) * (1 - dx) * uy) / ((1 - ax) * (1 - dy))
+      where
+        (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
+        (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
 
 divide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   Binomial b' d' u' a' undefined undefined
@@ -189,16 +266,36 @@ divide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     a' = ax / ay
 \end{code}
 
-And similarily, co-division is the inverse of co-multiplication.
+Lastly co-division, the inverse operation of co-multiplication \cite{josang2005multiplication},
+is denoted as $\omega_{x \overline{\lor} y} = \omega_x \overline{\sqcup} \omega_y$ and is
+computed as follows:
 
 \begin{code}
 (~/!) :: (ToBinomial op1, ToBinomial op2)
-         => SLExpr h a (op1 h (F.Subframe (a, a)))
-         -> SLExpr h a (op2 h a)
-         -> SLExpr h a (Binomial h a)
-opx ~/! opy = do opx' <- toBinomial <$> opx
-                 opy' <- toBinomial <$> opy
-                 pure $ codivide' opx' opy'
+         => SLExpr h a (op1 h (F.Subframe (b, c)))
+         -> SLExpr h a (op2 h b)
+         -> SLExpr h a (Binomial h c)
+opx ~/! opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  require (greaterBaseRate opx' opy') "ax must be greater than ay"
+  require (greaterBelief opx' opy') "bx must be greater than or equal to by"
+  require (dxConstraint opx' opy') "Division requirement not satisfied"
+  require (uxConstraint opx' opy') "Division requirement not satisfied"
+  return $ codivide' opx' opy'
+  where
+    greaterBaseRate x y     = bAtomicity x > bAtomicity y
+    greaterBelief x y = bBelief x >= bBelief y
+
+    dxConstraint x y = dx >= (ay * (1 - ax) * (1 - bx) * dy) / ((1 - ay) * ax * (1 - by))
+      where
+        (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
+        (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
+
+    uxConstraint x y = ux >= (ay * (1 - bx) * uy) / (ax * (1 - by))
+      where
+        (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
+        (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
 
 codivide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
   Binomial b' d' u' a' undefined undefined
@@ -212,6 +309,10 @@ codivide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
             / ((ax - ay) * (dy + (1 - ay) * uy)))
     a' = (ax - ay) / (1 - ay)
 \end{code}
+
+In this section we have introduced those binomial operators that have
+analogs to logic and set theory. In the next section we will discuss
+the binomial operators for modelling \emph{trust transitivity}.
 
 
 \subsubsection{Trust Transitivity Operators}
@@ -287,145 +388,27 @@ discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
 \end{code}
 
 
-
-
-
-
-
-%\subsubsection{Reasoning Operators}
-
-
-\ignore{
-\begin{code}
-{-
-deduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
-          => SLExpr h a (op1 h a)
-          -> SLExpr h a (op2 h a)
-          -> SLExpr h a (op3 h a)
-          -> SLExpr h a (Binomial h a)
-deduce opx opyxT opyxF = do
-  opx'   <- toBinomial <$> opx
-  opyxT' <- toBinomial <$> opyxT
-  opyxF' <- toBinomial <$> opyxF
-  let ay  = bAtomicity opyxT'
-      ay' = bAtomicity opyxF'
-  require (ay == ay') "y's atomicity must be the same."
-  pure $ deduce' opx' opyxT' opyxF'
-
-deduce' :: Binomial h a -> Binomial h a -> Binomial h a -> Binomial h a
-deduce' opx opy opy' = Binomial byx dyx uyx ayx undefined
-  where
-    (Binomial bx dx ux ax _)     = opx
-    (Binomial by dy uy ay _)     = opy
-    (Binomial by' dy' uy' ay' _) = opy'
-
-    byx = bIy - ay * k
-    dyx = dIy - (1 - ay) * k
-    uyx = uIy + k
-    ayx = ay
-
-    bIy = bx * by + dx * by' + ux * (by * ax + by' * (1 - ax))
-    dIy = bx * dy + dx * dy' + ux * (dy * ax + dy' * (1 - ax))
-    uIy = bx * uy + dx * uy' + ux * (uy * ax + uy' * (1 - ax))
-
-    k | ((by > by') && (dy > dy')) || ((by <= by') && (dy <= dy')) = 0
-
-      | ((by > by') && (dy <= dy')) && b1 && a1 = k2a1
-      | ((by > by') && (dy <= dy')) && b1 && a2 = k2a2
-      | ((by > by') && (dy <= dy')) && b2 && a1 = k2b1
-      | ((by > by') && (dy <= dy')) && b2 && a2 = k2b2
-
-      | ((by <= by') && (dy > dy')) && b1' && a1 = k3a1
-      | ((by <= by') && (dy > dy')) && b1' && a2 = k3a2
-      | ((by <= by') && (dy > dy')) && b2' && a1 = k3b1
-      | ((by <= by') && (dy > dy')) && b2' && a2 = k3b2
-
-    a1 = (eopx <= ax)
-    a2 = (eopx > ax)
-
-    b1  = (eopy' <= (by' + ay * (1 - by' - dy)))
-    b1' = (eopy' <= (by  + ay * (1 - by  - dy')))
-    b2  = (eopy' >  (by' + ay * (1 - by' - dy)))
-    b2' = (eopy' >  (by  + ay * (1 - by  - dy')))
-
-    k2a1 = (ax * ux * (bIy - by')) / ((bx + ax * ux) * ay)
-    k2a2 = (ax * ux * (dIy - dy) * (by - by')) / ((dx + (1 - ax) * ux) * ay * (dy' - dy))
-    k2b1 = ((1 - ax) * ux * (bIy - by') * (dy' - dy)) / ((bx + ax * ux) * (1 - ay) * (by - by'))
-    k2b2 = ((1 - ax) * ux * (dIy - dy)) / ((dx + (1 - ax) * ux) * (1 - ay))
-
-    k3a1 = ((1 - ax) * ux * (dIy - dy') * (by' - by)) / ((bx + ax * ux) * ay * (dy - dy'))
-    k3a2 = ((1 - ax) * ux * (bIy - by)) / ((dx + (1 - ax) * ux) * ay)
-    k3b1 = (ax * ux * (dIy - dy')) / ((bx + ax * ux) * (1 - ay))
-    k3b2 = (ax * ux * (bIy - by) * (dy - dy')) / ((dx + (1 - ax) * ux) * (1 - ay) * (by' - by))
-
-    eopx  = expectation opx
-    eopy' = by * ax + by' * (1 - ax) + ay * (uy * ax + uy' * (1 - ax))
--}
-\end{code}
-}
-
-
-\ignore{
-\begin{code}
-{-
-abduce :: (ToBinomial op1, ToBinomial op2, ToBinomial op3)
-          => SLExpr h a (op1 h a)
-          -> SLExpr h a (op2 h a)
-          -> SLExpr h a (op3 h a)
-          -> SLExpr h a Rational
-          -> SLExpr h a (Binomial h a)
-abduce opx opxyT opxyF ay = do
-  opx'   <- toBinomial <$> opx
-  opxyT' <- toBinomial <$> opxyT
-  opxyF' <- toBinomial <$> opxyF
-  ay'    <- ay
-  abduce' opx' opxyT' opxyF' ay'
-
-abduce' :: Binomial h a
-           -> Binomial h a
-           -> Binomial h a
-           -> Rational
-           -> SLExpr h a (Binomial h a)
-abduce' opx opxyT opxyF ay = deduce (pure opx) opyxT opyxF
-  where
-    (Binomial bx dx ux ax _)         = opx
-    (Binomial bxy dxy uxy axy _)     = opxyT
-    (Binomial bxy' dxy' uxy' axy' _) = opxyF
-
-    -- 4.58
-    e_opxyT = bxy + ax * uxy
-    e_opxyF = bxy' + ax * uxy'
-
-    -- 4.59
-    e_opyxT = (ay * e_opxyT) / (ay * e_opxyT + (1 - ay) * e_opxyF)
-    e_opyxF = (ay * (1 - e_opxyT)) / (ay * (1 - e_opxyT) + (1 - ay) * (1 - e_opxyF))
-
-    relevance = undefined :: Rational
-
-    -- For now...
-    opyxT = pure opxyT
-    opyxF = pure opxyF
--}
-\end{code}
-}
-
-
-\begin{comment}
-The binomial operators are summarized in table \ref{tbl:binomial-operators}.
+In this section we have presented the operators of Subjective Logic that
+take as inputs binomial opinions. We first introduced the operators that have
+analogs to the classical operators of logic and set theory, and then introduced
+operators for modelling transitive trust networks. These operators are summarized
+in table \ref{tbl:binomial-operators}. In the next section we will introduce the
+operators of Subjective Logic that take as inputs multinomial and hyper opinions.
 
 \begin{table}
 \begin{center}
 \begin{tabular}{| l | l | l |}
   \hline
-  Name & SL & SLHS \\
+  Name & SL Notation & SLHS Notation\\
   \hline
   Addition          & $\omega_{X \cup Y} = \omega_X + \omega_Y$       & $opx +! opy$  \\
   Subtraction       & $\omega_{X \setminus Y} = \omega_X - \omega_Y$  & $opx -! opy$  \\
-  Negation          & $\omega_{X \setminus Y} = \omega_X - \omega_Y$  & $opx -! opy$  \\
-  Multiplication    & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx *! opy$  \\
-  Co-multiplication & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx ~*! opy$ \\
-  Division          & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx /! opy$  \\
-  Co-division       & $\omega_{X \land Y} = \omega_X \times \omega_Y$ & $opx ~/! opy$ \\
+  Negation          & $\omega_{\bar{x}} = \lnot \omega_x$  & $opx -! opy$  \\
+  Multiplication    & $\omega_{X \land Y} = \omega_X \cdot \omega_Y$ & $opx *! opy$  \\
+  Co-multiplication & $\omega_{X \lor Y} = \omega_X \sqcup \omega_Y$ & $opx ~*! opy$ \\
+  Division          & $\omega_{X \bar{\land} Y} = \omega_X / \omega_Y$ & $opx /! opy$  \\
+  Co-division       & $\omega_{X \bar{\lor} Y} = \omega_X \bar{\sqcup} \omega_Y$ & $opx ~/! opy$ \\
+  Discounting       & $\omega^{A:B}_x = \omega^A_B \otimes \omega^B_x$           & $discount\,t\,opa\,opb$ \\
   \hline
 \end{tabular}
 \end{center}
@@ -433,7 +416,7 @@ The binomial operators are summarized in table \ref{tbl:binomial-operators}.
 \caption{Summary of binomial operators}
 \label{tbl:binomial-operators}
 \end{table}
-\end{comment}
+
 
 
 
@@ -938,6 +921,36 @@ constraint' (Hyper bA uA aA _ _) (Hyper bB uB aB _ _) =
     keys  = nub (V.focals bA ++ V.focals bB)
     keys' = nub (V.focals aA ++ V.focals aB)
 \end{code}
+
+The operators for multinomial and hyper opinions are sumarized in table \ref{tbl:mh-operators}.
+
+\begin{table}
+\begin{center}
+\begin{tabular}{| l | l | l |}
+  \hline
+  Name & SL Notation & SLHS Notation\\
+  \hline
+  Multiplication      & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $opx +! opy$  \\
+  Deduction           & $\omega_{Y || X} = \omega_X \circledcirc \omega_{Y | X}$                                           & $opx +! opy$  \\
+  Abduction           & $\omega_{Y \overline{||} X} = \omega_X \overline{\circledcirc} \omega_{X | Y}$                     & $opx +! opy$  \\
+  Cumulative Fusion   & $\omega^{A \diamondsuit B}_{X} = \omega^A_X \oplus \omega^B_X$                                     & $opx +! opy$  \\
+  Cumulative Unusion  & $\omega^{A \overline{\diamondsuit} B}_{X} = \omega^A_X \ominus \omega^B_X$                         & $opx +! opy$  \\
+  Averaging  Fusion   & $\omega^{A \underline{\diamondsuit} B}_{X} = \omega^A_X \underline{\oplus} \omega^B_X$             & $opx +! opy$  \\
+  Averaging  Unusion  & $\omega^{A \overline{\underline{\diamondsuit}} B}_{X} = \omega^A_X \underline{\ominus} \omega^B_X$ & $opx +! opy$  \\
+  Fission             & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $opx +! opy$  \\
+  Belief Constraining & $\omega^{A \& B}_{X} = \omega^A_X \odot \omega^B_X$                                                & $opx +! opy$  \\
+  \hline
+\end{tabular}
+\end{center}
+
+\caption{Summary of multinomial and hyper operators}
+\label{tbl:mh-operators}
+\end{table}
+
+
+
+
+
 
 
 \end{document}

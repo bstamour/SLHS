@@ -7,11 +7,10 @@
 \label{chap:results-and-analysis}
 
 In this chapter we will analyze SLHS by proving that the combinators terminate for
-all input expressions, analyze the complexity of the Subjective Logic operators, and
-finally demonstrate the power of SLHS by showcasing some example applications.
-
-
-
+all input expressions, analyze the complexity of the Subjective Logic operators,
+discuss how Haskell's strong type system and its support for monads has affected the
+design of SLHS, and finally we will demonstrate the power of SLHS by showcasing some
+example computations.
 
 
 \section{Proof of Termination}
@@ -229,6 +228,54 @@ and whose frames of discernment are themselves frames. We cannot check at compil
 frames are paritions of the same underlying frame, but we can still catch quite a bit of obvious mistakes.
 
 
+\section{The Use of Monads}
+
+In this section we will describe the roll that monads have played in the design of SLHS. As mentioned
+previously, the \emph{SLExpr} type that represents Subjective Logic expressions is a function from
+a world state, \emph{SLState}, to some output value. \emph{SLExpr} forms a monad, and thus we are
+able to use all of Haskell's built-in support for monads when writing computations involving
+objects of type \emph{SLExpr}. In particular, \emph{SLExpr} is a special kind of \emph{state monad},
+where the state carried through the computation is an \emph{SLState} object.
+
+Because they are monads, objects of type \emph{SLExpr} can be glued together using the various
+operators and functions in the Haskell standard library. One function that we use quite frequently
+in the implementation of SLHS is the \emph{liftM} function, which takes an ordinary function from
+some type $a$ to type $b$, and converts it into a function from type $M\,a$ to $M\,b$, where $M$ is
+any monad. This allows us to use functions such as \emph{toBinomial} directly on objects of type
+\emph{SLExpr} without having to unwrap them first.
+
+Another benefit of \emph{SLExpr} being a monad is that we are able to use Haskell's \emph{do-notation}
+in order to simplify our code. Do-notation allows us to write code of the form
+
+\begin{spec}
+z = mx >>= \x -> my >>= \y -> return (x + y)
+\end{spec}
+
+where each and every invocation of the bind operator must be explicitly written, as
+
+\begin{spec}
+z = do x <- mx
+       y <- my
+       return (x + y)
+\end{spec}
+
+This syntactic sugar not only allows the implementation of SLHS to be written more
+concisely in many cases, but it also extends to users of SLHS as well. Complicated
+Subjective Logic exprressions can be broken down into smaller pieces, and then glued
+together in a style that looks very imperative:
+
+\begin{spec}
+expr = do e1 <- getMultinomial ``Alice'' 0
+          e2 <- getMultinomial ``Bob'' 0
+          e3 <- e1 `times` e2
+          e4 <- e3 `cFuse` (getHyper ``Clark'' 0)
+          return e4
+\end{spec}
+
+which may help programmers who are more acustomed to writing programs in more mainstream
+languages such as \emph{Python} or \emph{Ruby}. In the next section we will demonstrate how
+problems involving Subjective Logic can be modelled and executed using SLHS.
+
 
 
 \section{Example Computations}
@@ -239,7 +286,7 @@ Subjective Logic literature.
 
 
 \subfile{./SLHS/examples/Ex1.lhs}
-
+\subfile{./SLHS/examples/Ex2.lhs}
 
 
 

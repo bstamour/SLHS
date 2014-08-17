@@ -52,6 +52,9 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              } deriving Show
 \end{code}
 
+
+
+
 \ignore{
 \begin{code}
 data Partition h a = Partition { pBelief      :: Rational
@@ -63,6 +66,9 @@ data Partition h a = Partition { pBelief      :: Rational
                                } deriving Show
 \end{code}
 }
+
+
+
 
 Here we use Haskell's \emph{record syntax} to define the data constructor.
 Haskell automatically creates the top-level functions \emph{bBelief},
@@ -81,16 +87,7 @@ class ToBinomial op where
 
 instance ToBinomial Binomial where
   toBinomial = id
-
 \end{code}
-
-
-
-
-
-
-
-
 
 
 \subsection{Multinomial Opinions}
@@ -99,7 +96,6 @@ Multinomials are represented as records containing a \emph{BeliefVector} to repr
 amount of belief assigned to each element of the frame, a scalar rational number to
 store the uncertainty mass, a \emph{BaseRateVector} which assigns each element in the frame
 to a base rate, and a meta-data object.
-
 
 \begin{code}
 data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
@@ -128,6 +124,11 @@ instance ToMultinomial Binomial where
 
 
 \subsection{Hyper Opinions}
+
+Hyper opinions share a similar structural layout to multinomial opinions
+except the belief vector spans the reduced powerset of the frame, and is
+thus represented as a \emph{BeliefVector} with sub-frames as the keys, instead of
+elements of the frame.
 
 \begin{code}
 data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
@@ -179,6 +180,16 @@ instance Ord a => Opinion Binomial h a where
   type ExpectationType Binomial h a    = Rational
   expectation (Binomial b d u a _ _)   = b + a * u
   getFrame (Binomial _ _ _ _ _ frm) = frm
+
+instance Opinion Multinomial h a where
+  type ExpectationType Multinomial h a = V.Vector a
+  expectation _                      = undefined
+  getFrame (Multinomial _ _ _ _ frm) = frm
+
+instance Opinion Hyper h a where
+  type ExpectationType Hyper h a = V.Vector a
+  expectation _                = undefined
+  getFrame (Hyper _ _ _ _ frm) = frm
 \end{code}
 
 
@@ -194,19 +205,6 @@ instance Ord a => Opinion Partition h a where
 }
 
 
-
-
-\begin{code}
-instance Opinion Multinomial h a where
-  type ExpectationType Multinomial h a = V.Vector a
-  expectation _                      = undefined
-  getFrame (Multinomial _ _ _ _ frm) = frm
-
-instance Opinion Hyper h a where
-  type ExpectationType Hyper h a = V.Vector a
-  expectation _                = undefined
-  getFrame (Hyper _ _ _ _ frm) = frm
-\end{code}
 
 
 
@@ -267,8 +265,6 @@ maybeToBinomial x (Multinomial b u a h f) = do
 
 
 
-
-
 \subsection{Belief Coarsening}
 \label{sec:belief-coarsening}
 
@@ -319,10 +315,6 @@ coarsenBy op pred = op >>= \op' ->
   let (theta, _) = F.partition pred . getFrame . toHyper $ op'
   in  coarsen op theta
 \end{code}
-
-
-
-
 
 
 \end{document}
