@@ -8,14 +8,37 @@
 
 \section{Motivation}
 
-Imagine two sensors designed to measure two very different properties of some
-small, furry animals - say guinea pigs. One sensor measures the sex of the baby guinea
-pig, while the other attempts (poorly) to detect the specific breed of the guinea pig.
-For simplicity, assume that guinea pigs fall into one of the breeds specified in table
-\ref{tbl:guinea-pig-breeds}. Assume guinea pigs have an even probability of being born
-male or female. Once the data has been collected, the guinea pig farm manager wishes to compute the
-liklihood of each sex/breed pairing. However the manager must take into account the
-uncertainty corresponding to mixed-breed guiea pigs.
+Imagine being in a courtroom where a man is being tried for murder. The prosecution has
+brought forth three witnesses who allegedly observed the event. Witness A is a close friend
+of the defendant, and has a high opinion of him. Witness B does not like the defendent at
+all, and has a very negative opinion of him. The third witness, Witness C, has no prior
+opinion of the defendent, and thus is very uncertain about his character.
+
+The judge has never once interacted with the defendent and therefore must base his entire
+opinion of him on the evidence brought forth, and by the witness testimonies. However the
+judge does have an opinion on each of the three witnesses. The judge golfs regularly with
+witness A, the judge knows witness B as the pastor at a local church, and witness C is a
+courtroom regular - always involved in some mischief or other. Therefore, while the judge
+can construct an opinion by analyzing the opinions of the three witnesses and forming a
+consensus, he also takes into account his knowledge of the three, and discounts their
+opinions by his own opinions of them. The judge places great weight on the testimonies of
+witnesses A and B, and can barely belief a word of witness C's statement.
+
+Now imagine two sensors designed to measure two orthogonal properties of baby guinea pigs.
+Before they reach a certain age, male guinea pigs must be separated from their mothers
+(and sisters) because they reach sexual maturity very quickly. Therefore it is important to
+be able to measure the sex of the guinea pigs quickly and partition the little furballs
+accordingly. Another important measurable trait is the breed of the guinea pig. If the
+pigs have been brought from many different litters, then it is important to be able to
+classify them as \emph{Silky}, \emph{American}, or \emph{Peruvian}. However this classification
+cannot be carried out with absolute certainty, as there can be mixed breed guinea pigs as well.
+Assume for simplicity that guinea pigs have a male/female birth ratio of 50/50, and that the
+probability of a guinea pig having a certain breed is given in table \ref{tbl:guinea-pig-breeds}.
+
+Given these two sensors, it is possible to combine the two guinea pig traits in order to
+classify them. However, imagine that your breed sensors has a tendency to give back inaccurate
+results, say, 5\% of the time. Any reasoning that is to be done with this sensor data must be
+discounted by the knowledge that it has a non-zero rate of error.
 
 \begin{table}
   \begin{center}
@@ -34,10 +57,6 @@ uncertainty corresponding to mixed-breed guiea pigs.
   \caption{Imaginary distribution of guinea pig breeds}
   \label{tbl:guinea-pig-breeds}
 \end{table}
-
-Now imagine a family doctor, investigating the symptoms of one of her patients. The patient
-shows symptoms that could point to a myriad of actual causes. The doctor begins with three
-potential hypotheses that could explain the symptops, and must abduce the correct explanation.
 
 Lastly, suppose you and two of your friends with to see a movie. There are three movies currently
 playing in your local theatre: Star Wars - The Empire Strikes First (M1), Cassablanca 2 (M2), and
@@ -67,11 +86,10 @@ which movie to see?
 \end{table}
 
 The above scenarios all share a common theme: they involve reasoning about uncertain or incomplete
-data. Any system designed to aide end users in reasoning in many real-world scenarios must take
-uncertainty into account. One particular form of probabilistic logic, Subjective Logic, offers a
-variety of operators for many different scenarios. And because Subjective Logic has been
-constructed to directly deal with the problem of uncertainty, it has been put to use in
-many domains [cite some examples here].
+data. Many real-world reasoning scenarios must deal with this kind of data, and thus any
+automated system designed to aide decision-makers must be able to take into account uncertainty.
+Subjective Logic, a recently emergent probabilistic logic system, offers a wealth of operators
+for combining, discounting, and reasoning with, uncertain data.
 
 
 \section{The Problem Addressed}
