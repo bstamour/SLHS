@@ -42,8 +42,6 @@ of discernment it is defined over. In code, the binomial opinion looks
 like the following:
 
 \begin{code}
-
-
 data Binomial h a = Binomial { bBelief      :: Rational
                              , bDisbelief   :: Rational
                              , bUncertainty :: Rational
@@ -51,43 +49,37 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              , bHolder      :: Holder h
                              , bFrame       :: BinomialFrame a
                              } deriving Show
-
-data BinomialFrame a = Normal a a
-                     | Split (F.Frame a) (F.Frame a)
-                     deriving Show
-
-isPartitioned :: Binomial h a -> Bool
-isPartitioned (Binomial _ _ _ _ _ (Normal _ _)) = True
-isPartitioned _                                 = False
 \end{code}
-
-
-
-
-
-
-
-\ignore{
-\begin{code}
-data Partition h a = Partition { pBelief      :: Rational
-                               , pDisbelief   :: Rational
-                               , pUncertainty :: Rational
-                               , pAtomicity   :: Rational
-                               , pHolder      :: Holder h
-                               , pFrame       :: (F.Subframe a, F.Subframe a)
-                               } deriving Show
-\end{code}
-}
-
-
-
 
 Here we use Haskell's \emph{record syntax} to define the data constructor.
 Haskell automatically creates the top-level functions \emph{bBelief},
 \emph{bDisbelief}, \emph{bUncertainty}, \emph{bAtomicity}, and
 \emph{bMetaData} that provide access to the "members" of the record.
 
-We also introduce a special \emph{type class} called \emph{ToBinomial}
+Since binomial opinions can either be defined over a binary frame of
+discernment, or a binary partitioning of a frame, we introduce a special
+frame type just for binomials, called \emph{BinomialFrame}:
+
+\begin{code}
+data BinomialFrame a = Normal a a
+                     | Split (F.Frame a) (F.Frame a)
+                     deriving Show
+\end{code}
+
+The two data constructors, \emph{Normal} and \emph{Split} represent the two
+possible kinds of frames that binomial opinions can be defined over.
+
+Since certain binomial operators require the opinion to be defined over a
+binary partitioning, we introduce a helper predicate that returns \emph{True}
+when the binomial opinion is a partition, and \emph{False} otherwise:
+
+\begin{code}
+isPartitioned :: Binomial h a -> Bool
+isPartitioned (Binomial _ _ _ _ _ (Normal _ _)) = True
+isPartitioned _                                 = False
+\end{code}
+
+Lastly, we also introduce a special \emph{type class} called \emph{ToBinomial}
 which allows us to define a range of types that can be converted to a
 binomial opinion. An example of such a type could be a \emph{Beta
 PDF}. We will re-use this strategy for implementing multinomial and
@@ -176,6 +168,7 @@ frame, respectively.
 \begin{code}
 class Opinion op h a where
   type ExpectationType op h a :: *
+
   expectation :: op h a -> ExpectationType op h a
   getFrame    :: op h a -> F.Frame a
 \end{code}
@@ -189,94 +182,24 @@ opinion types follows.
 
 \begin{code}
 instance Ord a => Opinion Binomial h a where
-  type ExpectationType Binomial h a    = Rational
-  expectation (Binomial b d u a _ _)   = b + a * u
-  getFrame (Binomial _ _ _ _ _ (Normal x y)) = F.fromList [x, y]
+  type ExpectationType Binomial h a = Rational
+
+  expectation (Binomial b d u a _ _)          = b + a * u
+  getFrame (Binomial _ _ _ _ _ (Normal x y))  = F.fromList [x, y]
   getFrame (Binomial _ _ _ _ _ (Split f1 f2)) = f1 `F.union` f2
 
 instance Opinion Multinomial h a where
   type ExpectationType Multinomial h a = V.Vector a
+
   expectation _                      = undefined
   getFrame (Multinomial _ _ _ _ frm) = frm
 
 instance Opinion Hyper h a where
   type ExpectationType Hyper h a = V.Vector a
+
   expectation _                = undefined
   getFrame (Hyper _ _ _ _ frm) = frm
 \end{code}
-
-
-
-
-\ignore{
-\begin{code}
-instance Ord a => Opinion Partition h a where
-  type ExpectationType Partition h a    = Rational
-  expectation (Partition b d u a _ _)   = b + a * u
-  getFrame (Partition _ _ _ _ _ (x, y)) = x `F.union` x
-\end{code}
-}
-
-
-
-
-
-
-\ignore{
-\begin{code}
-getBinomial :: (Ord h, Ord a) => h -> Int -> a -> SLExpr h a (Binomial h a)
-getBinomial holder f x = do
-  m <- getMultinomial holder f
-  case maybeToBinomial x m of
-    Nothing -> err "getBinomial: not a binomial opinion"
-    Just b  -> return b
-
-getMultinomial :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Multinomial h a)
-getMultinomial holder f = do
-  h <- getHyper holder f
-  case maybeToMultinomial h of
-    Nothing -> err "getMultinomial: not a multinomial opinion"
-    Just m  -> return m
-
-getHyper :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Hyper h a)
-getHyper holder idx = do
-  frames <- liftM slsFrames getState
-  vecs   <- liftM slsBeliefVecs getState
-  rates  <- liftM slsBaseRateVecs getState
-  if idx > length frames
-    then err "getHyper: index out of range"
-    else do let frm = frames !! idx
-            case M.lookup frm vecs of
-              Nothing -> err "getHyper: no mass assignments for that frame"
-              Just m  -> do
-                case M.lookup (Holder holder) m of
-                  Nothing -> err "getHyper: no mass assignment for that holder"
-                  Just m' -> do
-                    return $ Hyper m' 0 (V.fromList []) (Holder holder) frm
-
-maybeToMultinomial :: Ord a => Hyper h a -> Maybe (Multinomial h a)
-maybeToMultinomial (Hyper b u a h f) =
-  let fs = V.focals b
-  in if all (\f -> F.size f == 1) fs
-     then let bv = V.toList b
-              bv' = map (\(a, r) -> ((F.toList a) !! 0, r)) bv
-          in Just $ Multinomial (V.fromList bv') u a h f
-     else Nothing
-
-maybeToBinomial :: Ord a => a -> Multinomial h a -> Maybe (Binomial h a)
-maybeToBinomial x (Multinomial b u a h f) = do
-  guard (F.size f == 2)
-  guard (x `F.member` f)
-  let y = fst . head . V.elemsWhere (/= x) $ b
-  let b' = V.value b x
-  let d' = V.value b y
-  let u' = 1 - b' - d'
-  let a' = V.value a x
-  return $ Binomial b' d' u' a' h (Normal x y)
-\end{code}
-}
-
-
 
 
 \subsection{Belief Coarsening}
@@ -329,6 +252,110 @@ coarsenBy op pred = op >>= \op' ->
   let (theta, _) = F.partition pred . getFrame . toHyper $ op'
   in  coarsen op theta
 \end{code}
+
+
+
+
+\subsection{Accessing Opinion Expressions}
+
+SLHS is built around combining together objects of type \emph{SLExpr}, which
+are functions from some world state to some value. Since Subjective Logic operators
+rely on opinions as inputs, we require a method of obtaining the opinions stored
+in the state that is being threaded through behind the expressions. The following
+functions do just that.
+
+We start with fetching hyper opinions, as they are the most general. Given a belief
+holder $h$ and an index $idx$ corresponding to the $idx$'th frame of discernment in
+the state, \emph{getHyper} returns either a hyper opinion held by $h$ over opinion
+$frames\lbrack idx \rbrack$, or a runtime error diagnostic.
+
+\begin{code}
+getHyper :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Hyper h a)
+getHyper holder idx = do
+  frames <- liftM slsFrames getState
+  vecs   <- liftM slsBeliefVecs getState
+  rates  <- liftM slsBaseRateVecs getState
+  if idx > length frames
+    then err "getHyper: index out of range"
+    else do let frm = frames !! idx
+            case M.lookup frm vecs of
+              Nothing -> err "getHyper: no mass assignments for that frame"
+              Just m  -> do
+                case M.lookup (Holder holder) m of
+                  Nothing -> err "getHyper: no mass assignment for that holder"
+                  Just m' -> do
+                    return $ Hyper m' 0 (V.fromList []) (Holder holder) frm
+\end{code}
+
+While the above function looks fairly complicated, it simply unrwaps the relevant
+state data from the \emph{SLExpr} monad, checks to see if the index is within the
+bounds of the array of frames, and then looks to see if there are any mass assignments
+for that particular frame. If there are mass assignments for that frame, then we
+look up the particular mass assignment owned by the belief holder. If one exists, we
+return it, else we return an error message.
+
+Next we have a way of obtaining multinomial opinions. Since multinomial opinions
+are a special case of hyper opinions, we first obtain the hyper opinion via a call to
+\emph{getHyper}, and then check to see if we can safely convert that hyper opinion
+into a multinomial opinion. If so, we return it, else we return an error message.
+
+\begin{code}
+getMultinomial :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Multinomial h a)
+getMultinomial holder f = do
+  h <- getHyper holder f
+  case maybeToMultinomial h of
+    Nothing -> err "getMultinomial: not a multinomial opinion"
+    Just m  -> return m
+  where
+    maybeToMultinomial (Hyper b u a h f) =
+      let fs = V.focals b
+      in if all (\f -> F.size f == 1) fs
+         then let bv = V.toList b
+                  bv' = map (\(a, r) -> ((F.toList a) !! 0, r)) bv
+              in Just $ Multinomial (V.fromList bv') u a h f
+         else Nothing
+\end{code}
+
+The same trick applies to obtaining binomial opinions. We first obtain the
+relevant multinomial opinion and then see if we can safely convert it into
+a binomial opinion. If so, great! Elsewise we return an error message to
+the user.
+
+\begin{code}
+getBinomial :: (Ord h, Ord a) => h -> Int -> a -> SLExpr h a (Binomial h a)
+getBinomial holder f x = do
+  m <- getMultinomial holder f
+  case maybeToBinomial x m of
+    Nothing -> err "getBinomial: not a binomial opinion"
+    Just b  -> return b
+  where
+    maybeToBinomial x (Multinomial b u a h f) = do
+      guard (F.size f == 2)
+      guard (x `F.member` f)
+      let y = fst . head . V.elemsWhere (/= x) $ b
+      let b' = V.value b x
+      let d' = V.value b y
+      let u' = 1 - b' - d'
+      let a' = V.value a x
+      return $ Binomial b' d' u' a' h (Normal x y)
+\end{code}
+
+In the above code for \emph{maybeToBinomial} we utilize the fact that the
+\emph{Maybe} type is an instance of the type class \emph{MonadPlus}, which
+gives us access to the \emph{guard} function. MonadPlus can be thought of
+the set of types that are monads, but also have the properties of monoids
+from algebra: a zero element (in the case of Maybe, the Nothing data
+constructor), and a method of combining two MonadPlus objects together, which
+in Haskell is called \emph{mplus}. An example instance of MonadPlus for
+Maybe would be the following:
+
+\begin{spec}
+instance MonadPlus Maybe where
+  mzero = Nothing
+  Nothing  `mplus` x = x
+  (Just x) `mplus` _ = x
+\end{spec}
+
 
 
 \end{document}
