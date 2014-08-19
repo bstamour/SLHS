@@ -52,9 +52,15 @@ We represent belief holders as a recursive data type in order to be able to capt
 yet "imaginary" belief holders such as "the consensus of agents A, B and C."
 
 \begin{code}
+
+data FusionType = Cumulative
+                | Averaging
+                deriving (Eq, Ord, Show)
+
 data Holder a = Holder a
               | Discount (Holder a) (Holder a)
-              | Consensus (Holder a) (Holder a)
+              | Fuse FusionType (Holder a) (Holder a)
+              | Constraint (Holder a) (Holder a)
               deriving (Eq, Ord, Show)
 \end{code}
 

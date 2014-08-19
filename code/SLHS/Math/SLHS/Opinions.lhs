@@ -43,14 +43,26 @@ like the following:
 
 \begin{code}
 
+
 data Binomial h a = Binomial { bBelief      :: Rational
                              , bDisbelief   :: Rational
                              , bUncertainty :: Rational
                              , bAtomicity   :: Rational
                              , bHolder      :: Holder h
-                             , bFrame       :: F.Frame a
+                             , bFrame       :: BinomialFrame a
                              } deriving Show
+
+data BinomialFrame a = Normal a a
+                     | Split (F.Frame a) (F.Frame a)
+                     deriving Show
+
+isPartitioned :: Binomial h a -> Bool
+isPartitioned (Binomial _ _ _ _ _ (Normal _ _)) = True
+isPartitioned _                                 = False
 \end{code}
+
+
+
 
 
 
@@ -179,7 +191,8 @@ opinion types follows.
 instance Ord a => Opinion Binomial h a where
   type ExpectationType Binomial h a    = Rational
   expectation (Binomial b d u a _ _)   = b + a * u
-  getFrame (Binomial _ _ _ _ _ frm) = frm
+  getFrame (Binomial _ _ _ _ _ (Normal x y)) = F.fromList [x, y]
+  getFrame (Binomial _ _ _ _ _ (Split f1 f2)) = f1 `F.union` f2
 
 instance Opinion Multinomial h a where
   type ExpectationType Multinomial h a = V.Vector a
@@ -254,11 +267,12 @@ maybeToBinomial :: Ord a => a -> Multinomial h a -> Maybe (Binomial h a)
 maybeToBinomial x (Multinomial b u a h f) = do
   guard (F.size f == 2)
   guard (x `F.member` f)
+  let y = fst . head . V.elemsWhere (/= x) $ b
   let b' = V.value b x
-  let d' = snd . head . V.elemsWhere (/= x) $ b
+  let d' = V.value b y
   let u' = 1 - b' - d'
   let a' = V.value a x
-  return $ Binomial b' d' u' a' h f
+  return $ Binomial b' d' u' a' h (Normal x y)
 \end{code}
 }
 

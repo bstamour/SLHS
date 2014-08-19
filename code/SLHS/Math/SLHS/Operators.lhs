@@ -70,26 +70,30 @@ is defined when $x$ and $y$ are disjoint subsets of the same frame of discernmen
 \cite{mcanally2004addition}. Binomial addition is implemented as follows:
 
 \begin{code}
-(+!) :: (ToBinomial op1, ToBinomial op2, Eq h)
-       => SLExpr h a (op1 h (F.Subframe a))
-       -> SLExpr h a (op2 h (F.Subframe a))
-       -> SLExpr h a (Binomial h (F.Subframe a))
+(+!) :: (ToBinomial op1, ToBinomial op2, Eq h, Eq b, Ord b)
+       => SLExpr h a (op1 h b)
+       -> SLExpr h a (op2 h b)
+       -> SLExpr h a (Binomial h b)
 opx +! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
+  require (isPartitioned opx') "opinion must be a partition"
+  require (isPartitioned opy') "opinion must be a partition"
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  require (getFrame opx' == getFrame opy') "opinions must have the same frame"
   return $ add' opx' opy'
 \end{code}
 
 \begin{code}
-add' :: Binomial h (F.Subframe a) -> Binomial h (F.Subframe a) -> Binomial h (F.Subframe a)
-add' (Binomial bx dx ux ax mx _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' mx undefined
+add' :: Binomial h a -> Binomial h a -> Binomial h a
+add' opx@(Binomial bx dx ux ax hx fx) (Binomial by dy uy ay _ fy) =
+  Binomial b' d' u' a' hx f
   where
     b' = bx + by
     d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
     u' = (ax * ux + ay * uy) / (ax + ay)
     a' = ax + ay
+    f  = undefined
 \end{code}
 
 Here we see a pattern that we will re-use for all operator implementations. We start
@@ -105,21 +109,24 @@ two opinions $\omega_x$ and $\omega_y$ where $x \cap y = y$, the difference,
 $\omega_{x \setminus y}$ is calculated as follows:
 
 \begin{code}
-(-!) :: (ToBinomial op1, ToBinomial op2, Eq h)
-        => SLExpr h a (op1 h (F.Subframe b))
-        -> SLExpr h a (op2 h (F.Subframe b))
-        -> SLExpr h a (Binomial h (F.Subframe b))
+(-!) :: (ToBinomial op1, ToBinomial op2, Eq h, Eq b, Ord b)
+        => SLExpr h a (op1 h b)
+        -> SLExpr h a (op2 h b)
+        -> SLExpr h a (Binomial h b)
 opx -! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
+  require (isPartitioned opx') "opinion must be a partition"
+  require (isPartitioned opy') "opinion must be a partition"
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
+  require (getFrame opx' == getFrame opy') "opinions must have the same frame"
   return $ subtract' opx' opy'
 \end{code}
 
 \begin{code}
-subtract' :: Binomial h (F.Subframe a) -> Binomial h (F.Subframe a) -> Binomial h (F.Subframe a)
-subtract' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' undefined undefined
+subtract' :: Binomial h a -> Binomial h a -> Binomial h a
+subtract' (Binomial bx dx ux ax hx fx) (Binomial by dy uy ay _ fy) =
+  Binomial b' d' u' a' hx undefined
   where
     b' = bx - by
     d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
@@ -155,15 +162,15 @@ of the two opinions.
 (*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
         => SLExpr h a (op1 h b)
         -> SLExpr h a (op2 h c)
-        -> SLExpr h a (Binomial h (F.Subframe (b, c)))
+        -> SLExpr h a (Binomial h (b, c))
 opx *! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
   return $ b_times' opx' opy'
 
-b_times' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' undefined undefined
+b_times' (Binomial bx dx ux ax hx _) (Binomial by dy uy ay _ _) =
+  Binomial b' d' u' a' hx undefined
   where
     b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
          / (1 - ax * ay)
@@ -190,7 +197,7 @@ function:
 (~*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
          => SLExpr h a (op1 h b)
          -> SLExpr h a (op2 h c)
-         -> SLExpr h a (Binomial h (F.Subframe (b, c)))
+         -> SLExpr h a (Binomial h (b, c))
 opx ~*! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
@@ -230,7 +237,7 @@ $\omega_{x \overline{\land} y} = \omega_x / \omega_y$
 
 \begin{code}
 (/!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (F.Subframe (b, c)))
+        => SLExpr h a (op1 h (b, c))
         -> SLExpr h a (op2 h b)
         -> SLExpr h a (Binomial h c)
 opx /! opy = do
@@ -272,7 +279,7 @@ computed as follows:
 
 \begin{code}
 (~/!) :: (ToBinomial op1, ToBinomial op2)
-         => SLExpr h a (op1 h (F.Subframe (b, c)))
+         => SLExpr h a (op1 h (b, c))
          -> SLExpr h a (op2 h b)
          -> SLExpr h a (Binomial h c)
 opx ~/! opy = do
@@ -337,17 +344,18 @@ the user that selects the kind of discounting based on an input parameter of typ
 \emph{Favouring}:
 
 \begin{code}
-discount :: (ToBinomial op1, ToBinomial op2, Ord h, Ord a)
+discount :: (ToBinomial op1, ToBinomial op2, Ord h, Ord b)
             => Favouring
             ->SLExpr h a (op1 h h)
-            -> SLExpr h a (op2 h a)
-            -> SLExpr h a (Binomial h a)
-discount f opx opy = do opx' <- toBinomial <$> opx
-                        opy' <- toBinomial <$> opy
-                        return $ case f of
-                          Uncertainty       -> discount_u opx' opy'
-                          Opposite          -> discount_o opx' opy'
-                          BaseRateSensitive -> discount_b opx' opy'
+            -> SLExpr h a (op2 h b)
+            -> SLExpr h a (Binomial h b)
+discount f opx opy = do
+  opx' <- liftM toBinomial opx
+  opy' <- liftM toBinomial opy
+  return $ case f of
+    Uncertainty       -> discount_u opx' opy'
+    Opposite          -> discount_o opx' opy'
+    BaseRateSensitive -> discount_b opx' opy'
 \end{code}
 
 Depending on the first parameter, the discount function dispatches to one
@@ -356,8 +364,8 @@ Their definitions follow below.
 
 \begin{code}
 discount_u :: Binomial h h -> Binomial h a -> Binomial h a
-discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
-  Binomial b' d' u' a' undefined undefined
+discount_u (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
+  Binomial b' d' u' a' (Discount hx hy) fy
   where
     b' = bb * bx
     d' = bb * dx
@@ -367,8 +375,8 @@ discount_u (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 
 \begin{code}
 discount_o :: Binomial h h -> Binomial h a -> Binomial h a
-discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
-  Binomial b' d' u' a' undefined undefined
+discount_o (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
+  Binomial b' d' u' a' (Discount hx hy) fy
   where
     b' = bb * bx + db * dx
     d' = bb * dx + db * bx
@@ -378,8 +386,8 @@ discount_o (Binomial bb db ub ab _ _) (Binomial bx dx ux ax _ _) =
 
 \begin{code}
 discount_b :: (Ord a, Ord h) => Binomial h h -> Binomial h a -> Binomial h a
-discount_b op1@(Binomial bb db ub ab _ _) op2@(Binomial bx dx ux ax _ _) =
-  Binomial b' d' u' a' undefined undefined
+discount_b op1@(Binomial bb db ub ab hx _) op2@(Binomial bx dx ux ax hy fy) =
+  Binomial b' d' u' a' (Discount hx hy) fy
   where
     b' = expectation op1 * bx
     d' = expectation op1 * dx
@@ -442,18 +450,20 @@ operator with the symbol $*!$, and we use the name \emph{times} to
 denote the multinomial operator.
 
 \begin{code}
-times :: (ToMultinomial op1, ToMultinomial op2, Ord b, Ord c)
+times :: (ToMultinomial op1, ToMultinomial op2, Eq h, Ord b, Ord c)
          => SLExpr h a (op1 h b) -> SLExpr h a (op2 h c)
          -> SLExpr h a (Multinomial h (b, c))
-times opx opy = do opx' <- toMultinomial <$> opx
-                   opy' <- toMultinomial <$> opy
-                   return $ m_times' opx' opy'
+times opx opy = do
+  opx' <- liftM toMultinomial opx
+  opy' <- liftM toMultinomial opy
+  require (mHolder opx' == mHolder opy') "opinions must have the same holder"
+  return $ m_times' opx' opy'
 \end{code}
 
 \begin{code}
 m_times' :: (Ord a, Ord b) => Multinomial h a -> Multinomial h b -> Multinomial h (a, b)
-m_times' (Multinomial bx ux ax mx _) (Multinomial by uy ay my _) =
-  Multinomial b' u' a' mx undefined
+m_times' (Multinomial bx ux ax hx fx) (Multinomial by uy ay _ fy) =
+  Multinomial b' u' a' hx (fx `F.cross` fy)
   where
     b' = V.fromList bxy
     u' = uxy
@@ -496,18 +506,19 @@ should be used under different circumstances depending on the meaning
 of the fused opinions.
 
 \begin{code}
-cFuse :: (ToHyper op1, ToHyper op2, Ord a)
-         => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a) -> SLExpr h a (Hyper h a)
-cFuse opa opb = do opa' <- toHyper <$> opa
-                   opb' <- toHyper <$> opb
-                   pure $ cFuse' opa' opb'
+cFuse :: (ToHyper op1, ToHyper op2, Ord b)
+         => SLExpr h a (op1 h b) -> SLExpr h a (op2 h b) -> SLExpr h a (Hyper h b)
+cFuse opa opb = do
+  opa' <- liftM toHyper opa
+  opb' <- liftM toHyper opb
+  return $ cFuse' opa' opb'
 \end{code}
 
 \begin{code}
 cFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-cFuse' (Hyper ba ua aa _ _) (Hyper bb ub ab _ _)
-  | ua /= 0 || ub /= 0 = Hyper b' u' a' undefined undefined
-  | otherwise          = Hyper b'' u'' a'' undefined undefined
+cFuse' (Hyper ba ua aa hx _) (Hyper bb ub ab hy _)
+  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Cumulative hx hy) undefined
+  | otherwise          = Hyper b'' u'' a'' (Fuse Cumulative hx hy) undefined
   where
     b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = ua * ub / (ua + ub - ua * ub)
@@ -528,16 +539,17 @@ cFuse' (Hyper ba ua aa _ _) (Hyper bb ub ab _ _)
 \begin{code}
 aFuse :: (ToHyper op1, ToHyper op2, Ord a)
          => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a) -> SLExpr h a (Hyper h a)
-aFuse opa opb = do opa' <- toHyper <$> opa
-                   opb' <- toHyper <$> opb
-                   pure $ aFuse' opa' opb'
+aFuse opa opb = do
+  opa' <- liftM toHyper opa
+  opb' <- liftM toHyper opb
+  return $ aFuse' opa' opb'
 \end{code}
 
 \begin{code}
 aFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-aFuse' (Hyper ba ua aa _ _) (Hyper bb ub ab _ _)
-  | ua /= 0 || ub /= 0 = Hyper b' u' a' undefined undefined
-  | otherwise          = Hyper b'' u'' a'' undefined undefined
+aFuse' (Hyper ba ua aa hx _) (Hyper bb ub ab hy _)
+  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Averaging hx hy) undefined
+  | otherwise          = Hyper b'' u'' a'' (Fuse Averaging hx hy) undefined
   where
     b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = 2 * ua * ub / (ua + ub)
@@ -565,9 +577,10 @@ opinion.
 cUnfuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
            => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
            -> SLExpr h a (Multinomial h a)
-cUnfuse opc opb = do opc' <- toMultinomial <$> opc
-                     opb' <- toMultinomial <$> opb
-                     pure $ cUnfuse' opc' opb'
+cUnfuse opc opb = do
+  opc' <- liftM toMultinomial opc
+  opb' <- liftM toMultinomial opb
+  return $ cUnfuse' opc' opb'
 \end{code}
 
 \begin{code}
@@ -593,9 +606,10 @@ Likewise, averaging unfusion is the inverse operation to averaging fusion.
 aUnfuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
            => SLExpr h a (op1 h a) -> SLExpr h a (op2 h a)
            -> SLExpr h a (Multinomial h a)
-aUnfuse opc opb = do opc' <- toMultinomial <$> opc
-                     opb' <- toMultinomial <$> opb
-                     pure $ aUnfuse' opc' opb'
+aUnfuse opc opb = do
+  opc' <- liftM toMultinomial opc
+  opb' <- liftM toMultinomial opb
+  return $ aUnfuse' opc' opb'
 \end{code}
 
 \begin{code}
@@ -642,6 +656,13 @@ cSplit' phi (Multinomial b u a _ _) = (op1, op2)
     norm p = u + p * V.fold (+) 0 b
 \end{code}
 
+In the above function we utilized what is known as \emph{applicative style}
+to represent the function \emph{cSplit}. Applicative functors are a recent
+addition to the Haskell standard library (cite) and sit between functors
+and monads in terms of generality. All monads are applicative functors
+(hence why we were able to use the $<*>$ operator for free), and all applicative
+functors are functors in the normal Haskell sense.
+
 
 
 
@@ -672,8 +693,9 @@ deduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
           => SLExpr h a (op h a)
           -> [(a, Multinomial h b)]
           -> SLExpr h a (Multinomial h b)
-deduce opx ops = do opx' <- toMultinomial <$> opx
-                    pure $ deduce' opx' ops
+deduce opx ops = do
+  opx' <- liftM toMultinomial opx
+  return $ deduce' opx' ops
 \end{code}
 
 \begin{code}
@@ -820,8 +842,9 @@ abduce :: (ToMultinomial op,
           -> [(b, Multinomial h a)]
           -> BaseRateVector b
           -> SLExpr h a (Multinomial h b)
-abduce opx ops ay = do opx' <- toMultinomial <$> opx
-                       pure $ abduce' opx' ops ay
+abduce opx ops ay = do
+  opx' <- liftM toMultinomial opx
+  return $ abduce' opx' ops ay
 \end{code}
 
 \begin{code}
@@ -884,17 +907,20 @@ is equivalent in meaning to Dempster's rule of combination from
 \emph{Dempster Shafer Theory}.
 
 \begin{code}
-constraint :: (ToHyper op1, ToHyper op2, Ord a)
-              => SLExpr h a (op1 h a)
-              -> SLExpr h a (op2 h a)
-              -> SLExpr h a (Hyper h a)
-constraint op1 op2 = constraint' <$> (fmap toHyper op1) <*> (fmap toHyper op2)
+constraint :: (ToHyper op1, ToHyper op2, Ord b)
+              => SLExpr h a (op1 h b)
+              -> SLExpr h a (op2 h b)
+              -> SLExpr h a (Hyper h b)
+constraint op1 op2 = do
+  op1' <- liftM toHyper op1
+  op2' <- liftM toHyper op2
+  return $ constraint' op1' op2'
 \end{code}
 
 \begin{code}
 constraint' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-constraint' (Hyper bA uA aA _ _) (Hyper bB uB aB _ _) =
-  Hyper bAB uAB aAB undefined undefined
+constraint' (Hyper bA uA aA hx _) (Hyper bB uB aB hy _) =
+  Hyper bAB uAB aAB (Constraint hx hy) undefined
   where
     bAB = V.fromList . map (\k -> (k, harmony k / (1 - conflict))) $ keys
     uAB = (uA * uB) / (1 - conflict)

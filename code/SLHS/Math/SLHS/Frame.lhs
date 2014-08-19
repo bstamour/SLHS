@@ -105,6 +105,9 @@ fromList xs = Frame $ S.fromList xs
 
 member :: Ord a => a -> Frame a -> Bool
 member x (Frame s) = x `S.member` s
+
+cross :: (Ord a, Ord b) => Frame a -> Frame b -> Frame (a, b)
+cross (Frame s1) (Frame s2) = fromList [ (x, y) | x <- S.toList s1, y <- S.toList s2 ]
 \end{code}
 
 
