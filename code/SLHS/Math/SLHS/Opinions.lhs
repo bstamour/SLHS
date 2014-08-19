@@ -346,8 +346,9 @@ gives us access to the \emph{guard} function. MonadPlus can be thought of
 the set of types that are monads, but also have the properties of monoids
 from algebra: a zero element (in the case of Maybe, the Nothing data
 constructor), and a method of combining two MonadPlus objects together, which
-in Haskell is called \emph{mplus}. An example instance of MonadPlus for
-Maybe would be the following:
+in Haskell is called \emph{mplus}. Unfortunately the rules for identity and
+associativity cannot be enforced in the language itself. An example instance of
+MonadPlus for Maybe would be the following:
 
 \begin{spec}
 instance MonadPlus Maybe where
