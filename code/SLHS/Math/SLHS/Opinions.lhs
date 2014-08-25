@@ -28,6 +28,8 @@ import qualified Math.SLHS.Frame as F
 
 import qualified Data.Set as S
 import qualified Data.Map as M
+import Data.Ratio
+import Control.Arrow
 import Control.Monad
 \end{code}
 }
@@ -117,14 +119,37 @@ special case of multinomial opinions.
 
 \begin{code}
 class ToMultinomial op where
-  toMultinomial :: op h a -> Multinomial h a
+  toMultinomial :: Ord a => op h a -> Multinomial h a
 
 instance ToMultinomial Multinomial where
   toMultinomial = id
 
 instance ToMultinomial Binomial where
-  toMultinomial = undefined
+  toMultinomial (Binomial b d u a h (Normal x y)) = Multinomial b' u a' h f
+    where
+      b' = V.fromList [ (x, b), (y, d) ]
+      a' = V.fromList [ (x, a), (y, 1 - a) ]
+      f  = F.fromList [x, y]
+
+  toMultinomial (Binomial b d u a h (Split xs ys)) = Multinomial b' u a' h f
+    where
+      b' = V.fromList $
+           [ (x, r) | x <- F.toList xs, let r = b / toRational (F.size xs) ]
+           ++
+           [ (y, r) | y <- F.toList ys, let r = d / toRational (F.size ys) ]
+      a' = V.fromList $
+           [ (x, r) | x <- F.toList xs, let r = a / toRational (F.size xs) ]
+           ++
+           [ (y, r) | y <- F.toList ys, let r = (1 - a) / toRational (F.size ys) ]
+      f  = xs `F.union` ys
 \end{code}
+
+In the first case of the implementation of \emph{ToMultinomial Binomial}, where the
+binomial opinion is defined over a frame of cardinality 2, we simply create the
+relevant data structures for the multinomial opinion. In the second case, when the
+binomial opinion is defined over a partition of a frame, we split the belief, disbelief,
+and atomicity over the partitions to create the multinomial opinion. In a way, this
+operation can be seen as a form of \emph{uncoarsening}.
 
 
 \subsection{Hyper Opinions}
@@ -143,16 +168,18 @@ data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
                        } deriving Show
 
 class ToHyper op where
-  toHyper :: op h a -> Hyper h a
+  toHyper :: Ord a => op h a -> Hyper h a
 
 instance ToHyper Hyper where
   toHyper = id
 
 instance ToHyper Multinomial where
-  toHyper = undefined
+  toHyper (Multinomial b u a h f) = Hyper b' u a h f
+    where
+      b' = V.fromList . map (first F.singleton) . V.toList $ b
 
 instance ToHyper Binomial where
-  toHyper = undefined
+  toHyper = toHyper . toMultinomial
 \end{code}
 
 

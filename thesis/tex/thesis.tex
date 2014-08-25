@@ -1,3 +1,17 @@
+%
+% generic formatting stuff:
+% 1. Chapter X, Section Y
+% 2. Make sure to fix up Josang's name.
+% 3. Get a bunch of references to applications of SL
+% 4. References for chapter 2. There should be tons and tons.
+%
+
+%
+% All mentions of combinator => operator.
+%
+
+
+
 \documentclass[oneside]{book}
 
 \usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
@@ -10,18 +24,6 @@
 \usepackage{url}
 \usepackage{verbatim}
 
-\lstloadlanguages{Haskell}
-
-
-
-
-
-
-
-
-
-
-
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
@@ -29,10 +31,7 @@
 \newtheorem{corollary}[theorem]{Corollary}
 
 
-
-
-
-
+\lstloadlanguages{Haskell}
 
 \lstnewenvironment{code}
     {\lstset{}%
@@ -73,7 +72,10 @@
 \doublespacing
 \long\def\ignore#1{}
 
-\title{A Purely Functional Subjective Logic Combinator Library}
+%\title{A Purely Functional Subjective Logic Combinator Library}
+
+\title{A Subjective Logic Library Constructed From Monadic Higher Order Functions}
+
 
 \author{Bryan St. Amour}
 
@@ -101,9 +103,11 @@
 \subfile{chapter5}
 \subfile{chapter6}
 
+
 \nocite{*} % Just for now...
 \bibliography{bibliography}
 \bibliographystyle{plain}
+
 
 \chapter*{Vita Auctoris}
 \addcontentsline{toc}{chapter}{Vita Auctoris}

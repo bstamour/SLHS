@@ -437,14 +437,14 @@ We then introduce the \emph{deduction} and \emph{abduction} operators for reason
 and lastly we introduce the \emph{belief constraint} operator.
 
 
-
 \subsubsection{Multinomial Multiplication}
 
 The multiplication of two multinomial opinions is a separate operator
 than the product operator defined over binomial opinions. Whereas the
 binomial product operator is equivalent to the logical \emph{and}
 operator, multinomial multiplication constructs an opinion over a new
-frame which is the cartesian product of the frames of the input opinions.
+frame which is the cartesian product of the frames of the input opinions
+(cite).
 In order to avoid naming conflicts, we have chosen to name the binomial
 operator with the symbol $*!$, and we use the name \emph{times} to
 denote the multinomial operator.
@@ -503,7 +503,7 @@ m_times' (Multinomial bx ux ax hx fx) (Multinomial by uy ay _ fy) =
 Hyper opinions can be fused together using two different operators:
 \emph{cumulative fusion} and \emph{averaging fusion}. Each operator
 should be used under different circumstances depending on the meaning
-of the fused opinions.
+of the fused opinions \cite{josang2010cumulative, josang2012interpretation}.
 
 \begin{code}
 cFuse :: (ToHyper op1, ToHyper op2, Ord b)
@@ -567,8 +567,8 @@ aFuse' (Hyper ba ua aa hx _) (Hyper bb ub ab hy _)
     bB = V.value bb
 \end{code}
 
-Cumulative \emph{unfusion} is defined for multinomial opinions. It has
-yet to be generalized to hyper opinions. Given an opinion that represents
+Cumulative \emph{unfusion} is defined for multinomial opinions \cite{josang2009cumulative}.
+It has yet to be generalized to hyper opinions. Given an opinion that represents
 the result of cumulatively fusing together two opinions, and one of the
 two original opinions, it is possible to extract the other original
 opinion.
@@ -600,7 +600,8 @@ cUnfuse' (Multinomial bc uc ac _ _) (Multinomial bb ub ab _ _)
     belief x b = (b * ub - V.value bb x  * uc) / (ub - uc + ub * uc)
 \end{code}
 
-Likewise, averaging unfusion is the inverse operation to averaging fusion.
+Likewise, averaging unfusion is the inverse operation to averaging fusion
+\cite{josang2009cumulative}.
 
 \begin{code}
 aUnfuse :: (ToMultinomial op1, ToMultinomial op2, Ord a)
@@ -630,9 +631,9 @@ aUnfuse' (Multinomial bc uc ac _ _) (Multinomial bb ub ab _ _)
 \end{code}
 
 Fission is the operation of splitting a multinomial opinion into two
-multinomial opinions based on some ratio $\phi$. We refer to this as
-the \emph{split} operator. Like unfusion, fission has not yet been
-generalized to hyper opinions.
+multinomial opinions based on some ratio $\phi$ \cite{josang2009fission}
+We refer to this as the \emph{split} operator. Like unfusion, fission
+has not yet been generalized to hyper opinions.
 
 \begin{code}
 cSplit :: ToMultinomial op => Rational -> SLExpr h a (op h a)

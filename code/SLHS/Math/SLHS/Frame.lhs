@@ -103,6 +103,9 @@ toList (Frame s) = S.toList s
 fromList :: Ord a => [a] -> Frame a
 fromList xs = Frame $ S.fromList xs
 
+singleton :: Ord a => a -> Frame a
+singleton x = fromList [x]
+
 member :: Ord a => a -> Frame a -> Bool
 member x (Frame s) = x `S.member` s
 

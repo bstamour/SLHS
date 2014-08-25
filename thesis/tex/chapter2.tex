@@ -2,18 +2,15 @@
 
 \begin{document}
 
-\chapter{Background Information}
+\chapter{Background}
 \label{chap:background-information}
 
-In this chapter we will give a brief introduction to the relevant background material pertaining
-to this thesis. We will begin with a discussion of \emph{decision support systems}, followed by
-an overview of \emph{artificial reasoning}. Next we will discuss \emph{Dempster-Shafer Theory}, and
-then \emph{Subjective Logic}. We will then conclude with
+In this chapter we provide an introduction to the relevant background material pertaining
+to this thesis. We begin with a discussion of \emph{decision support systems}, followed by
+an overview of \emph{artificial reasoning}. Next we discuss \emph{Dempster-Shafer Theory}, and
+then \emph{Subjective Logic}. We then conclude with
 a brief overview of the \emph{Haskell} programming language, as it is the language used for the program
 examples throughout this thesis.
-
-
-
 
 
 
@@ -25,7 +22,8 @@ planning, or operations. Typically decision support systems work with the kinds 
 or underspecified problems faced by managers and decision-makers in many areas; involve the
 synthesis of models, analytics, and data; are targetted at non-technical people; and are designed
 to be flexible and adaptable in the face of new data or changes to the working environment
-\cite{sprague1980framework}. Some example decision support systems are the UDMDSS system
+\cite{sprague1980framework}. Some example decision support systems are the
+Unified Data Management and Decision Support System (UDMDSS)
 for health research surveys \cite{kent2010application},
 and the Gate Assignment Display System (GADS) developed for United Airlines
 by Texas Instruments [cite].
@@ -49,16 +47,192 @@ taxonomy:
     rules.
 \end{itemize}
 
-It is in the latter, \emph{knowledge-driven systems}, that this thesis is mostly concerned with: systems
-that are required to reason with (possibly incomplete) domain knowledge in order to assist the human
-decision-maker with his or her task.
+%
+% Discuss UDMDSS and its components. We develop a full-spectrum DSS that requires reasoning
+% at every step. SL forms the core of the reasoning engine. How does this library fit in with UDSS?
+%
+
+
+%
+% Seguay this into reasoning systems...
+%
 
 
 
-\section{The Dempster Shafer Theory of Evidence}
 
-Dempster-Shafer Theory is a mathematical theory of evidence that allows for the combination of
-evidence from different sources to arrive at a level of belief \cite{shafer1976mathematical}.
+
+
+%It is in the latter, \emph{knowledge-driven systems}, that this thesis is mostly concerned with: systems
+%that are required to reason with (possibly incomplete) domain knowledge in order to assist the human
+%decision-maker with his or her task.
+
+
+
+
+
+\section{Artificial Reasoning}
+
+
+
+
+
+
+%
+% Deduction: We all do deduction. Truths + Inference Rule = more facts.
+% Induction: The scientist. Observe something, generate hypothesis, test hypothesis.
+% Abduction: The doctor. Observe something, list of hypotheses, need to induce the
+% correct one and then apply deduction to see if it is valid? More info on this...
+%
+
+
+
+%
+% Certain vs Uncertain reasoning.
+% Certain: closed world. Propositional logic, modal logic, etc.
+% Uncertain: open world. Most of the weight of the thesis goes into this section...
+%
+
+
+
+
+
+Unlike deduction, induction and abduction are not certain inference techniques: it is
+not possible to reason inductively or abductively with absolute certainty.
+
+\subsection{Uncertain Reasoning}
+
+Dealing with the various kinds of uncertainty, such as fuzzy or incomplete information,
+has been a cornerstone problem for artificial reasoning research. Various systems and
+calculi have been proposed and explored over the years, including but not limited to
+
+\begin{itemize}
+  \item Bayesian Probability
+  \item Fuzzy logic and fuzzy set theory
+  \item Dempster-Shafer Theory
+  \item Subjective Logic
+\end{itemize}
+
+
+
+
+\subsubsection{Bayesian Probability}
+
+%
+% This is not Bayes' rule. This is bayesian updating. Introduce this better.
+% Contrast this with frequentist statistics?
+%
+
+%
+% mention the complexity of inverting the conditionals for bayesian update.
+%
+
+Bayesian probability is a probabilistic extension to propositional logic that
+supports reasoning with propositions whose truth values are uncertain. Bayesian
+probability is an evidence-based probability theory: probabilities of events are set
+to prior values and these values are updated as new evidence is encountered
+by applying \emph{Bayes' Rule}. The probability of $A$ when accounting for $B$ is
+computed as
+
+$$
+P(A | B) = \frac{P(B | A)}{P(B)} \times P(A)
+$$
+
+where $\frac{P(B | A)}{P(B)}$ represents the support that $B$ gives to $A$, and
+$P(A)$ is the prior probability of $A$.
+
+
+
+
+
+\subsubsection{Fuzzy Set Theory}
+
+%
+% Discuss overlapping instances. Example: ``Medium'' vs ``Tall''. How does
+% an item being in two sets at the same time correspond to some uncertainty...
+%
+
+Fuzzy set theory is an extension to traditional set theory that allows for
+elements to be partially contained within sets. In traditional set theory,
+the statement $x \in A$ is binary: $x$ is either an element of the set $A$ or
+it is not an element of $A$. For a given fuzzy set, fuzzy set theory assigns
+a measure to each element between 0 and 1, where 0 means the element is not
+in the set, and 1 means the element is entirely in the set, and any value in
+between represents a kind of partial membership.
+
+As an example, consider the set of tall people. The concept of tallness is
+somewhat ambiguous, and so we represent it as a fuzzy set by the following
+membership function:
+
+$$
+Tall(X) = \begin{cases}
+  0                 & \mbox{if } x < 42 \\
+  \frac{x - 42}{28} & \mbox{if } 42 \leq x \leq 70 \\
+  1                 & \mbox{if } x > 70
+\end{cases}
+$$
+
+If x, the persons height in inches, is less than 42, then they are definitely
+not tall. If the person is taller than 6 feet, then they are definitely tall.
+Any height in between is assigned a value between 0 and 1 by a simple linear
+function.
+
+
+
+
+
+\subsubsection{Dempster-Shafer Theory}
+
+Dempster-Shafer Theory is a mathematical and philosophical theory of evidence in
+which the central model of calculation is the \emph{basic belief assignment}. Given
+a \emph{frame of discernment} - a set of mutually disjoint (atomic) elements - that
+represents the entire set of discernable states in the universe of discourse, a
+basic belif assignment is a function from the powerset of the frame of discernment
+into the range $\lbrack 0, 1\rbrack$. The associated \emph{belief mass} for each
+subset of the frame is a measure of the amount of belief given by the holder of
+the basic belief assignment to the subset of states of the universe. Basic belief
+assignments can be combined together using \emph{Dempster's rule of combination}
+to produce new basic belief assignments. Subjective Logic shares many commonalities
+with Dempster-Shafer Theory, and thus we discuss Dempster-Shafer Theory in more detail
+in the next section.
+
+
+
+\subsubsection{Subjective Logic}
+
+Subjective Logic was introduced by Adun Josang in 1997 [cite] as a new
+extension to probabilistic logic that fixes some of the issues with
+Dempster-Shafer Theory. Though it is relatively young and is under
+constant refinement, Subjective Logic has been shown to be effective
+across a range of areas that require uncertain reasoning.  The primary
+object of consideration in Subjective Logic is the Subjective Opinion,
+which is a 3-tuple: $\omega_X = \langle b_X, u_X, a_X \rangle$, where
+$b_X$ is an assignment of belief mass to proper non-empty subsets of
+the frame of discernment $X$, $u_X$ is a scalar representing the
+uncertainty of the opinion, and $a_X$ is the a-priori belief mass
+assigned to elements of the frame $X$. Subjective Logic supports many
+operators for combining opinions together, and has support for both
+deductive and abductive reasoning with opinions.
+
+In this section we introduced the topic of artifical reasoning and discussed
+four major calculi for reasoning with uncertainty. In the next section we
+discuss Dempster-Shafer Theory in more detail, and then we give a more
+thourough introduction to Subjective Logic.
+
+
+
+
+
+
+%
+% DS-Theory and SL allow for ``evidentiary reasoning''. Perhaps add a section and
+% label it as so.
+%
+
+\section{Dempster-Shafer Theory}
+
+Dempster-Shafer Theory is a mathematical and philosophical theory of evidence that allows for
+the combination of evidence from different sources to arrive at a level of
+belief \cite{shafer1976mathematical}.
 
 Let $X$ be a \emph{frame of discernment},
 a set of mutually atomic entities. A \emph{basic belief assignment} over X is a function $m$ from the
@@ -98,35 +272,12 @@ and thus offers more tools to the user than Dempster-Shafer theory.
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \section{Subjective Logic}
 
 Subjective Logic is a newly emergent probabilistic logic calculus that supports reasoning
 under uncertainty \cite{josang2001logic}. In this section we will briefly introduce the
 core objects of Subjective Logic: subjective opinions, as well as some of the operators that
 allow for the construction of complex expressions.
-
-
-
-
-
-
 
 \subsection{Subjective Opinions}
 
@@ -198,9 +349,6 @@ Theory. Binomial opinions correspond to \emph{beta distributions}, multinomial o
 to \emph{dirichlet distributions}, and hyper opinions correspond to \emph{hyper-dirichlet distributions}.
 
 
-
-
-
 \subsection{Subjective Logic Operators}
 
 Subjective Logic includes a wealth of operators for working with all kinds of opinions. It includes
@@ -227,6 +375,105 @@ require reasoning when uncertainty is present.
 
 
 
+\section{Languages and Tools for Artificial Reasoning}
+
+
+% TODO: Group these into languages and tools.
+
+
+
+
+In this section we discuss some tools that are available for researchers developing
+artificial reasoning systems.
+
+\subsection{Weka}
+
+Waikato Environment for Knowledge Analysis (WEKA) is a popular workbench for machine learning
+\cite{witten2005data}. It contains many popular algorithms and visualization techniques for performing data mining,
+data analysis, and predictive modelling. It is developed in the JAVA programming language, and is
+distributed as \emph{Free Software} under the GNU General Public License.
+
+%
+% Written in Java. Talk about weaknesses vs haskell.
+%
+
+\subsection{R}
+
+R is a programming language for statistical computing [cite]. It is popular among statisticians, and
+is a power and free alternative to other statistical tools such as SAS and SPSS [cite]. R can be extended through
+user-defined packages, many of which are available through repositories such as CRAN and Bioconductor.
+
+%
+% Talk about being built mainly for statisticians. General-purpose but not as nice as Haskell.
+%
+
+\subsection{DSI Toolbox}
+
+Dempster-Shafer with Intervals (DSI) is a verified MATLAB toolbox
+for computing with Dempster-Shafer Theory \cite{auer2010verified}. The authors
+claim that DSI introduces intervals to a previously developed IPP toolbox\cite{limbourg2007}
+that fixes rounding errors. The authors claim that their use of interval calculus and
+directed rounding allows DSI to avoid the rounding errors of IPP.
+
+%
+% Fixes rounding errors. What other errors could possibly exist? This is a workbench though,
+% so compare it vs ours.
+%
+
+\subsection{Prolog}
+
+Prolog is a general purpose declarative programming language that represents all computations
+as either facts, or Horn-clauses, and programs are executed by chaining together logical inferences.
+Horn clauses are logical statements of the form
+
+$$
+head :- X1, X2, ... XN
+$$
+
+meaning the statement $head$ is true only when statements $X1$ through $XN$ are also true.
+As an example of how one can represent computations in Prolog, the following program computes
+the factorial of a number:
+
+\begin{code}
+factorial(0, X) :- X = 1.
+factorial(N, X) :- NN = N - 1, factorial(NN, X1), X = X1 * N.
+\end{code}
+
+Though it was the language of choice for Japan's ambitious fifth generation computing project \cite{shapiro1983fifth},
+Prolog still sees much use in the Natural Language Processing community
+\cite{covington1994natural, pelletier2006representation},
+as it has excellent support for implementing \emph{definite-clause grammars} \cite{pereira1980definite}.
+
+%
+% Fuck Prolog. Discuss writing general purpose programs. etc.
+%
+
+
+
+%
+% TODO: Add a section on agent-based modelling.
+%
+
+
+
+%
+% TODO: Add a table of each toolkit / language discussed. Rows:
+% 1. Tool name
+% 2. Fundamental item for reasoning
+% 3. Input Data
+% 4. Drawbacks.
+%
+
+
+
+
+\subsection{Summary}
+
+There currently exist many tools for developing artificial reasoning systems, yet
+due to it being quite young in comparrison to other calculi, there do not yet exist any
+comprehensive tools for developing applications with Subjective Logic. In the next section
+we present an overview of the Haskell programming language, and in chapter \ref{chap:sl-in-haskell}
+we present SLHS: Subjective Logic in Haskell.
 
 
 
@@ -333,12 +580,12 @@ the function to it to obtain a result.
 
 \section{Summary}
 
-In this chapter we briefly discussed the key ideas of decision support systems, followed by a brief
-introduction to Dempster-Shafer theory. We then introduced Subjective Logic and presented a brief
-overview of the Haskell programming language. In the next chapter we will present our
-research motivation, our thesis hypothesis, our research objectives, and our methodology.
-
-
+In this chapter we discussed the key ideas of decision support
+systems, followed by an overview of artificial reasoning, and an
+introduction to Dempster-Shafer theory. We then introduced Subjective
+Logic and presented a brief overview of the Haskell programming
+language. In the next chapter we present our research motivation,
+our thesis hypothesis, our research objectives, and our methodology.
 
 
 \end{document}
