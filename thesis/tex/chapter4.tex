@@ -52,6 +52,26 @@ sub-expressions.
 
 
 
+\section{Limitations}
+\label{sec:limitations}
+
+While SLHS is a robust implementation of the opinions and operators of Subjective Logic,
+our decision to represent all numbers as arbitrary-precision rational numbers imposes a
+fundamental restriction on the kinds of data that the library can handle. Any computation
+that involves the assignment of irrational numbers as belief masses cannot be represented
+directly in our system. However, it is possible to modify SLHS to be able to handle such
+values: one simply needs to either change the belief vectors to use values of type
+\emph{Double} instead of \emph{Rational}, or better yet, represent the numeric type as
+an additional type parameter to the belief vector. The latter would allow the user to
+use any numerical type of his or her choosing.
+
+
+
+
+%
+% Under extensions of SL, mention how SL is incomplete as far as total operators. Operators
+% seemingly added to fill some need... Perhaps discuss some information theory/entropy here...
+%
 
 
 
@@ -68,16 +88,6 @@ the validity of the library by recomputing examples from the literature.
 
 
 
-%
-% Discuss some limitations here: the use of rational numbers for example restricts
-% all of the priors to be rational. Cannot model radioactive decay (1/e).
-%
-
-
-%
-% Under extensions of SL, mention how SL is incomplete as far as total operators. Operators
-% seemingly added to fill some need... Perhaps discuss some information theory/entropy here...
-%
 
 
 

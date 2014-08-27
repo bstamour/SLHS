@@ -15,11 +15,11 @@ all, and has a very negative opinion of him. The third witness, Witness C, has n
 opinion of the defendent, and thus is very uncertain about his character.
 
 The judge has never once interacted with the defendent and therefore must base his entire
-opinion of him on the evidence brought forth, and by the witness testimonies. However the
-judge does have an opinion on each of the three witnesses. The judge golfs regularly with
-witness A, the judge knows witness B as the pastor at a local church, and witness C is a
+opinion of him on the evidence brought forth and by the witness testimonies. The
+judge does, however, have an opinion about each of the three witnesses. The judge golfs regularly with
+witness A, the judge knows witness B is the pastor at a local church, and witness C is a
 courtroom regular - always involved in some mischief or other. Therefore, while the judge
-can construct an opinion by analyzing the opinions of the three witnesses and forming a
+can construct an opinion of the defendent by analyzing the opinions of the three witnesses and forming a
 consensus, he also takes into account his knowledge of the three, and discounts their
 opinions by his own opinions of them. The judge places great weight on the testimonies of
 witnesses A and B, and can barely belief a word of witness C's statement.
@@ -27,18 +27,19 @@ witnesses A and B, and can barely belief a word of witness C's statement.
 Now imagine two sensors designed to measure two orthogonal properties of baby guinea pigs.
 Before they reach a certain age, male guinea pigs must be separated from their mothers
 (and sisters) because they reach sexual maturity very quickly. Therefore it is important to
-be able to measure the sex of the guinea pigs quickly and partition the little furballs
-accordingly. Another important measurable trait is the breed of the guinea pig. If the
+be able to measure the sex of the guinea pigs quickly and partition them
+accordingly in order to avoid a combinatorial explosion of new children. Another important
+measurable trait is the breed of the guinea pig. If the
 pigs have been brought from many different litters, then it is important to be able to
-classify them as \emph{Silky}, \emph{American}, or \emph{Peruvian}. However this classification
-cannot be carried out with absolute certainty, as there can be mixed breed guinea pigs as well.
+classify them as \emph{Silky}, \emph{American}, or \emph{Peruvian} before sending them to the pet store.
+This classification cannot be carried out with absolute certainty, as there can be mixed breed guinea pigs as well.
 Assume for simplicity that guinea pigs have a male/female birth ratio of 50/50, and that the
-probability of a guinea pig having a certain breed is given in table \ref{tbl:guinea-pig-breeds}.
+probability of a guinea pig having a certain breed is given in Table \ref{tbl:guinea-pig-breeds}.
 
-Given these two sensors, it is possible to combine the two guinea pig traits in order to
-classify them. However, imagine that your breed sensors has a tendency to give back inaccurate
+Given these two sensors, it is possible to classify the guinea pigs into eight categories.
+To complicate matters, imagine that your breed-detecting sensor has a tendency to give back inaccurate
 results, say, 5\% of the time. Any reasoning that is to be done with this sensor data must be
-discounted by the knowledge that it has a non-zero rate of error.
+handled with care, as it has a non-zero rate of error.
 
 \begin{table}
   \begin{center}
@@ -58,10 +59,10 @@ discounted by the knowledge that it has a non-zero rate of error.
   \label{tbl:guinea-pig-breeds}
 \end{table}
 
-Lastly, suppose you and two of your friends with to see a movie. There are three movies currently
+Lastly, suppose you and two of your friends wish to see a movie. There are three movies currently
 playing in your local theatre: Star Wars - The Empire Strikes First (M1), Cassablanca 2 (M2), and
 A Slug's Life (M3). Each of you has a preference for each of the three movies, as depicted in
-table \ref{tbl:movies}. Is it possible for the three of you to come to a reasonable decision for
+Table \ref{tbl:movies}. Is it possible for the three of you to come to a reasonable decision for
 which movie to see?
 
 \begin{table}
@@ -87,19 +88,18 @@ which movie to see?
 
 The above scenarios all share a common theme: they involve reasoning about uncertain or incomplete
 data. Many real-world reasoning scenarios must deal with this kind of data, and thus any
-automated system designed to aide decision-makers must be able to take into account uncertainty.
-Subjective Logic, a recently emergent probabilistic logic system, offers a wealth of operators
-for combining, discounting, and reasoning with, uncertain data.
+automated system designed to aide decision-makers in these (and many other) kinds of situations must be able to take
+uncertainty into account.
 
-
-%
-% Talk a bit about decision support here to lead into chapter 2...
-%
-
-%
-% This thesis is about constructing a libary for Subjective Logic... Make this chapter self-contained.
-%
-
+This thesis is about the engineering of a library for constructing and evaluating expressions in
+\emph{Subjective Logic}, a recently emergent extension to probabilistic logic \cite{josang2001logic}
+with support for reasoning under uncertainty.
+The library is designed to be a central component of Unified Data Management
+and Decision Support System (UDMDSS) \cite{kent2010towards,  kobti2011towards, kent2011design},
+a decision support system that is under active research and development within our lab. We utilize the
+\emph{Haskell} programming language \cite{hudak1992report} as it supports strong typing, has
+excellent support for programming with \emph{monads} \cite{peyton1993imperative}, and is overall an
+elegant \emph{purely functional} programming language for implementing mathematical programs.
 
 
 
@@ -108,22 +108,21 @@ for combining, discounting, and reasoning with, uncertain data.
 \section{The Problem Addressed}
 
 Subjective Logic is a relatively new form of probabilistic logic that is currently
-under active development. The novelty of Subjective Logic is that it
+under active development \cite{josang2001logic}. The novelty of Subjective Logic is that it
 directly handles uncertainty, and each and every operator for manipulating
-Subjective opinions takes this uncertainty into account. The result is a
+subjective opinions - the primary objects of Subjective Logic -
+takes this uncertainty into account. The result is a
 flexible calculus of opinions that can be used to model many kinds of
-situations that require reasoning under uncertainty.
+situations that require reasoning under uncertainty \cite{pope2005analysis, josang2006trust, li2004trust, oren2007subjective}.
 
-However, as Subjective Logic is still in its infancy, the operators, opinions, and
-even in some cases nomenclature, are in a flux. The result of this is that
+As Subjective Logic is still in its infancy, the operators, opinions, and
+even in some cases nomenclature, are under constant modification. As a result of this
 there is, to the best of our knowledge, no implementation of Subjective
-Logic available for application developers. Furthermore, there does not
-yet appear to be any formal analysis of the computational complexity of
-the operators provided.
-
-Josang has provided an implementation of some Subjective Logic operators.
-However the implementation is incomplete as it does not support computing
-with general subjective opinions.
+Logic available for use by application developers and researchers.
+Audun Josang has provided an implementation of some Subjective Logic operators,
+however the implementation is incomplete. The implementation was constructed before
+Subjective Logic had introduced \emph{hyper opinions} and other operators now found
+in the literature.
 
 
 
@@ -131,26 +130,26 @@ with general subjective opinions.
 
 \section{Our Proposed Solution}
 
-To combat this scarcity, we propose to develop a library of Subjective Logic
-operators using the \emph{Haskell} programming language. We propose to represent
+To combat this scarcity of implementations, we have developed a library of Subjective Logic
+operators using the \emph{Haskell} programming language. We represent
 expressions of Subjective Logic as functions from an initial world state to some
 numeric output, and the operators of Subjective Logic as higher order functions.
 Therefore simple expressions of Subjective Logic can be combined to form larger
 more complex equations.
 
-In order to assist us in combining together these equations, we will use monads,
+In order to assist us in combining together these equations, we use monads,
 in particular a \emph{state monad}. Monads are ubiquitous in Haskell, and are
-general enough to represent stateful computations \cite{launchbury1994lazy},
+a general design pattern that has been previously used to represent stateful computations \cite{launchbury1994lazy},
 input/output \cite{peyton1993imperative},
 and formal \cite{hutton1998monadic, leijen2001parsec} and natural language
 \cite{hafiz2010lazy} parsers.
 
-In order to evaluate our library for correctness, we propose to test them against
-example calculations provided by Josang in the literature. Furthermore we propose
-to prove that our set of operators terminates for all possible input equations.
-Lastly, we propose to perform a complexity analysis on a sample of the operators.
+In order to demonstrate the effectiveness of our library, we utilize it to implement some
+example calculations provided by Josang in the literature. Furthermore we prove that our set of
+operators terminates for all possible valid input equations.
+Lastly, we perform a complexity analysis on a representative subset of the operators.
 
-We hope that our library will be found useful by the research community, and that
+We expect that our library will be found useful by the research community, and that
 it will spur the development of Subjective Logic-based reasoning applications.
 
 
@@ -161,15 +160,18 @@ it will spur the development of Subjective Logic-based reasoning applications.
 \section{Organization of this Document}
 
 The remainder of this document is organized as follows.
-Chapter~\ref{chap:background-information}
-introduces the reader to the relevant background information on uncertain reasoning,
-Subjective Logic, and pure functional programming to hopefully allow the proceding
-chapters to be understood. Chapter~\ref{chap:thesis-statement} contains the thesis
-statement. Chapter~\ref{chap:sl-in-haskell} introduces \emph{SLHS}, a library of
+Chapter \ref{chap:background-information}
+introduces the reader to the relevant background information on decision support systems,
+automated reasoning systems, uncertain reasoning, Subjective Logic, and pure functional
+programming in Haskell to allow the proceding
+chapters to be better understood. Chapter \ref{chap:thesis-statement} contains the thesis problem, hypothesis, objectives, and methodology.
+Chapter \ref{chap:sl-in-haskell} introduces \emph{SLHS}, a library of
 Subjective Logic objects and operators, written in the Haskell programming language.
-Chapter~\ref{chap:results-and-analysis} presents an analysis of complexity for each
-operator in SLHS. It also contains examples of how one can use SLHS to model situations
-that require uncertain reasoning. Chapter~\ref{chap:conclusion} concludes the document.
+Chapter \ref{chap:results-and-analysis} presents a proof of termination, analysis of complexity a sample of
+operators in SLHS, and a discussion regarding the use of Haskell and monads on the design of the library.
+It also contains examples of how one can use SLHS to model situations
+that require uncertain reasoning, and lastly, it discusses the library's role within the larger UDMDSS decision support system.
+Chapter \ref{chap:conclusion} concludes this thesis and discusses areas for future improvement.
 
 
 

@@ -97,6 +97,7 @@ instance ToBinomial Binomial where
 
 
 \subsection{Multinomial Opinions}
+\label{sec:multinomial-opinions}
 
 Multinomials are represented as records containing a \emph{BeliefVector} to represent the
 amount of belief assigned to each element of the frame, a scalar rational number to

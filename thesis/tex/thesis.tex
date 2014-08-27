@@ -11,7 +11,6 @@
 %
 
 
-
 \documentclass[oneside]{book}
 
 \usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
@@ -23,13 +22,13 @@
 \usepackage{amssymb,amsmath}
 \usepackage{url}
 \usepackage{verbatim}
-
+\usepackage{graphicx}
+\usepackage{tabularx}
 
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
 \newtheorem{corollary}[theorem]{Corollary}
-
 
 \lstloadlanguages{Haskell}
 
@@ -69,27 +68,287 @@
                {|}{{$\mid$}}1
     }
 
-\doublespacing
+\usepackage{setspace}
+
+\newcommand{\uwinverytightsinglespacelen}{0.9}
+\newcommand{\uwintightsinglespacelen}{1.0}
+\newcommand{\uwinsinglespacelen}{1.1}
+\newcommand{\uwinonehalfspacelen}{1.5}
+\newcommand{\uwindoublespacelen}{2.0}
+\newcommand{\uwinlistofspacelen}{1.5}
+\newcommand{\uwindefaultspacelen}{\uwindoublespacelen}
+
+\newcommand{\uwinverytightsinglespace}%
+{\linespread{\uwinverytightsinglespacelen}}
+\newcommand{\uwintightsinglespace}%
+  {\linespread{\uwintightsinglespacelen}}
+\newcommand{\uwinsinglespace}%
+  {\linespread{\uwinsinglespacelen}}
+\newcommand{\uwinonehalfspace}%
+  {\linespread{\uwinonehalfspacelen}}
+\newcommand{\uwindoublespace}%
+  {\linespread{\uwindoublespacelen}}
+\newcommand{\uwinlistofspace}%
+  {\linespread{\uwinlistofspacelen}}
+\newcommand{\uwindefaultspace}%
+{\linespread{\uwindefaultspacelen}}
+
+\newenvironment{uwinverytightsinglespaceenv}%
+{\begin{spacing}{\uwinverytightsinglespacelen}}%
+  {\end{spacing}}
+\newenvironment{uwintightsinglespaceenv}%
+  {\begin{spacing}{\uwintightsinglespacelen}}%
+  {\end{spacing}}
+\newenvironment{uwinsinglespaceenv}%
+{\begin{spacing}{\uwinsinglespacelen}}%
+  {\end{spacing}}
+\newenvironment{uwinonehalfspaceenv}%
+{\begin{spacing}{\uwinonehalfspacelen}}%
+  {\end{spacing}}
+\newenvironment{uwindoublespaceenv}%
+{\begin{spacing}{\uwindoublespacelen}}%
+  {\end{spacing}}
+\newenvironment{uwinlistofspaceenv}%
+{\begin{spacing}{\uwinlistofspacelen}}%
+  {\end{spacing}}
+\newenvironment{uwindefaultspaceenv}%
+{\begin{spacing}{\uwindefaultspacelen}}%
+  {\end{spacing}}
+
+
+
+
+
+
+%\doublespacing
 \long\def\ignore#1{}
 
-%\title{A Purely Functional Subjective Logic Combinator Library}
-
 \title{A Subjective Logic Library Constructed From Monadic Higher Order Functions}
-
 
 \author{Bryan St. Amour}
 
 \begin{document}
 
-\maketitle
-\clearpage
 
 \pagenumbering{roman}
-\setcounter{page}{2}
+%\setcounter{page}{2}
+
+
+%---------------------------------------------------------------------------------------------------
+
+\clearpage
+
+%\currentpdfbookmark{Title Page}{titlepage}
+
+\thispagestyle{empty}
+\begin{center}
+  \vspace*{1in}
+
+  \begin{uwinonehalfspaceenv}
+    \Large\textbf{A Subjective Logic Library Constructed From Monadic Higher Order Functions}
+  \end{uwinonehalfspaceenv}
+
+  \vspace{\fill} %
+  \begin{uwinonehalfspaceenv}
+    By:\\*
+    Bryan St. Amour
+  \end{uwinonehalfspaceenv}
+  \vspace{\fill}
+
+  \normalsize
+  A Thesis \\*
+  Submitted to the Faculty of Graduate Studies \\*
+  through Computer Science \\*
+  in Partial Fulfillment of the Requirements for \\*
+  the degree of Master of Computer Science at the \\*
+  University of Windsor \\*
+
+  \vspace{1in}
+  Windsor, Ontario, Canada \\
+  \vspace{0.5cm}
+  2014 \\
+  \vspace{0.5cm}
+  \textcopyright \  2014 Bryan St. Amour
+\end{center}
+
+%---------------------------------------------------------------------------------------------------
+
+\clearpage
+\thispagestyle{empty}
+
+\vspace*{\fill}
+
+%\currentpdfbookmark{Copyright}{copyrightpage}%
+\noindent \textcopyright{} 2014, Bryan St. Amour
+
+\vspace{2ex}
+
+\noindent All Rights Reserved. Absolutely no part of this document may
+be reproduced, stored in a retrieval system, translated, in any form
+or by any means electronic, mechanical, facsimile, photocopying, or
+otherwise, without the prior written permission of the copyright
+holder.
+
+\vspace*{\fill}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+% Ability to do centered horizontal rules for approval page...
+\newcommand{\centeringrule}[2]{%
+  \hspace{\fill}%
+  \rule{#1}{#2}%
+  \hspace{\fill}%
+}
+
+%----------------------------------------------------------------------------
+% Thesis Approval Page
+%   arg1 = thesis title
+%   arg2 = thesis author
+%   arg3 = defense date
+%----------------------------------------------------------------------------
+\newcommand{\uwinthesisapprovalpage}[3]{%
+%  \cleartonextpage
+  \clearpage
+%  \currentpdfbookmark{Approved By}{approvedby}
+  \thispagestyle{empty}
+
+  \begin{center}
+    \begin{uwinonehalfspaceenv}
+      \Large\textbf{#1}
+    \end{uwinonehalfspaceenv}
+
+    \vspace{0.5cm}
+    By:\\
+    #2
+
+    \vspace{0.5cm}
+
+    \normalsize
+    APPROVED BY: \\
+
+    \begin{uwinverytightsinglespaceenv}
+      \small
+
+      \vspace{0.335in}
+      \centeringrule{3.5in}{0.5pt}
+      \newline
+      Dr. Richard Caron, External Reader \\*
+      Department of Mathematics and Statistics \\
+
+      \vspace{0.335in}
+      \centeringrule{3.5in}{0.5pt}
+      \newline
+      Dr. Richard A. Frost, Internal Reader \\*
+      School of Computer Science \\
+
+      \vspace{0.335in}
+      \centeringrule{3.5in}{0.5pt}
+      \newline
+      Dr. Robert D. Kent, Supervisor \\*
+      School of Computer Science \\
+
+      \vspace{0.335in}
+      \centeringrule{3.5in}{0.5pt}
+      \newline
+      Dr. A. Chair, Chair \\*
+      School of Computer Science \\[3ex]
+
+      \hspace{\stretch{1}} #3
+    \end{uwinverytightsinglespaceenv}
+    \vfill
+  \end{center}
+}
+% \pagebreak
+
+\uwinthesisapprovalpage
+  {A Subjective Logic Library Constructed From Monadic Higher Order Functions}
+  {Bryan St. Amour}
+  {Some Day 2014}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+\clearpage
+% \phantomsection
+\addcontentsline{toc}{chapter}{Author's Declaration of Originality}
+\chapter*{Author's Declaration of Originality\markboth{\MakeUppercase{Author's Declaration of Originality}}{}}
+
+\begin{uwindefaultspaceenv}
+  I hereby certify that I am the sole author of this thesis and that
+  no part of this thesis has been published or submitted for
+  publication.
+
+  I certify that, to the best of my knowledge, my thesis does not
+  infringe upon anyone's copyright nor violate any proprietary rights
+  and that any ideas, techniques, quotations, or any other material
+  from the work of other people included in my thesis, published or
+  otherwise, are fully acknowledged in accordance with the standard
+  referencing practices. Furthermore, to the extent that I have
+  included copyrighted material that surpasses the bounds of fair
+  dealing within the meaning of the Canada Copyright Act, I certify
+  that I have obtained a written permission from the copyright
+  owner(s) to include such material(s) in my thesis and have included
+  copies of such copyright clearances to my appendix.
+
+  I declare that this is a true copy of my thesis, including any final
+  revisions, as approved by my thesis committee and the Graduate
+  Studies office, and that this thesis has not been submitted for a
+  higher degree to any other University or Institution.
+\end{uwindefaultspaceenv}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+\clearpage
+\chapter*{Abstract\markboth{\MakeUppercase{Abstract}}{}}
+\addcontentsline{toc}{chapter}{Abstract}
+
+\begin{uwindoublespaceenv}
+  Text goes here.
+\end{uwindoublespaceenv}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+\clearpage
+\chapter*{\centering Dedication\markboth{\MakeUppercase{Dedication}}{}}
+\addcontentsline{toc}{chapter}{Dedication}
+\begin{center}
+  \normalsize
+  \textit{This thesis is dedicated to my late grandfather, Arthur
+    Rigo. Though I wonder whether you would understand the content of
+    this thesis, I've no doubt you'd be damn proud of me. This thesis
+    concerns itself with automated reasoning systems, but there is
+    just no reasoning with cancer. Here's to you, kemosabe.}
+\end{center}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+\clearpage
+\chapter*{Acknowledgements\markboth{\MakeUppercase{Acknowledgements}}{}}
+\addcontentsline{toc}{chapter}{Acknowledgements}
+
+\begin{uwindefaultspaceenv}
+  Stuff here.
+\end{uwindefaultspaceenv}
+
+
+%---------------------------------------------------------------------------------------------
+
+
+\begin{uwindefaultspaceenv}
 
 \tableofcontents
 
-%\listoffigures
+\listoffigures
+\clearpage
 
 \listoftables
 \clearpage
@@ -104,7 +363,7 @@
 \subfile{chapter6}
 
 
-\nocite{*} % Just for now...
+%\nocite{*} % Just for now...
 \bibliography{bibliography}
 \bibliographystyle{plain}
 
@@ -117,5 +376,7 @@ Catholic High School in 2005. Bryan completed his undergraduate degree in Comput
 the University of Windsor in 2010, and expects to complete his Master's degree in Computer Science
 from the same institute in Fall 2014. He currently resides in Tecumseh, Ontario with his wife
 Chelsey St. Amour, and their four guinea pigs: Squeakers, Beauty, Scarlet, and Pumpkin.
+
+\end{uwindefaultspaceenv}
 
 \end{document}

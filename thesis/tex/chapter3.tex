@@ -5,12 +5,16 @@
 \chapter{Thesis Statement}
 \label{chap:thesis-statement}
 
-In this chapter we will describe our research motivations, and then present our thesis hypothesis and
-research objectives. Lastly we will outline the methodology that we will utilize in order to
+In this chapter we describe our research motivations, and then present our thesis hypothesis and
+research objectives. Lastly we outline the methodology that we will utilize in order to
 achieve our goals.
 
 
-\section{Research Motivation}
+\section{Thesis Problem}
+
+%
+% Reiterate the motivation, then state the problem.
+%
 
 As mentioned previously, there does not yet exist a comprehensive library of Subjective
 Logic operators that can be used for application development and experimentation. There
@@ -48,24 +52,26 @@ The objectives of our research are the following:
 
 \begin{itemize}
   \item Develop a monadic combinator library of Subjective Logic operators.
-  \item Analyze the type safety of our library.
-  \item Prove that our set of operators terminates for all Subjective Logic equations.
-  \item Analyze the complexity of a selection of the operators.
+  \item Analyze the type safety of our library. % Not sure on this one...
+  \item Prove that our set of operators terminates for all valid Subjective Logic equations.
+  \item Analyze the complexity of a representative subset of the operators.
 \end{itemize}
+
+
 
 
 \section{Methodology}
 
-In order to complete the objectives of our research, we will do the following:
+In order to satisfy the objectives of our research, we undertake the following:
 
 \begin{itemize}
-  \item We will develop the library using the Haskell programming language due to it's strong type
+  \item We developed the library using the Haskell programming language due to it's strong type
 system and excellent support for monadic programming.
-  \item We will discuss how haskell's strong type system allows for our library to reject certain
+  \item We discuss how Haskell's strong type system allows for our library to reject certain
 classes of ill-formed Subjective Logic equations.
-  \item We will utilize structural induction on the length of the input equation to prove that
+  \item We utilize structural induction on the length of the input equation to prove that
 our operators terminate.
-  \item We will analyze the time complexity of the operators based on the amount of elements in the
+  \item We analyze the time complexity of the operators based on the amount of elements in the
 frame of discernment that have non-zero belief mass assigned to them.
 \end{itemize}
 
