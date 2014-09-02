@@ -18,9 +18,9 @@ import Data.Ratio
 This example also comes from the draft Subjective Logic book. Assume through
 a process of genetic engineering that we can produce two kinds of chicken eggs:
 male, or female. Each egg, regardless of gender, can also have genetic mutation
-S or T. The first sensor determines whether an egg ois male or female, and the
+S or T. The first sensor determines whether an egg is male or female, and the
 second sensor measures whether the egg has genetic mutation S or T. This
-scenario can be modelled by using two frames of discernment
+scenario can be modeled by using two frames of discernment
 
 \begin{code}
 type Gender = Int
@@ -38,7 +38,7 @@ mutation = [s, t]
 and two belief holders
 
 \begin{code}
-data Sensor = A | B deriving (Eq, Ord)
+data Sensor = A | B deriving (Eq, Ord, Show)
 sensors = [A, B]
 \end{code}
 
@@ -69,8 +69,24 @@ the following expression:
 \begin{code}
 expression = getMultinomial A 0 `times` getMultinomial B 1
 state      = makeState sensors [gender, mutation] observations baseRates
-opinion    = state >>= run expression
+opinion    = state >>= run' expression
 \end{code}
 
+We can see the resulting multinomial opinion by running the command
+\emph{print opinion}, which displays the following:
+
+\begin{spec}
+Multinomial:
+  Holder: Product (Holder A) (Holder B)
+  Frame: {(0,2),(0,3),(1,2),(1,3)}
+  Belief: <((0,2),37823 % 61000),((0,3),11297 % 61000),
+            ((1,2),249 % 2440), ((1,3),39 % 12200)>
+  Uncertainty: 273 % 3050
+  Base Rate: <((0,2),1 % 10),((0,3),2 % 5),((1,2),1 % 10),((1,3),2 % 5)>
+\end{spec}
+
+The fractions are a little messy, but with a trusty pocket calculator we can
+verify that the beliefs plus the uncertainty sums to 1. This result is in fact
+displayed with slightly more accuracy than the result in Josang's draft book.
 
 \end{document}

@@ -41,7 +41,7 @@ order to avoid storing the entire frame of discernment in memory: elements of th
 that have zero belief mass assigned to them are simply not stored in the tree. While this
 representation has some nice theoretical properties, such as the ability to map functions
 across the vector in $O (n)$ time, and the ability to determine whether an element is or is
-not a focal element in $O (\log n)$ time, we believe that improvements in the actual runtime
+not a focal element in $O (\log n)$ time, we believe that improvements in the actual run-time
 of the library may be achieved by switching to using a contiguous array.
 
 
@@ -55,22 +55,22 @@ many times throughout a more complex subjective logic expression, it would be
 beneficial to re-use a previously computed value. Instead, currently we would waste
 valuable time recomputing the output for the same expression over and over.
 
-One technique to avoid this costly recomputation is \emph{memoization} [cite].
+One technique to avoid this costly re-computation is \emph{memoization} \cite{michie1968memo}.
 At every operator invocation, we compute the value and store it in a table. If at
 any time we require the same expression to be computed, we first look answer up in
 the table. In a sense we would use additional memory in order to save time.
 
 
-\subsection{Exploiting Parallelization}
+\subsection{Exploiting Parallelism}
 
-Many operators of Subjective Logic appear to be easily parallelizable,
+Many operators of Subjective Logic appear to be easily made to run in parallel,
 as the new opinions are computed by combining together the belief
-masses of individual elements of the reduced powerset without
+masses of individual elements of the reduced power set without
 depending on any other elements. Therefore, attempting to introduce
 parallelism to the implementations of the operators should be as easy
 as modifying the underlying \emph{SLExpr} monad to utilize one of the
-many Haskell libraries for parallel and concurrent computing
-[cite]. Then the operators can be rewritten to compute their results
+many Haskell libraries for parallel and concurrent computing \cite{marlow2012parallel}.
+Then the operators can be rewritten to compute their results
 in parallel without any modification to the external interface to the
 library. While we did not address the issue of parallelism in this
 thesis, it appears, at least to the authors, to be a useful area of

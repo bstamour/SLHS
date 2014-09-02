@@ -5,7 +5,7 @@
 
 \section{Operators}
 
-In this section we will discuss the implementation details of the
+In this section we discuss the implementation details of the
 Subjective Logic operators that are provided by SLHS. The following
 notation is used for the operators:
 
@@ -13,14 +13,14 @@ notation is used for the operators:
   \item We denote binary operators with a trailing exclamation mark
     $!$ in order to avoid conflicting with Haskell's mathematical
     operators. For example, binomial addition is denoted as $+!$.
-  \item We use tildas as a prefix to denote $co-$ operations. For
+  \item We use tildes as a prefix to denote $co-$ operations. For
     example, the binomial co-multiplication operator is denoted as
     $\sim *!$.
   \item All n-ary operators, where $n > 2$ are denoted as simple
     functions, instead of symbolic operators.
 \end{itemize}
 
-Every operator is presented in it's most general
+Every operator is presented in its most general
 form. For example, instead of presenting two operators for
 \emph{averaging fusion} (one for multinomial opinions, and another for
 hyper opinions) we implement only the version for hyper opinions. In
@@ -36,6 +36,7 @@ and \emph{ToHyper} type classes.
 
 module Math.SLHS.Operators where
 
+import Data.Ratio ((%))
 import Control.Monad
 import Control.Applicative
 import Data.List
@@ -53,10 +54,10 @@ import qualified Math.SLHS.Vector as V
 
 We begin our treatment of the Subjective Logic operators by looking at
 those operators designed to work with binomial opinions. We split this
-section into two parts: \emph{logical and set-theoretical}, and
+section into two parts: \emph{logical and set-theoretical} operators, and
 \emph{trust transitivity} operators. The former contains the operators
 that are generalizations of those found in logic and set theory, such
-as conjunction, and set union. The latter operators are for modelling
+as conjunction, and set union. The latter operators are for modeling
 trust networks, where agents can formulate opinions based on reputation
 and trust.
 
@@ -71,29 +72,27 @@ is defined when $x$ and $y$ are disjoint subsets of the same frame of discernmen
 
 \begin{code}
 (+!) :: (ToBinomial op1, ToBinomial op2, Eq h, Eq b, Ord b)
-       => SLExpr h a (op1 h b)
-       -> SLExpr h a (op2 h b)
-       -> SLExpr h a (Binomial h b)
+       => SLExpr h a (op1 h (F.Frame b))
+       -> SLExpr h a (op2 h (F.Frame b))
+       -> SLExpr h a (Binomial h (F.Frame b))
 opx +! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
-  require (isPartitioned opx') "opinion must be a partition"
-  require (isPartitioned opy') "opinion must be a partition"
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
   require (getFrame opx' == getFrame opy') "opinions must have the same frame"
   return $ add' opx' opy'
 \end{code}
 
 \begin{code}
-add' :: Binomial h a -> Binomial h a -> Binomial h a
-add' opx@(Binomial bx dx ux ax hx fx) (Binomial by dy uy ay _ fy) =
-  Binomial b' d' u' a' hx f
+add' :: Ord a
+        => Binomial h (F.Frame a) -> Binomial h (F.Frame a) -> Binomial h (F.Frame a)
+add' opx@(Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx (xt `F.union` yt) (xf `F.union` yf)
   where
     b' = bx + by
     d' = (ax * (dx - by) + ay * (dy - bx)) / (ax + ay)
     u' = (ax * ux + ay * uy) / (ax + ay)
     a' = ax + ay
-    f  = undefined
 \end{code}
 
 Here we see a pattern that we will re-use for all operator implementations. We start
@@ -110,28 +109,29 @@ $\omega_{x \setminus y}$ is calculated as follows:
 
 \begin{code}
 (-!) :: (ToBinomial op1, ToBinomial op2, Eq h, Eq b, Ord b)
-        => SLExpr h a (op1 h b)
-        -> SLExpr h a (op2 h b)
-        -> SLExpr h a (Binomial h b)
+        => SLExpr h a (op1 h (F.Frame b))
+        -> SLExpr h a (op2 h (F.Frame b))
+        -> SLExpr h a (Binomial h (F.Frame b))
 opx -! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
-  require (isPartitioned opx') "opinion must be a partition"
-  require (isPartitioned opy') "opinion must be a partition"
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
   require (getFrame opx' == getFrame opy') "opinions must have the same frame"
   return $ subtract' opx' opy'
 \end{code}
 
 \begin{code}
-subtract' :: Binomial h a -> Binomial h a -> Binomial h a
-subtract' (Binomial bx dx ux ax hx fx) (Binomial by dy uy ay _ fy) =
-  Binomial b' d' u' a' hx undefined
+subtract' :: Ord a
+             => Binomial h (F.Frame a) -> Binomial h (F.Frame a) -> Binomial h (F.Frame a)
+subtract' (Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx ft ff
   where
     b' = bx - by
     d' = (ax * (dx + by) - ay * (1 + by - bx - uy)) / (ax - ay)
     u' = (ax * ux - ay * uy) / (ax - ay)
     a' = ax - ay
+    ft = xt `F.difference` yt
+    ff = xt `F.union` xf `F.difference` ft
 \end{code}
 
 Negation is a unary operator that switches the belief and disbelief and
@@ -149,7 +149,7 @@ negate op = do
 
 \begin{code}
 negate' :: Binomial h a -> Binomial h a
-negate' (Binomial b d u a _ _) = Binomial d b u (1 - a) undefined undefined
+negate' (Binomial b d u a h x y) = Binomial d b u (1 - a) h y x
 \end{code}
 
 Multiplication of two binomial opinions is equivalent to the logical
@@ -159,18 +159,18 @@ product of the opinions, $\omega_{x \land y}$, represents the conjunction
 of the two opinions.
 
 \begin{code}
-(*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
+(*!) :: (ToBinomial op1, ToBinomial op2, Eq h, Ord b, Ord c)
         => SLExpr h a (op1 h b)
         -> SLExpr h a (op2 h c)
-        -> SLExpr h a (Binomial h (b, c))
+        -> SLExpr h a (Binomial h (F.Frame (b, c)))
 opx *! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
   return $ b_times' opx' opy'
 
-b_times' (Binomial bx dx ux ax hx _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' hx undefined
+b_times' (Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx t f
   where
     b' = bx * by + ((1 - ax) * bx * uy + (1 - ay) * ux * by)
          / (1 - ax * ay)
@@ -178,6 +178,9 @@ b_times' (Binomial bx dx ux ax hx _) (Binomial by dy uy ay _ _) =
     u' = ux * uy + ((1 - ay) * bx * uy + (1 - ax) * ux * by)
          / (1 - ax * ay)
     a' = ax * ay
+
+    t = F.singleton (xt, yt)
+    f = F.fromList [(xt, yf), (xf, yt), (xf, yf)]
 \end{code}
 
 The resulting frame of discernment is a coarsened frame from the
@@ -194,18 +197,18 @@ $\omega_{x \lor y} = \omega_x \sqcup \omega_y$ is computed by the following
 function:
 
 \begin{code}
-(~*!) :: (ToBinomial op1, ToBinomial op2, Eq h)
+(~*!) :: (ToBinomial op1, ToBinomial op2, Eq h, Ord b, Ord c)
          => SLExpr h a (op1 h b)
          -> SLExpr h a (op2 h c)
-         -> SLExpr h a (Binomial h (b, c))
+         -> SLExpr h a (Binomial h (F.Frame (b, c)))
 opx ~*! opy = do
   opx' <- liftM toBinomial opx
   opy' <- liftM toBinomial opy
   require (bHolder opx' == bHolder opy') "opinions must have same holder"
   return $ cotimes' opx' opy'
 
-cotimes' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' undefined undefined
+cotimes' (Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx t f
   where
     b' = bx + by - bx * by
     d' = dx * dy + (ax * (1 - ay) * dx * uy + (1 - ax) * ay * ux * dy)
@@ -213,6 +216,9 @@ cotimes' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     u' = ux * uy + (ay * dx * uy + ax * ux * dy)
          / (ax + ay - ax * ay)
     a' = ax + ay - ax * ay
+
+    t = F.fromList [(xt, yt), (xf, yt), (xt, yf)]
+    f = F.singleton (xf, yf)
 \end{code}
 
 Binomial multiplication and co-multiplication are duals to one another
@@ -220,7 +226,7 @@ and satisfy De-Morgan's law:
 $\omega_{x \land y} = \omega_{\overline{\overline{x} \lor \overline{y}}}$
 and $\omega_{x \lor y} = \omega_{\overline{\overline{x} \land \overline{y}}}$,
 but they do not distribute over one another \cite{josang2005multiplication}.
-Furthermore, Josang and McAnally claim that binomial multiplication and
+Josang and McAnally claim that binomial multiplication and
 co-multiplication produce good approximations of the analytically correct
 products and co-products of Beta probability density functions
 \cite{josang2005multiplication}. Therefore, if one were to construct a
@@ -236,8 +242,8 @@ $\omega_{x \overline{\land} y} = \omega_x / \omega_y$
 \cite{josang2005multiplication}, and is computed as follows:
 
 \begin{code}
-(/!) :: (ToBinomial op1, ToBinomial op2)
-        => SLExpr h a (op1 h (b, c))
+(/!) :: (ToBinomial op1, ToBinomial op2, Eq c)
+        => SLExpr h a (op1 h (F.Frame (b, c)))
         -> SLExpr h a (op2 h b)
         -> SLExpr h a (Binomial h c)
 opx /! opy = do
@@ -262,8 +268,8 @@ opx /! opy = do
         (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
         (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
 
-divide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' undefined undefined
+divide' (Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx zt zf
   where
     b' = ay * (bx + ax * ux) / ((ay - ax) * (by + ay *uy))
          - ax * (1 - dx) / ((ay - ax) * (1 - dy))
@@ -271,6 +277,9 @@ divide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
     u' = ay * (1 - dx) / ((ay - ax) * (1 - dy))
          - ay * (bx + ax * ux) / ((ay - ax) * (bx + ay * uy))
     a' = ax / ay
+
+    [(_, zt)] = F.toList xt
+    zf = head . filter (/= zt) . map snd . F.toList $ xf
 \end{code}
 
 Lastly co-division, the inverse operation of co-multiplication \cite{josang2005multiplication},
@@ -278,8 +287,8 @@ is denoted as $\omega_{x \overline{\lor} y} = \omega_x \overline{\sqcup} \omega_
 computed as follows:
 
 \begin{code}
-(~/!) :: (ToBinomial op1, ToBinomial op2)
-         => SLExpr h a (op1 h (b, c))
+(~/!) :: (ToBinomial op1, ToBinomial op2, Eq c)
+         => SLExpr h a (op1 h (F.Frame (b, c)))
          -> SLExpr h a (op2 h b)
          -> SLExpr h a (Binomial h c)
 opx ~/! opy = do
@@ -304,8 +313,8 @@ opx ~/! opy = do
         (bx, dx, ux, ax) = (bBelief x, bDisbelief x, bUncertainty x, bAtomicity x)
         (by, dy, uy, ay) = (bBelief y, bDisbelief y, bUncertainty y, bAtomicity y)
 
-codivide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
-  Binomial b' d' u' a' undefined undefined
+codivide' (Binomial bx dx ux ax hx xt xf) (Binomial by dy uy ay _ yt yf) =
+  Binomial b' d' u' a' hx zt zf
   where
     b' = (bx - by) / (1 - by)
     d' = ((1 - ay) * (dx + (1 - ax) * ux)
@@ -315,11 +324,14 @@ codivide' (Binomial bx dx ux ax _ _) (Binomial by dy uy ay _ _) =
          - ((1 - ay) * (dx + (1 - ax) * ux)
             / ((ax - ay) * (dy + (1 - ay) * uy)))
     a' = (ax - ay) / (1 - ay)
+
+    zt = head . filter (/= zf) . map snd . F.toList $ xt
+    [(_, zf)] = F.toList xf
 \end{code}
 
 In this section we have introduced those binomial operators that have
-analogs to logic and set theory. In the next section we will discuss
-the binomial operators for modelling \emph{trust transitivity}.
+analogs to logic and set theory. In the next section we discuss
+the binomial operators for modeling \emph{trust transitivity}.
 
 
 \subsubsection{Trust Transitivity Operators}
@@ -332,7 +344,7 @@ A's opinion of B.
 
 Subjective Logic offers three methods of discounting:
 \emph{uncertainty favouring discounting}, \emph{opposite belief
-favouring discounting}, and \emph{base rate sensitive discounting}.
+favouring discounting}, and \emph{base rate sensitive discounting} \cite{josang2012trust}.
 We begin by constructing a simple data type to represent the three kinds of discounting.
 
 \begin{code}
@@ -364,8 +376,8 @@ Their definitions follow below.
 
 \begin{code}
 discount_u :: Binomial h h -> Binomial h a -> Binomial h a
-discount_u (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
-  Binomial b' d' u' a' (Discount hx hy) fy
+discount_u (Binomial bb db ub ab hx _ _) (Binomial bx dx ux ax hy fx fy) =
+  Binomial b' d' u' a' (Discount hx hy) fx fy
   where
     b' = bb * bx
     d' = bb * dx
@@ -375,8 +387,8 @@ discount_u (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
 
 \begin{code}
 discount_o :: Binomial h h -> Binomial h a -> Binomial h a
-discount_o (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
-  Binomial b' d' u' a' (Discount hx hy) fy
+discount_o (Binomial bb db ub ab hx _ _) (Binomial bx dx ux ax hy fx fy) =
+  Binomial b' d' u' a' (Discount hx hy) fx fy
   where
     b' = bb * bx + db * dx
     d' = bb * dx + db * bx
@@ -386,8 +398,8 @@ discount_o (Binomial bb db ub ab hx _) (Binomial bx dx ux ax hy fy) =
 
 \begin{code}
 discount_b :: (Ord a, Ord h) => Binomial h h -> Binomial h a -> Binomial h a
-discount_b op1@(Binomial bb db ub ab hx _) op2@(Binomial bx dx ux ax hy fy) =
-  Binomial b' d' u' a' (Discount hx hy) fy
+discount_b op1@(Binomial bb db ub ab hx _ _) op2@(Binomial bx dx ux ax hy fx fy) =
+  Binomial b' d' u' a' (Discount hx hy) fx fy
   where
     b' = expectation op1 * bx
     d' = expectation op1 * dx
@@ -396,12 +408,12 @@ discount_b op1@(Binomial bb db ub ab hx _) op2@(Binomial bx dx ux ax hy fy) =
 \end{code}
 
 
-In this section we have presented the operators of Subjective Logic that
-take as inputs binomial opinions. We first introduced the operators that have
+In this section we have presented the operators of Subjective Logic for working with binomial opinions.
+We first introduced the operators that have
 analogs to the classical operators of logic and set theory, and then introduced
-operators for modelling transitive trust networks. These operators are summarized
-in table \ref{tbl:binomial-operators}. In the next section we will introduce the
-operators of Subjective Logic that take as inputs multinomial and hyper opinions.
+operators for modeling transitive trust networks. These operators are summarized
+in Table \ref{tbl:binomial-operators}. In the next section we introduce the
+operators of Subjective Logic for working with multinomial and hyper opinions.
 
 \begin{table}
 \begin{center}
@@ -409,12 +421,12 @@ operators of Subjective Logic that take as inputs multinomial and hyper opinions
   \hline
   Name & SL Notation & SLHS Notation\\
   \hline
-  Addition          & $\omega_{X \cup Y} = \omega_X + \omega_Y$       & $opx +! opy$  \\
-  Subtraction       & $\omega_{X \setminus Y} = \omega_X - \omega_Y$  & $opx -! opy$  \\
-  Negation          & $\omega_{\bar{x}} = \lnot \omega_x$  & $opx -! opy$  \\
-  Multiplication    & $\omega_{X \land Y} = \omega_X \cdot \omega_Y$ & $opx *! opy$  \\
-  Co-multiplication & $\omega_{X \lor Y} = \omega_X \sqcup \omega_Y$ & $opx ~*! opy$ \\
-  Division          & $\omega_{X \bar{\land} Y} = \omega_X / \omega_Y$ & $opx /! opy$  \\
+  Addition          & $\omega_{X \cup Y} = \omega_X + \omega_Y$                  & $opx +! opy$  \\
+  Subtraction       & $\omega_{X \setminus Y} = \omega_X - \omega_Y$             & $opx -! opy$  \\
+  Negation          & $\omega_{\bar{x}} = \lnot \omega_x$                        & $negate opx$  \\
+  Multiplication    & $\omega_{X \land Y} = \omega_X \cdot \omega_Y$             & $opx *! opy$  \\
+  Co-multiplication & $\omega_{X \lor Y} = \omega_X \sqcup \omega_Y$             & $opx ~*! opy$ \\
+  Division          & $\omega_{X \bar{\land} Y} = \omega_X / \omega_Y$           & $opx /! opy$  \\
   Co-division       & $\omega_{X \bar{\lor} Y} = \omega_X \bar{\sqcup} \omega_Y$ & $opx ~/! opy$ \\
   Discounting       & $\omega^{A:B}_x = \omega^A_B \otimes \omega^B_x$           & $discount\,t\,opa\,opb$ \\
   \hline
@@ -431,10 +443,11 @@ operators of Subjective Logic that take as inputs multinomial and hyper opinions
 \subsection{Multinomial and Hyper Operators}
 
 In this section we present the multinomial and hyper operators. We start with
-multinomial multiplication and describe how it differs from binomial multiplication,
-then we introduce the various operators for belief \emph{fusion} and \emph{unfusion}.
-We then introduce the \emph{deduction} and \emph{abduction} operators for reasoning,
-and lastly we introduce the \emph{belief constraint} operator.
+multinomial multiplication and describe how it differs from binomial multiplication \cite{josang2005multiplication},
+then we introduce the various operators for belief \emph{fusion} and \emph{unfusion}
+\cite{josang2012interpretation, josang2010cumulative, josang2009fission, josang2009cumulative}.
+We then introduce the \emph{deduction} and \emph{abduction} operators for reasoning \cite{josanginverting, josang2008conditional, josang2008abductive},
+and lastly we introduce the \emph{belief constraint} operator \cite{josang2012dempster}.
 
 
 \subsubsection{Multinomial Multiplication}
@@ -443,10 +456,9 @@ The multiplication of two multinomial opinions is a separate operator
 than the product operator defined over binomial opinions. Whereas the
 binomial product operator is equivalent to the logical \emph{and}
 operator, multinomial multiplication constructs an opinion over a new
-frame which is the cartesian product of the frames of the input opinions
-(cite).
-In order to avoid naming conflicts, we have chosen to name the binomial
-operator with the symbol $*!$, and we use the name \emph{times} to
+frame which is the cartesian product of the frames of the input opinions \cite{josang2005multiplication}.
+In order to avoid symbolic naming conflicts, we have chosen to name the binomial
+operator with the symbol $*!$, and we have used the name \emph{times} to
 denote the multinomial operator.
 
 \begin{code}
@@ -456,14 +468,13 @@ times :: (ToMultinomial op1, ToMultinomial op2, Eq h, Ord b, Ord c)
 times opx opy = do
   opx' <- liftM toMultinomial opx
   opy' <- liftM toMultinomial opy
-  require (mHolder opx' == mHolder opy') "opinions must have the same holder"
   return $ m_times' opx' opy'
 \end{code}
 
 \begin{code}
 m_times' :: (Ord a, Ord b) => Multinomial h a -> Multinomial h b -> Multinomial h (a, b)
-m_times' (Multinomial bx ux ax hx fx) (Multinomial by uy ay _ fy) =
-  Multinomial b' u' a' hx (fx `F.cross` fy)
+m_times' (Multinomial bx ux ax hx fx) (Multinomial by uy ay hy fy) =
+  Multinomial b' u' a' (Product hx hy) (fx `F.cross` fy)
   where
     b' = V.fromList bxy
     u' = uxy
@@ -471,30 +482,28 @@ m_times' (Multinomial bx ux ax hx fx) (Multinomial by uy ay _ fy) =
 
     bxy = [ ((x, y), f x y) | x <- xKeys, y <- yKeys ]
       where
-        f x y = expect x y - V.value ax x * V.value ay y * uxy
-
-    uxy = minimum [ uxy' x y | x <- xKeys, y <- yKeys ]
+        f x y = expect x y - (V.value ax x * V.value ay y * uxy)
 
     axy = [ ((x, y), f x y) | x <- xKeys, y <- yKeys ]
       where
         f x y = V.value ax x * V.value ay y
 
-    uxy' x y = uIxy * expect x y /
-               (bIxy x y + V.value ax x * V.value ay y * uIxy)
+    uxy = minimum [ uxy' x y | x <- xKeys, y <- yKeys ]
+
+    uxy' x y = (uIxy * expect x y) / (bIxy x y + V.value ax x * V.value ay y * uIxy)
 
     uIxy = uRxy + uCxy + uFxy
       where
-        uRxy = 1 - ux * sum [ V.value by y | y <- yKeys ]
-        uCxy = 1 - uy * sum [ V.value bx x | x <- xKeys ]
+        uRxy = sum [ ux * V.value by y | y <- yKeys ]
+        uCxy = sum [ uy * V.value bx x | x <- xKeys ]
         uFxy = ux * uy
 
     bIxy x y = V.value bx x * V.value by y
 
-    expect x y = (V.value bx x + V.value ax x * ux) *
-                 (V.value by y + V.value ay y * uy)
+    expect x y = (V.value bx x + V.value ax x * ux) * (V.value by y + V.value ay y * uy)
 
-    xKeys = nub $ V.focals bx ++ V.focals ax
-    yKeys = nub $ V.focals by ++ V.focals ay
+    xKeys = F.toList fx
+    yKeys = F.toList fy
 \end{code}
 
 
@@ -516,9 +525,9 @@ cFuse opa opb = do
 
 \begin{code}
 cFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-cFuse' (Hyper ba ua aa hx _) (Hyper bb ub ab hy _)
-  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Cumulative hx hy) undefined
-  | otherwise          = Hyper b'' u'' a'' (Fuse Cumulative hx hy) undefined
+cFuse' (Hyper ba ua aa hx fx) (Hyper bb ub ab hy _)
+  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Cumulative hx hy) fx
+  | otherwise          = Hyper b'' u'' a'' (Fuse Cumulative hx hy) fx
   where
     b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = ua * ub / (ua + ub - ua * ub)
@@ -547,9 +556,9 @@ aFuse opa opb = do
 
 \begin{code}
 aFuse' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-aFuse' (Hyper ba ua aa hx _) (Hyper bb ub ab hy _)
-  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Averaging hx hy) undefined
-  | otherwise          = Hyper b'' u'' a'' (Fuse Averaging hx hy) undefined
+aFuse' (Hyper ba ua aa hx fx) (Hyper bb ub ab hy _)
+  | ua /= 0 || ub /= 0 = Hyper b' u' a' (Fuse Averaging hx hy) fx
+  | otherwise          = Hyper b'' u'' a'' (Fuse Averaging hx hy) fx
   where
     b' = V.fromList . map (\k -> (k, bFunc k)) $ keys
     u' = 2 * ua * ub / (ua + ub)
@@ -585,9 +594,9 @@ cUnfuse opc opb = do
 
 \begin{code}
 cUnfuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
-cUnfuse' (Multinomial bc uc ac _ _) (Multinomial bb ub ab _ _)
-  | uc /= 0 || ub /= 0 = Multinomial ba ua aa undefined undefined
-  | otherwise          = Multinomial ba' ua' aa' undefined undefined
+cUnfuse' (Multinomial bc uc ac (Fuse Cumulative hx hy) fx) (Multinomial bb ub ab _ _)
+  | uc /= 0 || ub /= 0 = Multinomial ba ua aa hx fx
+  | otherwise          = Multinomial ba' ua' aa' hx fx
   where
     ba = V.mapWithKey belief bc
     ua = ub * uc / (ub - uc + ub * uc)
@@ -615,9 +624,9 @@ aUnfuse opc opb = do
 
 \begin{code}
 aUnfuse' :: Ord a => Multinomial h a -> Multinomial h a -> Multinomial h a
-aUnfuse' (Multinomial bc uc ac _ _) (Multinomial bb ub ab _ _)
-  | uc /= 0 || ub /= 0 = Multinomial ba ua aa undefined undefined
-  | otherwise          = Multinomial ba' ua' aa' undefined undefined
+aUnfuse' (Multinomial bc uc ac (Fuse Averaging hx hy) fx) (Multinomial bb ub ab _ _)
+  | uc /= 0 || ub /= 0 = Multinomial ba ua aa hx fx
+  | otherwise          = Multinomial ba' ua' aa' hy fx
   where
     ba = V.mapWithKey belief bc
     ua = ub * uc / (2 * ub - uc)
@@ -636,17 +645,19 @@ We refer to this as the \emph{split} operator. Like unfusion, fission
 has not yet been generalized to hyper opinions.
 
 \begin{code}
-cSplit :: ToMultinomial op => Rational -> SLExpr h a (op h a)
+cSplit :: (Ord a, ToMultinomial op) => Rational -> SLExpr h a (op h a)
           -> SLExpr h a (Multinomial h a , Multinomial h a)
-cSplit phi op = cSplit' <$> (pure phi) <*> (toMultinomial <$> op)
+cSplit phi op = do
+  op' <- liftM toMultinomial op
+  return $ cSplit' phi op'
 \end{code}
 
 \begin{code}
 cSplit' :: Rational -> Multinomial h a -> (Multinomial h a, Multinomial h a)
-cSplit' phi (Multinomial b u a _ _) = (op1, op2)
+cSplit' phi (Multinomial b u a (Fuse Cumulative h1 h2) fx) = (op1, op2)
   where
-    op1 = Multinomial b1 u1 a undefined undefined
-    op2 = Multinomial b2 u2 a undefined undefined
+    op1 = Multinomial b1 u1 a h1 fx
+    op2 = Multinomial b2 u2 a h2 fx
 
     b1 = V.map (\x -> phi * x / norm phi) b
     u1 = u / norm phi
@@ -657,12 +668,6 @@ cSplit' phi (Multinomial b u a _ _) = (op1, op2)
     norm p = u + p * V.fold (+) 0 b
 \end{code}
 
-In the above function we utilized what is known as \emph{applicative style}
-to represent the function \emph{cSplit}. Applicative functors are a recent
-addition to the Haskell standard library (cite) and sit between functors
-and monads in terms of generality. All monads are applicative functors
-(hence why we were able to use the $<*>$ operator for free), and all applicative
-functors are functors in the normal Haskell sense.
 
 
 
@@ -673,7 +678,7 @@ functors are functors in the normal Haskell sense.
 \subsubsection{Deduction and Abduction}
 
 Deduction and abduction of multinomial opinions allows for one to do
-conditional reasoning with Subjective Logic. We first introduce the
+conditional reasoning with Subjective Logic \cite{josanginverting, josang2008conditional, josang2008abductive}. We first introduce the
 operator for performing deduction, which we call \emph{deduce}, and
 then discuss the operator \emph{abduce} for performing abduction.
 
@@ -682,12 +687,10 @@ which the opinions are defined over must satisfy two properties: they
 must be \emph{bounded}, and the must be \emph{enumerable}. These
 constraints on the type of frames allowed is expressed via the type
 classes \emph{Bounded} and \emph{Enum}. Boundedness simply means that
-there exists a least and greatest element, and enumerability insists
-that the frames be mappable to the integers.
+there exists a least and greatest element, and enumerability means that
+the values of the type must be enumerable.
 
-We will begin by introducing deduction. Subjective Logic deduction is
-a fairly complex operation, and so we have split the implementation
-into steps, following it's description (cite).
+We begin by introducing deduction.
 
 \begin{code}
 deduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
@@ -705,11 +708,9 @@ deduce' :: forall a. forall b. forall h.
            => Multinomial h a
            -> [(a, Multinomial h b)]
            -> Multinomial h b
-deduce' opx@(Multinomial bx ux ax _ _) ops = Multinomial b' u' a' undefined undefined
+deduce' opx@(Multinomial bx ux ax hx _) ops = Multinomial b' u' a' hx f
   where
 \end{code}
-
-The expectation of y given a vacuous expectation on X.
 
 \begin{code}
     expt y = sum . map f $ xs
@@ -717,15 +718,11 @@ The expectation of y given a vacuous expectation on X.
         f x = V.value ax x * V.value (expectation (findOpinion x)) y
 \end{code}
 
-The expectation of y given X.
-
 \begin{code}
     expt' y = sum . map f $ xs
       where
         f x = V.value (expectation opx) x * V.value (expectation (findOpinion x)) y
 \end{code}
-
-The expectation of y given the theoretical maximum uncertainty.
 
 \begin{code}
     tExpt y = (1 - V.value ay y) * byxs + (V.value ay y) * (byxr + uyxr)
@@ -736,31 +733,26 @@ The expectation of y given the theoretical maximum uncertainty.
         byxs       = V.value (mBelief xs') y
 \end{code}
 
-All values of frames X and Y. We need to enumerate them in their entirity.
-
 \begin{code}
     xs = [minBound .. maxBound] :: [a]
     ys = [minBound .. maxBound] :: [b]
 \end{code}
 
-All of the base rate vectors must be the same, so take the first one.
-
 \begin{code}
     ay = mBaseRate . snd . head $ ops
 \end{code}
-
-Next, some helper functions.
 
 \begin{code}
     uYx x = maybe 1 mUncertainty . lookup x $ ops
 
     findOpinion x = case lookup x ops of
-      Nothing -> Multinomial (V.fromList []) 1 ay undefined undefined
+      Nothing -> Multinomial (V.fromList []) 1 ay hx f
       Just op -> op
 \end{code}
 
-Step 1: For each y, we compute the pair (xr, xs) that yields the theoretical
-maximum uncertainty.
+\begin{code}
+    f = mFrame . snd . head $ ops
+\end{code}
 
 \begin{code}
     dims :: b -> (Multinomial h b, Multinomial h b)
@@ -781,8 +773,6 @@ maximum uncertainty.
                      return (val, xr'', xs'')
 \end{code}
 
-Step 2: Compute the triangle apex uncertainty for each y.
-
 \begin{code}
     triangleApexU y
       | expt y <= tExpt y = (expt y - byxs) / V.value ay y
@@ -793,32 +783,22 @@ Step 2: Compute the triangle apex uncertainty for each y.
         byxs = V.value (mBelief . snd . dims $ y) y
 \end{code}
 
-Intermediate sub-simplex apex uncertainty.
-
 \begin{code}
     intApexU = maximum . map triangleApexU $ ys
 \end{code}
 
-Step 3: Compute the intermediate belief components.
-
 \begin{code}
     bComp y = expt y - V.value ay y * intApexU
 \end{code}
-
-Compute the adjusted apex uncertainty.
 
 \begin{code}
     adjustedU y | bComp y < 0 = expt y / V.value ay y
                 | otherwise   = intApexU
 \end{code}
 
-Finally compute the sub-simplex apex uncertainty.
-
 \begin{code}
     apexU = minimum . map adjustedU $ ys
 \end{code}
-
-Step 4: The final values we expect.
 
 \begin{code}
     b' = V.fromList [ (y, expt' y - (V.value ay y) * u') | y <- ys ]
@@ -831,14 +811,10 @@ Subjective Logic abduction is a two step procedure. Given an opinion
 over a frame X and a list of conditional opinions over X given Y, we
 first must invert the conditionals into a list of conditional opinions
 over Y given X, and then perform Subjective Logic deduction with the
-new list and the opinion over X. Failure to invert the conditional
-opinions when performing abductive reasoning results in one falling
-victim to the \emph{prosecutor's fallacy}.
+new list and the opinion over X.
 
 \begin{code}
-abduce :: (ToMultinomial op,
-           Ord a, Bounded a, Enum a,
-           Ord b, Bounded b, Enum b)
+abduce :: (ToMultinomial op, Ord a, Bounded a, Enum a, Ord b, Bounded b, Enum b)
           => SLExpr h a (op h a)
           -> [(b, Multinomial h a)]
           -> BaseRateVector b
@@ -855,11 +831,11 @@ abduce' :: forall a. forall b. forall h.
            -> [(b, Multinomial h a)]
            -> BaseRateVector b
            -> Multinomial h b
-abduce' opx@(Multinomial bx ux ax _ _) ops ay = deduce' opx ops'
+abduce' opx@(Multinomial bx ux ax hx fx) ops ay = deduce' opx ops'
   where
     ops' = map multinomial xs
 
-    multinomial x = (x, Multinomial b' u' a' undefined undefined)
+    multinomial x = (x, Multinomial b' u' a' hx (F.fromList ys))
       where
         b'  = V.fromList bs
         u'  = uT x
@@ -892,20 +868,18 @@ abduce' opx@(Multinomial bx ux ax _ _) ops ay = deduce' opx ops'
 \end{code}
 
 \begin{code}
-    -- TODO: Factor this out.
     findOpinion y = case lookup y ops of
-      Nothing -> Multinomial (V.fromList []) 1 ax undefined undefined
+      Nothing -> Multinomial (V.fromList []) 1 ax hx (F.fromList xs)
       Just op -> op
 \end{code}
 
 
 \subsubsection{Belief Constraining}
 
-The final operator we will discuss is the \emph{belief constraint}
-operator. This operator takes as input two objects that are convertible
+The final operator we discuss is the \emph{belief constraint}
+operator \cite{josang2012dempster}. This operator takes as input two objects that are convertible
 to hyper opinions and returns a hyper opinion as output. This function
-is equivalent in meaning to Dempster's rule of combination from
-\emph{Dempster Shafer Theory}.
+is equivalent in meaning to Dempster's rule of combination from Dempster-Shafer Theory \cite{josang2012dempster}.
 
 \begin{code}
 constraint :: (ToHyper op1, ToHyper op2, Ord b)
@@ -919,12 +893,14 @@ constraint op1 op2 = do
 \end{code}
 
 \begin{code}
-constraint' :: Ord a => Hyper h a -> Hyper h a -> Hyper h a
-constraint' (Hyper bA uA aA hx _) (Hyper bB uB aB hy _) =
-  Hyper bAB uAB aAB (Constraint hx hy) undefined
+constraint' :: (Ord a) => Hyper h a -> Hyper h a -> Hyper h a
+constraint' h1@(Hyper bA uA aA hx fx) h2@(Hyper bB uB aB hy _) =
+  Hyper bAB uAB aAB (Constraint hx hy) fx
   where
     bAB = V.fromList . map (\k -> (k, harmony k / (1 - conflict))) $ keys
+
     uAB = (uA * uB) / (1 - conflict)
+
     aAB = V.fromList $ map (\k -> (k, f k)) keys'
       where
         f x = (axA * (1 - uA) + axB * (1 - uB)) / (2 - uA - uB)
@@ -937,19 +913,19 @@ constraint' (Hyper bA uA aA hx _) (Hyper bB uB aB hy _) =
         bxA     = V.value bA x
         bxB     = V.value bB x
         rest    = sum . map combine $ matches
-        matches = [(y, z) | y <- keys, z <- keys, F.union y z == x]
+        matches = [(y, z) | y <- keys, z <- keys, F.intersection y z == x]
 
     conflict = sum . map combine $ matches
       where
-        matches = [(y, z) | y <- keys, z <- keys, F.union y z == F.empty]
+        matches = [(y, z) | y <- keys, z <- keys, F.intersection y z == F.empty]
 
-    combine (y, z) = V.value bA y + V.value bB z
+    combine (y, z) = V.value bA y * V.value bB z
 
-    keys  = nub (V.focals bA ++ V.focals bB)
+    keys = F.toList $ F.reducedPowerSet fx
     keys' = nub (V.focals aA ++ V.focals aB)
 \end{code}
 
-The operators for multinomial and hyper opinions are sumarized in table \ref{tbl:mh-operators}.
+The operators for multinomial and hyper opinions are summarized in table \ref{tbl:mh-operators}.
 
 \begin{table}
 \begin{center}
@@ -957,15 +933,15 @@ The operators for multinomial and hyper opinions are sumarized in table \ref{tbl
   \hline
   Name & SL Notation & SLHS Notation\\
   \hline
-  Multiplication      & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $opx +! opy$  \\
-  Deduction           & $\omega_{Y || X} = \omega_X \circledcirc \omega_{Y | X}$                                           & $opx +! opy$  \\
-  Abduction           & $\omega_{Y \overline{||} X} = \omega_X \overline{\circledcirc} \omega_{X | Y}$                     & $opx +! opy$  \\
-  Cumulative Fusion   & $\omega^{A \diamondsuit B}_{X} = \omega^A_X \oplus \omega^B_X$                                     & $opx +! opy$  \\
-  Cumulative Unusion  & $\omega^{A \overline{\diamondsuit} B}_{X} = \omega^A_X \ominus \omega^B_X$                         & $opx +! opy$  \\
-  Averaging  Fusion   & $\omega^{A \underline{\diamondsuit} B}_{X} = \omega^A_X \underline{\oplus} \omega^B_X$             & $opx +! opy$  \\
-  Averaging  Unusion  & $\omega^{A \overline{\underline{\diamondsuit}} B}_{X} = \omega^A_X \underline{\ominus} \omega^B_X$ & $opx +! opy$  \\
-  Fission             & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $opx +! opy$  \\
-  Belief Constraining & $\omega^{A \& B}_{X} = \omega^A_X \odot \omega^B_X$                                                & $opx +! opy$  \\
+  Multiplication      & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $opx\; `times`\; opy$  \\
+  Deduction           & $\omega_{Y || X} = \omega_X \circledcirc \omega_{Y | X}$                                           & $deduce\; opx\; ops$  \\
+  Abduction           & $\omega_{Y \overline{||} X} = \omega_X \overline{\circledcirc} \omega_{X | Y}$                     & $abduce\; opx\; opys\; a$  \\
+  Cumulative Fusion   & $\omega^{A \diamondsuit B}_{X} = \omega^A_X \oplus \omega^B_X$                                     & $opx\; `cFuse`\; opy$  \\
+  Cumulative Unfusion  & $\omega^{A \overline{\diamondsuit} B}_{X} = \omega^A_X \ominus \omega^B_X$                         & $opx\; `cUnfuse`\; opy$  \\
+  Averaging  Fusion   & $\omega^{A \underline{\diamondsuit} B}_{X} = \omega^A_X \underline{\oplus} \omega^B_X$             & $opx\; `aFuse`\; opy$  \\
+  Averaging  Unfusion  & $\omega^{A \overline{\underline{\diamondsuit}} B}_{X} = \omega^A_X \underline{\ominus} \omega^B_X$ & $opx\; `aUnfuse`\; opy$  \\
+  Fission             & $\omega_{X \cup Y} = \omega_X + \omega_Y$                                                          & $split\; phi\; opx$  \\
+  Belief Constraining & $\omega^{A \& B}_{X} = \omega^A_X \odot \omega^B_X$                                                & $opx\; `constraint`\; opy$  \\
   \hline
 \end{tabular}
 \end{center}

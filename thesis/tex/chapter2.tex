@@ -21,7 +21,7 @@ Decision support systems are information systems that are designed to aide users
 decision-making tasks \cite{sprague1980framework}. Examples of such tasks are those pertaining to management,
 planning, or operations. Typically decision support systems work with the kinds of unstructured
 or underspecified problems faced by managers and decision-makers in many areas; involve the
-synthesis of models, analytics, and data; are targetted at non-technical people; and are designed
+synthesis of models, analytics, and data; are targeted at non-technical people; and are designed
 to be flexible and adaptable in the face of new data or changes to the working environment
 \cite{sprague1980framework}.
 
@@ -135,21 +135,22 @@ uncertainty tends to zero, leaving a pure probability.
 \section{Uncertain Reasoning}
 \label{sec:uncertain-reasoning}
 
-%
-% Word this properly...
-%
 
-Dealing with the various kinds of uncertainty, such as fuzzy or incomplete information,
-has been a cornerstone problem for artificial reasoning research. Various systems and
-calculi have been proposed and explored over the years, including but not limited to
+Since the early days of Artificial Intelligence, researchers have been interested in modeling
+how humans perform various kinds of reasoning \cite{russell2003}, and more recently (late 1980's to early 1990's)
+researchers have developed successful techniques for constructing artificial systems that can reason with
+uncertainty \cite{russell2003}. Tools that are used by researchers for handling uncertain or incomplete
+information include, but are not limited to
 
 \begin{itemize}
   \item Bayesian Probability
-  \item Fuzzy logic and fuzzy set theory
+  \item Fuzzy Logic
   \item Dempster-Shafer Theory
-  \item Subjective Logic
+  \item and more recently, Subjective Logic
 \end{itemize}
 
+In this section we discuss the above mentioned calculi, and in Section \ref{sec:tools-for-reasoning} we discuss
+various languages, workbenches, and tools that are available for researchers.
 
 
 %
@@ -168,7 +169,7 @@ true prior to any evidence being accounted for) is assigned, and as evidence is
 accounted for, the probability of the proposition is updated through a mechanism
 called \emph{Bayesian Updating} \cite{paulos2011mathematics}. Unlike a frequentist
 view of probability, in which the probability of a proposition represents the frequency
-of the event occuring, in Bayesian Probability the probability of a proposition
+of the event occurring, in Bayesian Probability the probability of a proposition
 represents a state of belief \cite{de1977theory}.
 
 Reasoning with Bayesian Probability amounts to the following:
@@ -261,7 +262,7 @@ These two values bound the probability of $A$ from below and above. That is,
 $bel(A) \leq P(A) \leq pl(A)$. The real novelty of Dempster-Shafer Theory, however, is
 \emph{Dempster's Rule of Combination}, which states how two BBA's generated
 by two observations can be combined together \cite{dempster1968generalization}. Let $m_1$ and $m_2$ be two BBA's over a
-frame of discernment $X$. We combine together the two BBA's by computing what is refered to
+frame of discernment $X$. We combine together the two BBA's by computing what is referred to
 as the \emph{joint mass}, denoted as $m_{1,2}$, by the following equation:
 
 \begin{equation*}
@@ -274,7 +275,7 @@ as the \emph{joint mass}, denoted as $m_{1,2}$, by the following equation:
 $K$, which represents the amount of conflicting belief between $m_1$ and $m_2$, is $\sum_{B \cap C = \emptyset} m_1(B) m_2(C)$.
 
 While fairly straight forward to calculate, it has been shown by Zadeh \cite{zadeh1979validity, zadeh1986simple}
-that Dempster's Rule generates counter-intiutive results when there is a high degree of
+that Dempster's Rule generates counter-intuitive results when there is a high degree of
 conflict between the two belief masses, and Josang and Pope claimed that Dempster's Rule actually
 represents a method of preference combination while serving as an approximation for other forms of belief
 combination such as the cumulative or average fusion of two beliefs \cite{josang2012dempster}. Subjective Logic, which we introduce next,
@@ -301,7 +302,7 @@ Though it is relatively young and is under constant refinement,
 Subjective Logic has been shown to be effective
 across a range of areas that require uncertain reasoning, such as
 trust network analysis \cite{josang2006trust, josang2008optimal},
-modelling trust on mobile ad-hoc networks \cite{li2004trust, liu2011novel},
+modeling trust on mobile ad-hoc networks \cite{li2004trust, liu2011novel},
 and arguing with evidence \cite{oren2007subjective, josang2000legal}.
 
 
@@ -338,9 +339,9 @@ $A$ is the (optional) agent who owns that particular belief.
 
 Elements of $R\left(\Theta\right)$ such that $b_\Theta\left(x\right) > 0$ are called \emph{focal elements}.
 Subjective opinions where the focal elements are all singleton sets - that is, every focal element is
-simply an element of $\Theta$ - are refered to as \emph{multinomial opinions}. Multinomial opinions
-defined over frames of cardinality 2 are refered to as \emph{binomial opinions}. The most general of
-opinions, subjective opinions, are also refered to as \emph{hyper opinions}. Lastly, opinions can either
+simply an element of $\Theta$ - are referred to as \emph{multinomial opinions}. Multinomial opinions
+defined over frames of cardinality 2 are referred to as \emph{binomial opinions}. The most general of
+opinions, subjective opinions, are also referred to as \emph{hyper opinions}. Lastly, opinions can either
 be \emph{dogmatic}, when $u_\Theta$ is zero, or \emph{uncertain} otherwise. The six classes of subjective
 opinions are summarized in Table \ref{tbl:sl-opinions}.
 
@@ -414,6 +415,7 @@ require reasoning when uncertainty is present.
 
 
 \section{Languages and Tools for Automated Reasoning}
+\label{sec:tools-for-reasoning}
 
 In Section \ref{sec:uncertain-reasoning} we introduced various systems for automated reasoning. In this
 section we discuss some languages and tools that have been developed for the previously mentioned
@@ -428,7 +430,7 @@ with Subjective Logic.
 
 \emph{Waikato Environment for Knowledge Analysis (WEKA)} is a popular workbench for machine learning
 \cite{witten2005data}. It contains many popular algorithms and visualization techniques for performing data mining,
-data analysis, and predictive modelling. It is developed in the JAVA programming language, and is
+data analysis, and predictive modeling. It is developed in the JAVA programming language, and is
 distributed as \emph{Free Software} under the GNU General Public License.
 
 Though freely available, Weka requires all data to be described using a fixed number of attributes and all
@@ -526,7 +528,7 @@ does handle uncertainty, however it would fight against the spirit of the langua
       \hline
       Prolog                & Deduction                   & Horn Clauses & Unideal for uncertainty. All computations represented as logical deductions. \\
       \hline
-      R                     & Bayesian Statistics         & Data tables  & Powerful for statistical compuation.                                         \\
+      R                     & Bayesian Statistics         & Data tables  & Powerful for statistical computation.                                         \\
       \hline
       Weka                  & Machine learning algorithms & Data tables  & Vast array of tools. Data must conform to a certain format to be usable.     \\
       \hline
@@ -651,7 +653,7 @@ One type class in particular gets special attention in Haskell. Types that are i
 class \emph{Monad} are very popular in functional programming, and Haskell in particular \cite{peyton1993imperative}. Monads
 are mathematical objects from \emph{category theory} that are prevalent throughout Haskell.
 They were first introduced by Eugenio Moggi \cite{moggi1991notions} and have subsequently been
-used for parsing \cite{hutton1998monadic, leijen2001parsec, hafiz2010lazy}, modelling state
+used for parsing \cite{hutton1998monadic, leijen2001parsec, hafiz2010lazy}, modeling state
 \cite{launchbury1994lazy}, and much more. Most
 importantly, Haskell uses monads to handle input/output \cite{peyton1993imperative}, which allows Haskell to read
 input from the user, and send output to the computer screen, while remaining a pure functional

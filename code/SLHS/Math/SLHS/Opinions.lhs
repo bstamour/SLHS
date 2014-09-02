@@ -6,8 +6,8 @@
 
 \section{Opinions}
 
-In this section we will discuss the implementation of the most important
-objects in SLHS from the user's standpoint: Subjective opinions. We start by
+In this section we discuss the implementations of the various
+kinds of subjective opinions. We start by
 implementing binomial opinions, and then we present multinomial and hyper
 opinions.
 
@@ -37,7 +37,7 @@ import Control.Monad
 
 \subsection{Binomial Opinions}
 
-We represent binomial opnions by four rational numbers corresponding
+We represent binomial opinions by four rational numbers corresponding
 to the belief, disbelief, uncertainty, and base rate of the opinion,
 along with some additional meta-data: the belief holder and the frame
 of discernment it is defined over. In code, the binomial opinion looks
@@ -49,37 +49,42 @@ data Binomial h a = Binomial { bBelief      :: Rational
                              , bUncertainty :: Rational
                              , bAtomicity   :: Rational
                              , bHolder      :: Holder h
-                             , bFrame       :: BinomialFrame a
-                             } deriving Show
+                             , bX           :: a
+                             , bNotX        :: a
+                             }
 \end{code}
 
 Here we use Haskell's \emph{record syntax} to define the data constructor.
 Haskell automatically creates the top-level functions \emph{bBelief},
-\emph{bDisbelief}, \emph{bUncertainty}, \emph{bAtomicity}, and
-\emph{bMetaData} that provide access to the "members" of the record.
+\emph{bDisbelief}, \emph{bUncertainty}, \emph{bAtomicity}, \emph{bHolder},
+\emph{bX}, and \emph{bNotX} that provide access to the respective items of the record.
 
-Since binomial opinions can either be defined over a binary frame of
-discernment, or a binary partitioning of a frame, we introduce a special
-frame type just for binomials, called \emph{BinomialFrame}:
 
+
+
+
+
+
+\ignore{
 \begin{code}
-data BinomialFrame a = Normal a a
-                     | Split (F.Frame a) (F.Frame a)
-                     deriving Show
+instance (Show h, Show a) => Show (Binomial h a) where
+  show (Binomial b d u a h x y) = "Binomial:\n"
+                                           ++ "\tHolder: " ++ (show h) ++ "\n"
+                                           ++ "\tFocus: " ++ (show x) ++ "\n"
+                                           ++ "\t~Focus: " ++ (show y) ++ "\n"
+                                           ++ "\tb = " ++ (show b) ++ "\n"
+                                           ++ "\td = " ++ (show d) ++ "\n"
+                                           ++ "\tu = " ++ (show u) ++ "\n"
+                                           ++ "\ta = " ++ (show a) ++ "\n"
+
 \end{code}
+}
 
-The two data constructors, \emph{Normal} and \emph{Split} represent the two
-possible kinds of frames that binomial opinions can be defined over.
 
-Since certain binomial operators require the opinion to be defined over a
-binary partitioning, we introduce a helper predicate that returns \emph{True}
-when the binomial opinion is a partition, and \emph{False} otherwise:
 
-\begin{code}
-isPartitioned :: Binomial h a -> Bool
-isPartitioned (Binomial _ _ _ _ _ (Normal _ _)) = True
-isPartitioned _                                 = False
-\end{code}
+
+
+
 
 Lastly, we also introduce a special \emph{type class} called \emph{ToBinomial}
 which allows us to define a range of types that can be converted to a
@@ -102,7 +107,7 @@ instance ToBinomial Binomial where
 Multinomials are represented as records containing a \emph{BeliefVector} to represent the
 amount of belief assigned to each element of the frame, a scalar rational number to
 store the uncertainty mass, a \emph{BaseRateVector} which assigns each element in the frame
-to a base rate, and a meta-data object.
+to a base rate, a belief holder, and a reference to the frame of discernment.
 
 \begin{code}
 data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
@@ -110,8 +115,20 @@ data Multinomial h a = Multinomial { mBelief      :: BeliefVector a
                                    , mBaseRate    :: BaseRateVector a
                                    , mHolder      :: Holder h
                                    , mFrame       :: F.Frame a
-                                   } deriving Show
+                                   }
 \end{code}
+
+\ignore{
+\begin{code}
+instance (Show h, Show a) => Show (Multinomial h a) where
+  show (Multinomial b u a h f) = "Multinomial:\n"
+                                 ++ "\tHolder: " ++ (show h) ++ "\n"
+                                 ++ "\tFrame: " ++ (show f) ++ "\n"
+                                 ++ "\tBelief: " ++ (show b) ++ "\n"
+                                 ++ "\tUncertainty: " ++ (show u) ++ "\n"
+                                 ++ "\tBase Rate: " ++ (show a) ++ "\n"
+\end{code}
+}
 
 Just as in the case of binomials, we introduce a type class to represent types that can be
 converted to multinomials. We provide the instance for multinomial opinions (the identity
@@ -126,47 +143,28 @@ instance ToMultinomial Multinomial where
   toMultinomial = id
 
 instance ToMultinomial Binomial where
-  toMultinomial (Binomial b d u a h (Normal x y)) = Multinomial b' u a' h f
+  toMultinomial (Binomial b d u a h x y) = Multinomial b' u a' h f
     where
       b' = V.fromList [ (x, b), (y, d) ]
       a' = V.fromList [ (x, a), (y, 1 - a) ]
       f  = F.fromList [x, y]
-
-  toMultinomial (Binomial b d u a h (Split xs ys)) = Multinomial b' u a' h f
-    where
-      b' = V.fromList $
-           [ (x, r) | x <- F.toList xs, let r = b / toRational (F.size xs) ]
-           ++
-           [ (y, r) | y <- F.toList ys, let r = d / toRational (F.size ys) ]
-      a' = V.fromList $
-           [ (x, r) | x <- F.toList xs, let r = a / toRational (F.size xs) ]
-           ++
-           [ (y, r) | y <- F.toList ys, let r = (1 - a) / toRational (F.size ys) ]
-      f  = xs `F.union` ys
 \end{code}
-
-In the first case of the implementation of \emph{ToMultinomial Binomial}, where the
-binomial opinion is defined over a frame of cardinality 2, we simply create the
-relevant data structures for the multinomial opinion. In the second case, when the
-binomial opinion is defined over a partition of a frame, we split the belief, disbelief,
-and atomicity over the partitions to create the multinomial opinion. In a way, this
-operation can be seen as a form of \emph{uncoarsening}.
 
 
 \subsection{Hyper Opinions}
 
 Hyper opinions share a similar structural layout to multinomial opinions
-except the belief vector spans the reduced powerset of the frame, and is
+except the belief vector spans the reduced power set of the frame, and is
 thus represented as a \emph{BeliefVector} with sub-frames as the keys, instead of
 elements of the frame.
 
 \begin{code}
-data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Subframe a)
+data Hyper h a = Hyper { hBelief      :: BeliefVector (F.Frame a)
                        , hUncertainty :: Rational
                        , hBaseRate    :: BaseRateVector a
                        , hHolder      :: Holder h
                        , hFrame       :: F.Frame a
-                       } deriving Show
+                       }
 
 class ToHyper op where
   toHyper :: Ord a => op h a -> Hyper h a
@@ -184,13 +182,34 @@ instance ToHyper Binomial where
 \end{code}
 
 
+\ignore{
+\begin{code}
+instance (Show h, Show a) => Show (Hyper h a) where
+  show (Hyper b u a h f) = "Hyper:\n"
+                           ++ "\tHolder: " ++ (show h) ++ "\n"
+                           ++ "\tFrame: " ++ (show f) ++ "\n"
+                           ++ "\tBelief: " ++ (show b) ++ "\n"
+                           ++ "\tUncertainty: " ++ (show u) ++ "\n"
+                           ++ "\tBase Rate: " ++ (show a) ++ "\n"
+\end{code}
+}
+
+
+
+
+
+
+
+
+
+
 \subsection{The Opinion Type Class}
 
 There are certain operations that are common amongst all opinions.
 One example of such operation is the \emph{probability expectation}:
 for binomials, the probability expectation is a simple scalar, whereas
 for multinomial and hyper opinions the probability expectation is a
-vector over the frame of discernment, and the reduced powerset of the
+vector over the frame of discernment, and the reduced power set of the
 frame, respectively.
 
 \begin{code}
@@ -203,7 +222,7 @@ class Opinion op h a where
 
 In order to accomodate a function such as probability expectation that
 returns a value of a different type depending on the type of the opinion,
-we use an \emph{indexed type family}. For each opinion type, we associate
+we use an \emph{indexed type family} \cite{kiselyov2010fun}. For each opinion type, we associate
 an "expectation type", which is the type one would obtain when querying the
 probability expectation of the opinion. The instances for each of the three
 opinion types follows.
@@ -212,20 +231,28 @@ opinion types follows.
 instance Ord a => Opinion Binomial h a where
   type ExpectationType Binomial h a = Rational
 
-  expectation (Binomial b d u a _ _)          = b + a * u
-  getFrame (Binomial _ _ _ _ _ (Normal x y))  = F.fromList [x, y]
-  getFrame (Binomial _ _ _ _ _ (Split f1 f2)) = f1 `F.union` f2
+  expectation (Binomial b d u a _ _ _)          = b + a * u
+  getFrame (Binomial _ _ _ _ _ f1 f2) = F.fromList [f1, f2]
 
-instance Opinion Multinomial h a where
+instance Ord a => Opinion Multinomial h a where
   type ExpectationType Multinomial h a = V.Vector a
 
-  expectation _                      = undefined
+  expectation (Multinomial b u a _ f) = V.fromList vals
+    where
+      vals = map (\k -> (k, V.value b k + V.value a k + u)) keys
+      keys = F.toList f
+
   getFrame (Multinomial _ _ _ _ frm) = frm
 
-instance Opinion Hyper h a where
-  type ExpectationType Hyper h a = V.Vector a
+instance Ord a => Opinion Hyper h a where
+  type ExpectationType Hyper h a = V.Vector (F.Frame a)
 
-  expectation _                = undefined
+  expectation (Hyper b u a _ f) = V.fromList vals
+    where
+      vals = map (\k -> (k, V.value b k + aval k + u)) keys
+      keys = F.toList . F.reducedPowerSet $ f
+      aval k = sum . map (V.value a) . F.toList $ k
+
   getFrame (Hyper _ _ _ _ frm) = frm
 \end{code}
 
@@ -241,17 +268,18 @@ discernment is partitioned into two sets: the subset given as input,
 and everything else. These two subsets, taken together as a set, form
 a new binary frame with which the new binomial opinion will be defined
 over. Secondly, the belief masses associated with elements of the
-powerset of the original frame via the hyper opinion input are split
+power set of the original frame via the hyper opinion input are split
 up and assigned to the elements of the new frame. The resulting belief
 mass assignment preserves additivity, and thus the new binomial
 opinion is valid. The operation for coarsening is given below.
 
 \begin{code}
-coarsen :: (ToHyper op, Ord a) => SLExpr h a (op h a)
-           -> F.Subframe a -> SLExpr h a (Binomial h (F.Subframe a))
+coarsen :: (ToHyper op, Ord b)
+           => SLExpr h a (op h b)
+           -> F.Frame b -> SLExpr h a (Binomial h (F.Frame b))
 coarsen op theta = liftM2 coarsen' op (return theta)
   where
-    coarsen' op theta = Binomial b d u a undefined undefined
+    coarsen' op theta = Binomial b d u a holder theta (frm `F.difference` theta)
       where
         b = sumSnd . V.elemsWhere subset         $ belief
         d = sumSnd . V.elemsWhere emptyIntersect $ belief
@@ -261,26 +289,41 @@ coarsen op theta = liftM2 coarsen' op (return theta)
         belief   = hBelief . toHyper $ op
         baseRate = V.value (hBaseRate . toHyper $ op)
 
+        holder   = hHolder . toHyper $ op
+        frm      = hFrame  . toHyper $ op
+
         sumSnd         = sum . map snd
         subset         = (`F.isSubsetOf` theta)
         emptyIntersect = F.isEmpty . (`F.intersection` theta)
 \end{code}
 
 As a convenience, we also offer a function to coarsen a hyper opinion,
-not by an explicitly given subframe, but by those elements of the frame
-that satisfy a given predicate. As an example, consider a frame of
-discernment consisting of the natural numbers. Using the following
-function, one can coarsen the frame into the binary frame
-$\lbrace \mbox{evens}, \lnot \mbox{evens} \rbrace$.
+not by an explicitly given sub-frame, but by those elements of the frame
+that satisfy a given predicate.
 
 \begin{code}
-coarsenBy :: (ToHyper op, Ord a) => SLExpr h a (op h a)
-             -> (a -> Bool) -> SLExpr h a (Binomial h (F.Frame a))
+coarsenBy :: (ToHyper op, Ord b) => SLExpr h a (op h b)
+             -> (b -> Bool) -> SLExpr h a (Binomial h (F.Frame b))
 coarsenBy op pred = op >>= \op' ->
   let (theta, _) = F.partition pred . getFrame . toHyper $ op'
   in  coarsen op theta
 \end{code}
 
+As an example, consider a frame of discernment containing the integer values
+one through twenty, and a hyper opinion $\omega^A$ defined over the frame. We can
+then construct a binomial opinion
+$\omega^A_{P(x)} = \langle b_{P(x)}, d_{P(x)}, u_{P(x)}, a_{P(x)} \rangle$,
+where the predicate $P(x)$ denotes "x is even" by utilizing the \emph{coarsenBy}
+function:
+
+\begin{spec}
+isEven :: Int -> Bool
+isEven n = n `mod` 2 == 0
+
+evenOpinion = coarsenBy isEven oldOpinion
+\end{spec}
+
+where \emph{oldOpinion} is the initial hyper opinion.
 
 
 
@@ -294,8 +337,8 @@ functions do just that.
 
 We start with fetching hyper opinions, as they are the most general. Given a belief
 holder $h$ and an index $idx$ corresponding to the $idx$'th frame of discernment in
-the state, \emph{getHyper} returns either a hyper opinion held by $h$ over opinion
-$frames\lbrack idx \rbrack$, or a runtime error diagnostic.
+the state, \emph{getHyper} returns either a hyper opinion held by $h$ over the
+\emph{idx}th frame, or a run-time error message.
 
 \begin{code}
 getHyper :: (Ord h, Ord a) => h -> Int -> SLExpr h a (Hyper h a)
@@ -306,21 +349,32 @@ getHyper holder idx = do
   if idx > length frames
     then err "getHyper: index out of range"
     else do let frm = frames !! idx
-            case M.lookup frm vecs of
-              Nothing -> err "getHyper: no mass assignments for that frame"
-              Just m  -> do
-                case M.lookup (Holder holder) m of
-                  Nothing -> err "getHyper: no mass assignment for that holder"
-                  Just m' -> do
-                    return $ Hyper m' 0 (V.fromList []) (Holder holder) frm
+            m <- do case M.lookup frm vecs of
+                      Nothing -> err "getHyper: no mass assignments for that frame"
+                      Just m  -> do
+                        case M.lookup (Holder holder) m of
+                          Nothing -> err "getHyper: no mass assignment for that holder"
+                          Just m' -> return m'
+
+            a <- do case M.lookup frm rates of
+                      Nothing -> err "getHyper: no base rates for that frame"
+                      Just a -> do
+                        case M.lookup (Holder holder) a of
+                          Nothing -> err "getHyper: no base rate for that holder"
+                          Just a' -> return a'
+
+            let u = 1 - V.fold (+) 0 m
+            return $ Hyper m u a (Holder holder) frm
 \end{code}
 
-While the above function looks fairly complicated, it simply unrwaps the relevant
+While the above function looks fairly complicated, it simply unwraps the relevant
 state data from the \emph{SLExpr} monad, checks to see if the index is within the
 bounds of the array of frames, and then looks to see if there are any mass assignments
 for that particular frame. If there are mass assignments for that frame, then we
 look up the particular mass assignment owned by the belief holder. If one exists, we
-return it, else we return an error message.
+return it, else we return an error message. We perform a similar unwrapping for
+checking for base rates, and then compute the uncertainty and return the resulting
+hyper opinion.
 
 Next we have a way of obtaining multinomial opinions. Since multinomial opinions
 are a special case of hyper opinions, we first obtain the hyper opinion via a call to
@@ -346,7 +400,7 @@ getMultinomial holder f = do
 
 The same trick applies to obtaining binomial opinions. We first obtain the
 relevant multinomial opinion and then see if we can safely convert it into
-a binomial opinion. If so, great! Elsewise we return an error message to
+a binomial opinion. If so, great! Otherwise we return an error message to
 the user.
 
 \begin{code}
@@ -365,25 +419,17 @@ getBinomial holder f x = do
       let d' = V.value b y
       let u' = 1 - b' - d'
       let a' = V.value a x
-      return $ Binomial b' d' u' a' h (Normal x y)
+      return $ Binomial b' d' u' a' h x y
 \end{code}
 
 In the above code for \emph{maybeToBinomial} we utilize the fact that the
 \emph{Maybe} type is an instance of the type class \emph{MonadPlus}, which
 gives us access to the \emph{guard} function. MonadPlus can be thought of
-the set of types that are monads, but also have the properties of monoids
-from algebra: a zero element (in the case of Maybe, the Nothing data
+the set of types that are monads, but also have the additive properties of monoids:
+a zero element (in the case of Maybe, the Nothing data
 constructor), and a method of combining two MonadPlus objects together, which
-in Haskell is called \emph{mplus}. Unfortunately the rules for identity and
-associativity cannot be enforced in the language itself. An example instance of
-MonadPlus for Maybe would be the following:
-
-\begin{spec}
-instance MonadPlus Maybe where
-  mzero = Nothing
-  Nothing  `mplus` x = x
-  (Just x) `mplus` _ = x
-\end{spec}
+in Haskell is called \emph{mplus} \cite{jones2003haskell}. Unfortunately the rules for identity and
+associativity cannot be enforced in the language itself.
 
 
 

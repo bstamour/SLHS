@@ -6,28 +6,30 @@
 \chapter{Results and Analysis}
 \label{chap:results-and-analysis}
 
-In this chapter we will analyze SLHS by proving that the \emph{run} function terminates for
-all input expressions, analyze the complexity of the Subjective Logic operators,
+In this chapter we analyze SLHS by proving that the \emph{run} function terminates for
+all valid input expressions, analyze the complexity of a representative subset of the Subjective Logic operators,
 discuss how Haskell's strong type system and its support for monads has affected the
-design of SLHS, and finally we will demonstrate the power of SLHS by showcasing some
-example computations.
+design of SLHS, and finally we demonstrate the power of SLHS by showcasing some
+example computations and discuss how the library fits into the
+\emph{Unified Data Management and Decision Support System (UDMDSS)} \cite{kent2010application, kent2010towards}.
 
 
 \section{Proof of Termination}
 \label{sec:termination}
 
-In this section we will perform a termination analysis of the \emph{run} function. The
-run function takes in a subjective logic expression and an initial state, and returns
-either the computed value or an error message. We will prove that run terminates for
+In this section we perform a termination analysis of the \emph{run} function. The
+run function takes in a Subjective Logic expression and an initial state, and returns
+either the computed value or an error message. We prove that run terminates for
 subjective logic expressions of arbitrary length.
 
 Our strategy for proving termination is as follows: we utilize a function $|\cdot|$ that
-maps each subjective logic expression $e$ to the number of sub-expresssions contained in
+maps each Subjective Logic expression $e$ to the set of ordinal numbers. We let $|e|$
+denote the number of sub-expressions contained in
 $e$, including $e$ itself. As \emph{run} recursively computes the values of the
 sub-expressions, we will show that the value of $|e|$ decreases at each step, concluding
-when $|e|$ is 1, and \emph{run} simply returns the final value. Therefore we can conclude
+when $|e|$ is 1, when \emph{run} simply returns the final value. Therefore we can conclude
 that \emph{run} terminates because the set of ordinals is \emph{well-founded}, that is there
-cannot exist infinitely descending chains.
+cannot exist infinitely descending chains \cite{moschovakis2006notes}.
 
 \begin{lemma}
   The \emph{return} function introduces a new sub-expression.
@@ -122,7 +124,7 @@ cannot exist infinitely descending chains.
 
 In this section we analyze the time complexity of a representative subset of the SLHS operators. We
 analyze the complexity of belief constraining to demonstrate how computationally expensive it is to
-work with hyper opinions, which are defined over the reduced powerset of the frame of discernment.
+work with hyper opinions, which are defined over the reduced power set of the frame of discernment.
 Next we analyze the complexity of belief fission, an operator defined over multinomial opinions.
 Lastly, we analyze the complexity of multinomial multiplication.
 
@@ -146,19 +148,19 @@ carried out in a constant amount of time.
 
 \begin{proof}
   Since belief constraining is defined over hyper opinions, let $m = 2^n - 2$ be the cardinality
-  of the reduced powerset of the frame. Computing the \emph{conflict} requires finding all elements of
-  the powerset that share overlap and adding together their assigned belief masses. This operation
+  of the reduced power set of the frame. Computing the \emph{conflict} requires finding all elements of
+  the power set that share overlap and adding together their assigned belief masses. This operation
   takes $O (m^2)$ time for the iteration, and $O (\log m)$ for looking up the belief masses. Therefore
   conflict takes $O (m^2 \log m)$ time.
 
-  Computing the new belief mass requires computing the \emph{Harmony} for every element of the powerset.
+  Computing the new belief mass requires computing the \emph{Harmony} for every element of the power set.
   Computing the harmony takes $O (m^2)$ time per element, resulting in a time complexity of $O (m^3 \log m)$
   for computing the new belief mass.
 
   Computing the uncertainty requires computing the conflict, which we have already computed as a part of
   the new belief mass.
 
-  Atomicity requires iterating over the entire reduced powerset, and thus requires $O (m \log m)$ time.
+  Atomicity requires iterating over the entire reduced power set, and thus requires $O (m \log m)$ time.
 
   Therefore the total time complexity for belief constraining is
   $O (m^3 \log m + m^2 \log m + m \log m) = O (m^3 \log m) = O ((2^n - 2)^3 \log (2^n - 2))$.
@@ -180,7 +182,7 @@ carried out in a constant amount of time.
 
 \begin{proof}
   The \emph{expect x y} function takes $O (\log m + \log n)$ time, since it needs to perform
-  lookups on each frame. Computing the uncertainty takes $O (m \log m \times n \log n)$ time,
+  look-ups on each frame. Computing the uncertainty takes $O (m \log m \times n \log n)$ time,
   computing the new atomicity takes $O (m \log m \times n \log n)$ time, and computing the new
   belief also takes $O (m \log m \times n \log n)$ time. Therefore the entire time complexity is
   $O (m \log m \times n \log n)$.
@@ -197,7 +199,7 @@ carried out in a constant amount of time.
 
 
 
-\section{Use of Haskell's Type System}
+\section{The Use of Haskell's Type System}
 \label{sec:types}
 
 In this section we discuss how SLHS leverages Haskell's type system to catch many errors
@@ -219,26 +221,24 @@ leverage Haskell's strong typing to stop those invalid expressions from even com
 Consider the type signature for the binomial addition operator:
 
 \begin{spec}
-(+!) :: (ToBinomial op1, ToBinomial op2)
-       => SLExpr h a (op1 h (F.Subframe a))
-       -> SLExpr h a (op2 h (F.Subframe a))
-       -> SLExpr h a (Binomial h (F.Subframe a))
+(+!) :: (ToBinomial op1, ToBinomial op2, Eq h, Eq b, Ord b)
+        => SLExpr h a (op1 h b)
+        -> SLExpr h a (op2 h b)
+        -> SLExpr h a (Binomial h b)
 \end{spec}
 
 What this tells us is that addition takes in two parameters, \emph{op1} and \emph{op2}, each wrapped in
 the \emph{SLExpr} monad. These two opinion types must be convertible to binomials, as they must belong to
-the type class \emph{ToBinomial}. Secondly, since opinion types are parameterized over the type of elements
-contained within the associated frame of discernment, we enforce that those elements are themselves
-\emph{subframes}. We can ensure that addition only happens between types convertible to binomial opinions
-and whose frames of discernment are themselves frames. We cannot check at compile time whether the two
-frames are paritions of the same underlying frame, but we can still catch quite a bit of obvious mistakes.
-
+the type class \emph{ToBinomial}. This signature also tells us that the elements of the frame must be of
+the same type. Therefore, if any one of the opinions is constructed over the cartesian product of two frames,
+then both opinions must be constructed over the cartesian product of two frames. Checking whether the two
+frames are in fact the same must be deferred until run time, however.
 
 \section{The Use of Monads}
 \label{sec:monads}
 
-In this section we describe the roll that monads have played in the design of SLHS. As mentioned
-previously, the \emph{SLExpr} type that represents Subjective Logic expressions is a function from
+In this section we describe the role that monads have played in the design of SLHS. As mentioned
+previously, the \emph{SLExpr} type, which is the type used to represent Subjective Logic expressions within SLHS, is a function from
 a world state, \emph{SLState}, to some output value. \emph{SLExpr} forms a monad, and thus we are
 able to use all of Haskell's built-in support for monads when writing computations involving
 objects of type \emph{SLExpr}. In particular, \emph{SLExpr} is a special kind of \emph{state monad},
@@ -268,7 +268,7 @@ z = do x <- mx
 
 This syntactic sugar not only allows the implementation of SLHS to be written more
 concisely in many cases, but it also extends to users of SLHS as well. Complicated
-Subjective Logic exprressions can be broken down into smaller pieces, and then glued
+Subjective Logic expressions can be broken down into smaller pieces, and then glued
 together in a style that looks very imperative:
 
 \begin{spec}
@@ -279,9 +279,12 @@ expr = do e1 <- getMultinomial ``Alice'' 0
           return e4
 \end{spec}
 
-which may help programmers who are more acustomed to writing programs in more mainstream
-structural languages such as \emph{Python} or \emph{Ruby}. In the next section we demonstrate how
-problems involving Subjective Logic can be modelled and executed using SLHS.
+which may help programmers who are more accustomed to writing programs in more mainstream
+structural languages such as \emph{Python} \cite{van2003python} or \emph{Ruby} \cite{matsumoto2002ruby}.
+In the next section we demonstrate how
+problems involving Subjective Logic can be modeled and executed using SLHS.
+
+
 
 
 \section{Example Computations}
@@ -293,13 +296,15 @@ Subjective Logic literature.
 \subfile{./SLHS/examples/Ex2.lhs}
 
 
+
 \section{Utilization Within UDMDSS}
 
-As mentioned in Section \ref{sec:dss}, we have designed the Unified Data Management
-and Decision Support System (UDMDSS)
+As mentioned in Section \ref{sec:dss}, we have participated in a team effort to design the
+Unified Data Management and Decision Support System (UDMDSS)
 as a part of our ongoing research into the development of decision support systems for
-the management and analysis of health care research surveys. SLHS was designed to aide in the
-developemnt of automated reasoning systems that utilized Subjective Logic, and though it has
+the management and analysis of population research surveys \cite{kent2010towards, kent2011design, kobti2011towards}.
+SLHS was designed to aide in the
+development of automated reasoning systems that utilized Subjective Logic, and though it has
 not been integrated yet, we expect that SLHS will find a place in the heart of the UDMDSS
 system. Further development on UDMDSS will see SLHS put to the test of analyzing real health care
 data using the tools of Subjective Logic.
@@ -310,11 +315,11 @@ data using the tools of Subjective Logic.
 \section{Summary}
 
 In this chapter we presented a termination analysis for the \emph{run} function of SLHS, proving
-that it terminates for all expressions. We then provided a complexity analysis for a selection
+that it terminates for all valid expressions. We then provided a complexity analysis for a selection
 of Subjective Logic operators. We also discussed how Haskell's type system is leveraged in SLHS
-to catch problems with Subjective Logic expressions at compile time, and we also provided some
-example calculations. In the next chapter we will conclude this thesis and discuss areas in which
-we feel SLHS can be improved.
+to catch problems with Subjective Logic expressions at compile time, and how the use of monads facilitated a sound design.
+We also provided some example calculations with SLHS, and we discussed its position within the larger UDMDSS system.
+In the next chapter we conclude this thesis and discuss areas in which we feel SLHS can be improved.
 
 
 

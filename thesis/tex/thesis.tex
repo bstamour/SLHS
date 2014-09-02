@@ -231,25 +231,29 @@ holder.
     \begin{uwinverytightsinglespaceenv}
       \small
 
-      \vspace{0.335in}
+      \vspace{1in}
+%      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
       Dr. Richard Caron, External Reader \\*
       Department of Mathematics and Statistics \\
 
-      \vspace{0.335in}
+      \vspace{1in}
+%      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
       Dr. Richard A. Frost, Internal Reader \\*
       School of Computer Science \\
 
-      \vspace{0.335in}
+      \vspace{1in}
+%      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
       Dr. Robert D. Kent, Supervisor \\*
       School of Computer Science \\
 
-      \vspace{0.335in}
+      \vspace{1in}
+%      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
       Dr. A. Chair, Chair \\*
@@ -307,8 +311,32 @@ holder.
 \chapter*{Abstract\markboth{\MakeUppercase{Abstract}}{}}
 \addcontentsline{toc}{chapter}{Abstract}
 
+%
+% Maybe just rebuild this from scratch...
+%
+
 \begin{uwindoublespaceenv}
-  Text goes here.
+Subjective Logic is a recently emergent probabilistic logic system
+that allows for reasoning under uncertainty. The fundamental
+quantities include opinions based on ownership, beliefs, uncertainty,
+and base rates, and a range of operators including logic, fusion and
+reasoning over combinations of opinions. Though algebraically
+expressive, there is a lack of software tooling to support
+computation, such as code libraries, calculators, work benches and, in
+particular, software for the development of decision support systems. With this
+motivation, we present a complete design for a library of opinion data
+structures and operators constructed from higher order functions that
+are capable of representing and evaluating arbitrary well-formed
+expressions of Subjective Logic.  By leveraging monads, mathematical
+objects from Category Theory, we have enabled our operators to
+propagate run-time errors from deeply nested sub-expressions and
+control the access and updating of state, without sacrificing
+compositionality. Furthermore, we have conducted a termination
+analysis on the expression evaluator, and a complexity analysis on a
+representative subset of the operators. We have also proposed and implemented
+extensions to the set of Subjective Logic operators. We have implemented our
+library as Subjective Logic in Haskell (SLHS) and provide examples of
+how to create and compute the values of Subjective Logic expressions.
 \end{uwindoublespaceenv}
 
 
@@ -336,7 +364,26 @@ holder.
 \addcontentsline{toc}{chapter}{Acknowledgements}
 
 \begin{uwindefaultspaceenv}
-  Stuff here.
+No worthwhile academic endevour can be done in isolation; the age of the lone genius working
+away in his tower are long behind us. Conducting academic research is a team effort, and this
+thesis would not have come together without the assistance of some key players. I would first like
+to thank my lab mates Paul Preney, Dave MacMillan, and Jeffery Drake for being there to bounce ideas
+off of. Especially to Paul: we may have a friendly rivalry when it comes to meta-programming, but you
+are by far the better programmer.
+
+I would also like to extend my sincerest thanks to my thesis readers: Dr. Rick Caron from Mathematics and
+Statistics, and Dr. Richard Frost from Computer Science. Your comments and suggestions have helped shape
+my research in a positive way. Many thanks also go out to my thesis advisor Dr. Robert D. Kent. Bob, thank
+you for everything you have done over the years, from the excellent conversations on everything from women
+to quantum tunnelling, to the opportunities that you gave me for developing myself both academically and
+industrially. Finally, thanks for believing in me even during the times that I had all but given up on myself.
+
+I also wish to acknowledge the love and support of my amazing parents, Gary and Lee Ann St. Amour. Thank you for
+always being there for me. I would also like to extend my endless gratitude to my wife, Chelsey St. Amour. I
+started the Master's program as your boyfriend, and I'm finishing it as your husband. Words cannot express how
+thankful I am of your love and support throughout this adventure.
+
+Finally, I would like to thank the Canadian Institutes of Health Research (CIHR) and the Auto21 Network of Centres of Excellence for financial support.
 \end{uwindefaultspaceenv}
 
 
