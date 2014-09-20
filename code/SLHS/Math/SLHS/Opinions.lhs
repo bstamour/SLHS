@@ -327,12 +327,12 @@ where \emph{oldOpinion} is the initial hyper opinion.
 
 
 
-\subsection{Accessing Opinion Expressions}
+\subsection{Accessing Opinions}
 
 SLHS is built around combining together objects of type \emph{SLExpr}, which
 are functions from some world state to some value. Since Subjective Logic operators
 rely on opinions as inputs, we require a method of obtaining the opinions stored
-in the state that is being threaded through behind the expressions. The following
+in the state that is being threaded through behind the Subjective Logic expressions. The following
 functions do just that.
 
 We start with fetching hyper opinions, as they are the most general. Given a belief

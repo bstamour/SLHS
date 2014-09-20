@@ -17,11 +17,11 @@ Haskell's \emph{Foreign Function Interface}, can be utilized by other
 programming languages, most notably $C$ and $C++$.
 
 SLHS is designed to be simple to use: all Subjective Logic operators
-take in \emph{expressions} as input, and return expressions as output.
-An expression is simply a function, mapping some data (frames of
-discernment, belief mass assignments, configuration information) to
+take in Subjective Logic expressions as input, and return Subjective Logic expressions as output,
+where Subjective Logic expressions are represented as functions that map some data
+(frames of discernment, belief mass assignments, configuration information) to
 some value - typically an opinion. Therefore the operators are \emph{higher order functions}.
-It will be shown that these SL expressions, or \emph{SLExpr}s are a
+It will be shown that these Subjective Logic expressions, or \emph{SLExpr}s are a
 kind of \emph{monad}, and therefore when working with \emph{SLExpr}s one may leverage
 Haskell's excellent support for monadic programming. We use the monad operators provided by Haskell liberally
 within the implementation of SLHS, and we utilize Haskell's \emph{do-notation} - a syntactic sugar available

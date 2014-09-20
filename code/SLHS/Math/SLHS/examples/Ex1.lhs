@@ -111,4 +111,13 @@ applying the \emph{Constraint} holder data constructor twice, defined over the
 frame ${BD,GM,WP}$, and has 100\% belief allocated to the movie \emph{GM}, and
 each movie has a base rate of $\frac{1}{3}$.
 
+Note that the result of the calculation, that the three friends should see the movie
+\emph{Grey Matter}, does not seem to be the intuitively correct answer. This can be
+attributed to Clark's opinion, while it seemingly neglects to take into account that
+neither Alice nor Bob seem to really want to see that movie. One method of fixing this
+issue could be to introduce a \emph{weighted constraint} operator that places more
+emphasis on different opinions. Since Alice and Bob seem much more certain regarding
+which movie they want to see, perhaps more weight should be given to their opinions, and
+less to Clark's.
+
 \end{document}

@@ -7,7 +7,7 @@
 \label{chap:results-and-analysis}
 
 In this chapter we analyze SLHS by proving that the \emph{run} function terminates for
-all valid input expressions, analyze the complexity of a representative subset of the Subjective Logic operators,
+all valid input Subjective Logic expressions, analyze the complexity of a representative subset of the Subjective Logic operators,
 discuss how Haskell's strong type system and its support for monads has affected the
 design of SLHS, and finally we demonstrate the power of SLHS by showcasing some
 example computations and discuss how the library fits into the
@@ -19,16 +19,17 @@ example computations and discuss how the library fits into the
 
 In this section we perform a termination analysis of the \emph{run} function. The
 run function takes in a Subjective Logic expression and an initial state, and returns
-either the computed value or an error message. We prove that run terminates for
-subjective logic expressions of arbitrary length.
+either the computed value or an error message. We prove that run terminates for valid
+Subjective Logic expressions of arbitrary length.
 
 Our strategy for proving termination is as follows: we utilize a function $|\cdot|$ that
-maps each Subjective Logic expression $e$ to the set of ordinal numbers. We let $|e|$
+maps each Subjective Logic expression $e$ to a natural number. We let $|e|$
 denote the number of sub-expressions contained in
 $e$, including $e$ itself. As \emph{run} recursively computes the values of the
 sub-expressions, we will show that the value of $|e|$ decreases at each step, concluding
 when $|e|$ is 1, when \emph{run} simply returns the final value. Therefore we can conclude
-that \emph{run} terminates because the set of ordinals is \emph{well-founded}, that is there
+that \emph{run} terminates
+because the set of naturals, along with the $<$ relation, is \emph{well-founded}. That is there
 cannot exist infinitely descending chains \cite{moschovakis2006notes}.
 
 \begin{lemma}

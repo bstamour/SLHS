@@ -121,11 +121,11 @@ The \emph{SLExpr} type is parametrized over three types:
 
 \begin{itemize}
 \item The type \emph{h} represents the type that all belief holders within the
-expression must have. For example, if \emph{h} is instantiated to \emph{Int}, then
+Subjective Logic expression must have. For example, if \emph{h} is instantiated to \emph{Int}, then
 all belief holders must be represented by objects that inhabit the \emph{Int} type.
 
 \item The type \emph{a} represents the types that make up the frames of discernment
-within the expression. Any given expression can contain references to many frames,
+within the expression. Any given Subjective Logic expression can contain references to many frames,
 but for simplicity of implementation, we enforce the rule that all frames must be
 made up of elements of the same type. For example, all frames could be inhabited by
 elements of type \emph{UserDefined}, where \emph{UserDefined} is a type that is
