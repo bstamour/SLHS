@@ -11,7 +11,7 @@
 %
 
 
-\documentclass[oneside]{book}
+\documentclass[oneside, 12pt]{book}
 
 \usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
 \usepackage{subfiles}
@@ -25,6 +25,20 @@
 \usepackage{graphicx}
 \usepackage{tabularx}
 
+
+
+
+
+
+\usepackage{mathptmx}% http://ctan.org/pkg/mathptmx
+
+
+
+
+
+
+
+
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{lemma}[theorem]{Lemma}
 \newtheorem{proposition}[theorem]{Proposition}
@@ -37,7 +51,7 @@
       \csname lst@SetFirstLabel\endcsname}
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
-      basicstyle={\small\ttfamily\singlespacing},
+      basicstyle={\scriptsize\ttfamily\singlespacing},
       flexiblecolumns=false,
       basewidth={0.5em,0.45em},
       literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
@@ -55,7 +69,7 @@
       \csname lst@SetFirstLabel\endcsname}
     {\csname lst@SaveFirstLabel\endcsname}
     \lstset{
-      basicstyle={\small\ttfamily\singlespacing},
+      basicstyle={\scriptsize\ttfamily\singlespacing},
       flexiblecolumns=false,
       basewidth={0.5em,0.45em},
       literate={+}{{$+$}}1 {/}{{$/$}}1 {*}{{$*$}}1 {=}{{$=$}}1
@@ -158,9 +172,9 @@
   \normalsize
   A Thesis \\*
   Submitted to the Faculty of Graduate Studies \\*
-  through Computer Science \\*
+  through the School of Computer Science \\*
   in Partial Fulfillment of the Requirements for \\*
-  the degree of Master of Computer Science at the \\*
+  the degree of Master of Science at the \\*
   University of Windsor \\*
 
   \vspace{1in}
@@ -235,21 +249,21 @@ holder.
 %      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
-      Dr. Richard Caron, External Reader \\*
+      Dr. Richard Caron \\*
       Department of Mathematics and Statistics \\
 
       \vspace{1in}
 %      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
-      Dr. Richard A. Frost, Internal Reader \\*
+      Dr. Richard A. Frost \\*
       School of Computer Science \\
 
       \vspace{1in}
 %      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
-      Dr. Robert D. Kent, Supervisor \\*
+      Dr. Robert D. Kent, Advisor \\*
       School of Computer Science \\
 
       \vspace{1in}
@@ -269,10 +283,20 @@ holder.
 \uwinthesisapprovalpage
   {A Subjective Logic Library Constructed Using Monadic Higher Order Functions}
   {Bryan St. Amour}
-  {September 16 2014}
+  {September 16, 2014}
 
 
 %---------------------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
 
 
 \clearpage
@@ -419,11 +443,15 @@ Finally, I would like to thank the Canadian Institutes of Health Research (CIHR)
 \chapter*{Vita Auctoris}
 \addcontentsline{toc}{chapter}{Vita Auctoris}
 
-Bryan St. Amour was born and raised in Windsor, Ontario, Canada, and graduated from F.J. Brennan
-Catholic High School in 2005. Bryan completed his undergraduate degree in Computer Science from
-the University of Windsor in 2010, and expects to complete his Master's degree in Computer Science
-from the same institute in Fall 2014. He currently resides in Tecumseh, Ontario with his wife
-Chelsey St. Amour, and their four guinea pigs: Squeakers, Beauty, Scarlet, and Pumpkin.
+Bryan St. Amour was born in 1987 and raised in Windsor, Ontario, Canada. He completed his undergraduate degree in
+Computer Science from the University of Windsor in 2010, and his Master's degree in Computer Science from the same
+institute in 2014.
+
+%Bryan St. Amour was born and raised in Windsor, Ontario, Canada, and graduated from F.J. Brennan
+%Catholic High School in 2005. Bryan completed his undergraduate degree in Computer Science from
+%the University of Windsor in 2010, and expects to complete his Master's degree in Computer Science
+%from the same institute in Fall 2014. He currently resides in Tecumseh, Ontario with his wife
+%Chelsey St. Amour, and their four guinea pigs: Squeakers, Beauty, Scarlet, and Pumpkin.
 
 \end{uwindefaultspaceenv}
 
