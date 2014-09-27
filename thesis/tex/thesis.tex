@@ -1,16 +1,3 @@
-%
-% generic formatting stuff:
-% 1. Chapter X, Section Y
-% 2. Make sure to fix up Josang's name.
-% 3. Get a bunch of references to applications of SL
-% 4. References for chapter 2. There should be tons and tons.
-%
-
-%
-% All mentions of combinator => operator.
-%
-
-
 \documentclass[oneside, 12pt]{book}
 
 \usepackage[top=1in, bottom=1in, left=1.5in, right=1in]{geometry}
@@ -24,10 +11,9 @@
 \usepackage{verbatim}
 \usepackage{graphicx}
 \usepackage{tabularx}
-
 \usepackage{mathptmx}% http://ctan.org/pkg/mathptmx
-
 \usepackage{fancyhdr}
+\usepackage{setspace}
 
 \pagestyle{fancy}
 \fancyhead{}
@@ -78,8 +64,6 @@
                {|}{{$\mid$}}1
     }
 
-\usepackage{setspace}
-
 \newcommand{\uwinverytightsinglespacelen}{0.9}
 \newcommand{\uwintightsinglespacelen}{1.0}
 \newcommand{\uwinsinglespacelen}{1.1}
@@ -125,47 +109,20 @@
 {\begin{spacing}{\uwindefaultspacelen}}%
   {\end{spacing}}
 
-
-
-
-
-
-%\doublespacing
 \long\def\ignore#1{}
 
 \title{A Subjective Logic Library Constructed Using Monadic Higher Order Functions}
 
 \author{Bryan St. Amour}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 \begin{document}
 
 
 \pagenumbering{roman}
-%\setcounter{page}{2}
-
 
 %---------------------------------------------------------------------------------------------------
 
 \clearpage
-
-%\currentpdfbookmark{Title Page}{titlepage}
 
 \thispagestyle{empty}
 \begin{center}
@@ -218,9 +175,7 @@ holder.
 
 \vspace*{\fill}
 
-
 %---------------------------------------------------------------------------------------------
-
 
 % Ability to do centered horizontal rules for approval page...
 \newcommand{\centeringrule}[2]{%
@@ -238,7 +193,6 @@ holder.
 \newcommand{\uwinthesisapprovalpage}[3]{%
 %  \cleartonextpage
   \clearpage
-%  \currentpdfbookmark{Approved By}{approvedby}
   \thispagestyle{empty}
 
   \begin{center}
@@ -269,14 +223,14 @@ holder.
 %      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
-      Dr. R A. Frost \\*
+      Dr. R Frost \\*
       School of Computer Science \\
 
       \vspace{1in}
 %      \vspace{0.335in}
       \centeringrule{3.5in}{0.5pt}
       \newline
-      Dr. R D. Kent, Advisor \\*
+      Dr. R Kent, Advisor \\*
       School of Computer Science \\
 
       \vspace{1in}
@@ -298,19 +252,7 @@ holder.
   {Bryan St. Amour}
   {September 16, 2014}
 
-
 %---------------------------------------------------------------------------------------------
-
-
-
-
-
-
-
-
-
-
-
 
 \clearpage
 % \phantomsection
@@ -340,17 +282,11 @@ holder.
   higher degree to any other University or Institution.
 \end{uwindefaultspaceenv}
 
-
 %---------------------------------------------------------------------------------------------
-
 
 \clearpage
 \chapter*{Abstract\markboth{\MakeUppercase{Abstract}}{}}
 \addcontentsline{toc}{chapter}{Abstract}
-
-%
-% Maybe just rebuild this from scratch...
-%
 
 \begin{uwindoublespaceenv}
 
@@ -363,38 +299,13 @@ complete design for a library of opinion data structures and operators construct
 from higher order functions that are capable of representing and evaluating well-formed
 expressions of Subjective Logic. By leveraging monads, mathematical objects from
 Category Theory, we have enabled our operators to detect and propagate run-time
-errors without sacrificing compositionality. Futhermore, we have conducted a termination
+errors without sacrificing compositionality. Furthermore, we have conducted a termination
 analysis on the expression evaluator and a complexity analysis on a representative
 subset of the operators. We have also proposed and implemented extensions to the set of
 Subjective Logic operators. Lastly, we provide examples of how to compute the values of
 Subjective Logic expressions.
 
-\begin{comment}
-Subjective Logic is a recently emergent probabilistic logic system
-that allows for reasoning under uncertainty. The fundamental
-quantities include opinions based on ownership, beliefs, uncertainty,
-and base rates, and a range of operators including logic, fusion and
-reasoning over combinations of opinions. Though algebraically
-expressive, there is a lack of software tooling to support
-computation, such as code libraries, calculators, work benches and, in
-particular, software for the development of decision support systems. With this
-motivation, we present a complete design for a library of opinion data
-structures and operators constructed from higher order functions that
-are capable of representing and evaluating arbitrary well-formed
-expressions of Subjective Logic.  By leveraging monads, mathematical
-objects from Category Theory, we have enabled our operators to
-propagate run-time errors from deeply nested sub-expressions and
-control the access and updating of state, without sacrificing
-compositionality. Furthermore, we have conducted a termination
-analysis on the expression evaluator, and a complexity analysis on a
-representative subset of the operators. We have also proposed and implemented
-extensions to the set of Subjective Logic operators. We have implemented our
-library as Subjective Logic in Haskell (SLHS) and provide examples of
-how to create and compute the values of Subjective Logic expressions.
-\end{comment}
-
 \end{uwindoublespaceenv}
-
 
 %---------------------------------------------------------------------------------------------
 
@@ -411,9 +322,7 @@ how to create and compute the values of Subjective Logic expressions.
     just no reasoning with cancer. Here's to you, kemosabe.}
 \end{center}
 
-
 %---------------------------------------------------------------------------------------------
-
 
 \clearpage
 \chapter*{Acknowledgements\markboth{\MakeUppercase{Acknowledgements}}{}}
@@ -443,9 +352,7 @@ thankful I am of your love and support throughout this adventure.
 Finally, I would like to thank the Canadian Institutes of Health Research (CIHR) and the Auto21 Network of Centres of Excellence for financial support.
 \end{uwindefaultspaceenv}
 
-
 %---------------------------------------------------------------------------------------------
-
 
 \begin{uwindefaultspaceenv}
 
@@ -466,11 +373,8 @@ Finally, I would like to thank the Canadian Institutes of Health Research (CIHR)
 \subfile{chapter5}
 \subfile{chapter6}
 
-
-%\nocite{*} % Just for now...
 \bibliography{bibliography}
 \bibliographystyle{plain}
-
 
 \chapter*{Vita Auctoris}
 \addcontentsline{toc}{chapter}{Vita Auctoris}
